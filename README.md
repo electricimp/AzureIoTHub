@@ -4,7 +4,7 @@ The Azure IoT Hub client is an Electric Imp agent side library for interfacing t
 
 **To add this library to your project, add `#require "iothub.agent.nut:1.0.0"` to the top of your agent code.**
 
-You can view the library's source code on [GitHub](https://github.com/electricimp/iothub/tree/v1.0.0).
+You can view the library's source code on [GitHub](https://github.com/electricimp/AzureIoTHub/tree/v1.0.0).
 This class is ported from and designed to be as close as possible to the [NodeJS SDK](https://github.com/Azure/azure-iot-sdks/blob/master/node/). Refer to the NodeJS SDK for further information.
 
 ## iothub.Registry Class Usage
@@ -29,7 +29,7 @@ Creates a new device identity in the Iot Hub. The optional *deviceInfo* field is
 
 ### function update(*deviceInfo, [callback]*)
 
-Updates an existing device identity in the Iot Hub. The *deviceInfo* field is an iothub.Device object or table containing the keys specified [here](https://msdn.microsoft.com/en-us/library/mt548488.aspx). 
+Updates an existing device identity in the Iot Hub. The *deviceInfo* field is an iothub.Device object or table containing the keys specified [here](https://msdn.microsoft.com/en-us/library/mt548488.aspx). The deviceId and statusReason cannot be updated via this method.
 
 ### function remove(*[deviceId], callback*)
 
@@ -185,7 +185,7 @@ The Azure Portal provides the Connection String. To use the Device Registry you 
 
 ## Examples
 
-There are further examples in the [GitHub repository](https://github.com/electricimp/iothub/tree/v1.0.0).
+There are further examples in the [GitHub repository](https://github.com/electricimp/AzureIoTHub/tree/v1.0.0).
 
 # License
 
