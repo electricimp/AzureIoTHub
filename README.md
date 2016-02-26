@@ -26,6 +26,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+<br />
 [![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=master)](https://travis-ci.org/electricimp/AzureIoTHub)
 
 # Azure IoT Hub Client 1.0.0 
