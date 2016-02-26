@@ -10,6 +10,10 @@ class ClientTestCase extends ImpTestCase {
     _client = null;
 
     function setUp() {
+        return this.initClient();
+    }
+
+    function initClient() {
         return Promise(function (resolve, reject) {
 
             local connectionString = "HostName=" + HUB_NAME
