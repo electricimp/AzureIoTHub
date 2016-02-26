@@ -2,9 +2,9 @@
  * Test case to test iothub.Client
  */
 
-const HUB_NAME = "imptesthuba";
+const HUB_NAME = "#{env:AZURE_IOTHUB_HUB_NAME}";
 const ACCESS_KEY = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY}"
-const ACCESS_KEY_NAME = "iothubowner"
+const ACCESS_KEY_NAME = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME}"
 
 class RegistryTestCase extends ImpTestCase {
 
