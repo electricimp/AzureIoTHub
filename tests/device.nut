@@ -11,14 +11,20 @@ i <- 0;
 d <- 1;
 
 function step() {
-    imp.wakeup(0.05, step);
+    imp.wakeup(0.2, step);
 
-    leds.fill([0, 0, 50], 0, 4)
-        .set(i, [0, 255, 255])
+    leds.fill([0, 0, 0], 0, 4)
+        .set(i, [0, 50, 0])
         .draw();
 
     i += d;
     if (i == 4 || i == 0) d = -d;
 }
 
-step();
+function start() {
+    leds.fill([0, 50, 0], 0, 4)
+        .draw();
+    imp.wakeup(15, step);
+}
+
+start();
