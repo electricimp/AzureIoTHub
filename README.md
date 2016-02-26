@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=master)](https://travis-ci.org/electricimp/AzureIoTHub)
+
 # Azure IoT Hub Client 1.0.0 
 
 The Azure IoT Hub client is an Electric Imp agent side library for interfacing to the Azure IoT Hub version "2015-08-15-preview". Initially, it only supports the device registry (create, update, delete, get, list) and sending device-to-cloud events. Receiving events is currently not functioning.
