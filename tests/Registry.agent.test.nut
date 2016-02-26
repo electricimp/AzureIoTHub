@@ -63,11 +63,11 @@ class RegistryTestCase extends ImpTestCase {
         }.bindenv(this));
     }
 
-    function test3ListDevice() {
+    function test3ListDevices() {
         return Promise(function (resolve, reject) {
             this._registry.list(function(err, devices) {
                 if (err && err.response.statuscode == 429) {
-                    resolve(this.test3ListDevice());
+                    resolve(this.test3ListDevices());
                 } else if (err) {
                     reject("list() error: " + err.message + " (" + err.response.statuscode + ")");
                 } else if (devices) {
