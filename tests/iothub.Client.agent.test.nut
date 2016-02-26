@@ -11,17 +11,17 @@ class ClientTestCase extends ImpTestCase {
 
     function setUp() {
         return Promise(function (resolve, reject) {
-            local connectionString = "HostName=" + HUB_NAME + ".azure-devices.net;SharedAccessKeyName=" + ACCESS_KEY_NAME + ";SharedAccessKey=" + ACCESS_KEY;
+
+            local connectionString = "HostName=" + HUB_NAME
+                + ".azure-devices.net;SharedAccessKeyName=" + ACCESS_KEY_NAME
+                + ";SharedAccessKey=" + ACCESS_KEY;
             local registry = iothub.Registry.fromConnectionString(connectionString);
             local hostname = iothub.ConnectionString.Parse(connectionString).HostName;
 
             registry.get(function (err, deviceInfo) {
-
                 if (err) {
                     if (err.response.statuscode == 404) {
-
                         registry.create(function(err, deviceInfo) {
-
                             if (err && err.response.statuscode == 429) {
                                 // todo add 10s delay
                                 resolve(this.setUp());
@@ -34,7 +34,6 @@ class ClientTestCase extends ImpTestCase {
                                 reject("createDevice error unknown")
                             }
                         }.bindenv(this));
-
                     } else if (err.response.statuscode == 429) {
                         // todo add 10s delay
                         resolve(this.setUp());
