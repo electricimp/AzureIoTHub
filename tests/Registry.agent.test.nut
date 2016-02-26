@@ -63,7 +63,6 @@ class RegistryTestCase extends ImpTestCase {
         }.bindenv(this));
     }
 
-
     function test3GetDevice() {
         return Promise(function (resolve, reject) {
             this._registry.get(this._deviceId, function(err, deviceInfo) {
@@ -80,6 +79,40 @@ class RegistryTestCase extends ImpTestCase {
                     }
                 } else {
                     reject("get() error unknown")
+                }
+            }.bindenv(this));
+        }.bindenv(this));
+    }
+
+    function test3ListDevice() {
+        return Promise(function (resolve, reject) {
+            this._registry.list(function(err, devices) {
+                if (err && err.response.statuscode == 429) {
+                    resolve(this.test3ListDevice());
+                } else if (err) {
+                    reject("list() error: " + err.message + " (" + err.response.statuscode + ")");
+                } else if (devices) {
+                    try {
+                        this.assertTrue(type(devices) == "array");
+
+                        local found = false;
+
+                        foreach (k, v in devices) {
+                            if (v.getBody().deviceId == this._deviceId) {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        this.assertTrue(found, "Device " + this._deviceId + " not found");
+
+                        resolve("Device is listed, total: " + devices.len());
+
+                    } catch (e) {
+                        reject(e);
+                    }
+                } else {
+                    reject("list() error unknown")
                 }
             }.bindenv(this));
         }.bindenv(this));
