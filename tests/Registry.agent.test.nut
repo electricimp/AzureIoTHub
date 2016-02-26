@@ -63,27 +63,6 @@ class RegistryTestCase extends ImpTestCase {
         }.bindenv(this));
     }
 
-    function test3GetDevice() {
-        return Promise(function (resolve, reject) {
-            this._registry.get(this._deviceId, function(err, deviceInfo) {
-                if (err && err.response.statuscode == 429) {
-                    resolve(this.test3GetDevice());
-                } else if (err) {
-                    reject("get() error: " + err.message + " (" + err.response.statuscode + ")");
-                } else if (deviceInfo) {
-                    try {
-                        this.assertEqual(deviceInfo.getBody().deviceId, this._deviceId)
-                        resolve("Retrieved " + this._deviceId);
-                    } catch (e) {
-                        reject(e);
-                    }
-                } else {
-                    reject("get() error unknown")
-                }
-            }.bindenv(this));
-        }.bindenv(this));
-    }
-
     function test3ListDevice() {
         return Promise(function (resolve, reject) {
             this._registry.list(function(err, devices) {
@@ -113,6 +92,27 @@ class RegistryTestCase extends ImpTestCase {
                     }
                 } else {
                     reject("list() error unknown")
+                }
+            }.bindenv(this));
+        }.bindenv(this));
+    }
+
+    function test4GetDevice() {
+        return Promise(function (resolve, reject) {
+            this._registry.get(this._deviceId, function(err, deviceInfo) {
+                if (err && err.response.statuscode == 429) {
+                    resolve(this.test4GetDevice());
+                } else if (err) {
+                    reject("get() error: " + err.message + " (" + err.response.statuscode + ")");
+                } else if (deviceInfo) {
+                    try {
+                        this.assertEqual(deviceInfo.getBody().deviceId, this._deviceId)
+                        resolve("Retrieved " + this._deviceId);
+                    } catch (e) {
+                        reject(e);
+                    }
+                } else {
+                    reject("get() error unknown")
                 }
             }.bindenv(this));
         }.bindenv(this));
