@@ -1,3 +1,31 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Azure IoT Hub Client 1.0.0](#azure-iot-hub-client-100)
+  - [iothub.Registry Class Usage](#iothubregistry-class-usage)
+    - [Constructor: iothub.Registry.fromConnectionString(*ConnectionString*)](#constructor-iothubregistryfromconnectionstringconnectionstring)
+    - [function create(*[deviceInfo], [callback]*)](#function-createdeviceinfo-callback)
+    - [function update(*deviceInfo, [callback]*)](#function-updatedeviceinfo-callback)
+    - [function remove(*[deviceId], callback*)](#function-removedeviceid-callback)
+    - [function get(*[deviceId], callback*)](#function-getdeviceid-callback)
+    - [function list(*callback*)](#function-listcallback)
+    - [Callbacks](#callbacks)
+    - [Example](#example)
+  - [iothub.Client Class Usage](#iothubclient-class-usage)
+    - [Constructor: iothub.Client.fromConnectionString(*ConnectionString*)](#constructor-iothubclientfromconnectionstringconnectionstring)
+    - [function sendEvent(*message, [callback]*)](#function-sendeventmessage-callback)
+    - [function sendEventBatch(*messages, [callback]*)](#function-sendeventbatchmessages-callback)
+    - [Callbacks](#callbacks-1)
+    - [Example](#example-1)
+  - [Authentication](#authentication)
+  - [Examples](#examples)
+  - [Testing](#testing)
+    - [Environment Varialbles](#environment-varialbles)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 [![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=master)](https://travis-ci.org/electricimp/AzureIoTHub)
 
 # Azure IoT Hub Client 1.0.0 
@@ -188,6 +216,33 @@ The Azure Portal provides the Connection String. To use the Device Registry you 
 ## Examples
 
 There are further examples in the [GitHub repository](https://github.com/electricimp/AzureIoTHub/tree/v1.0.0).
+
+## Testing
+
+Repository contains [impUnit](https://github.com/electricimp/impUnit) tests and a configuration for [impTest](https://github.com/electricimp/impTest) tool.
+
+Tests can be launched with:
+
+```bash
+imptest test
+```
+
+By default configuration for the testing is read from [.imptest](https://github.com/electricimp/impTest/blob/develop/docs/imptest-spec.md).
+
+To run test with your settings (for example while you are developing), create your copy of **.imptest** file and name it something like **.imptest.local**, then run tests with:
+ 
+ ```bash
+ imptest test -c .imptest.local
+ ```
+
+Tests do not require any specific hardware.
+
+### Environment Varialbles
+
+Test cases expect the following environment variables:
+- __AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME__ – shared access key name
+- __AZURE_IOTHUB_SHARED_ACCESS_KEY__ – shared access key
+- __AZURE_IOTHUB_HUB_NAME__ – IoT hub name
 
 # License
 
