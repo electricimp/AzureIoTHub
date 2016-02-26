@@ -1,5 +1,5 @@
 /**
- * Test case to test iothub.Client
+ * Test case to test iothub.Registry
  */
 
 const HUB_NAME = "#{env:AZURE_IOTHUB_HUB_NAME}";
