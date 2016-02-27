@@ -1,6 +1,6 @@
 {
-  "modelId": "3IIYRlBdD8Ji" /* April/LEDTail */,
-  "devices": ["23236c6938a609ee" /* EI.Test.B */],
+  "modelId": "FDmwxg-3sYAx" /* April */,
+  "devices": ["233f4aafaf952dee" /* EI.Test.G */],
   "agentFile": "iothub.agent.nut",
   "stopOnFailure": false,
   "timeout": 60
