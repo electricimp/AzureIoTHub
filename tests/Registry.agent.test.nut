@@ -19,15 +19,12 @@ class RegistryTestCase extends ImpTestCase {
 
     function createRegistry() {
         return Promise(function (resolve, reject) {
-
             local connectionString = "HostName=" + HUB_NAME
                 + ".azure-devices.net;SharedAccessKeyName=" + ACCESS_KEY_NAME
                 + ";SharedAccessKey=" + ACCESS_KEY;
             this._registry = iothub.Registry.fromConnectionString(connectionString);
-            local hostname = iothub.ConnectionString.Parse(connectionString).HostName;
-
+            
             resolve("Registry created")
-
         }.bindenv(this));
     }
 
