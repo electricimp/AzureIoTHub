@@ -12,8 +12,18 @@ class RegistryTestCase extends ImpTestCase {
     _deviceId = null;
     _haveDevice = false;
 
+    function _replace(haystack, needle, substitute) {
+        local p = 0;
+
+        while (p = haystack.find(needle)) {
+          haystack = haystack.slice(0, p) + substitute + haystack.slice(p + 1);
+        }
+
+        return haystack;
+    }
+
     function setUp() {
-        this._deviceId = "testDevice" + math.rand() + math.rand();
+        this._deviceId = "device_" + this._replace(this.session, "-", "_") + "_" + math.rand();
         return this.createRegistry();
     }
 
@@ -23,7 +33,6 @@ class RegistryTestCase extends ImpTestCase {
                 + ".azure-devices.net;SharedAccessKeyName=" + ACCESS_KEY_NAME
                 + ";SharedAccessKey=" + ACCESS_KEY;
             this._registry = iothub.Registry.fromConnectionString(connectionString);
-            
             resolve("Registry created")
         }.bindenv(this));
     }
