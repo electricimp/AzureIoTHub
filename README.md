@@ -33,6 +33,8 @@ const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=
 registry <- iothub.Registry.fromConnectionString(CONNECT_STRING);
 ```
 
+## iothub.Registry Class Methods
+
 ### create(*[deviceInfo][, callback]*)
 
 This method creates a new device identity in the IoT Hub. The optional *deviceInfo* parameter is an iothub.Device object or table containing the keys specified [here](https://msdn.microsoft.com/en-us/library/mt548493.aspx). If the *deviceInfo* table’s *deviceId* key is not provided, the agent’s ID will be used.
@@ -121,6 +123,8 @@ The *connectionString* parameter is provided by the [Azure Portal](https://porta
 // Instantiate a client.
 client <- iothub.Client.fromConnectionString(DEVICE_CONNECT_STRING);
 ```
+
+## iothub.Client Class Methods
 
 ### sendEvent(*message[, callback]*)
 
