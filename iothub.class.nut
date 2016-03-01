@@ -631,8 +631,10 @@ class iothub.Registry {
         return this;
     }
 
-    function list(done) {
+    function list(done = null) {
 
+        if (done == null) return null;
+        
         local path = iothub.Endpoint.devicePath("") + iothub.Endpoint.versionQueryString();
         _transport.listDevices(path, function (err, body) {
 
