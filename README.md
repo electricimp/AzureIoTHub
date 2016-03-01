@@ -4,7 +4,7 @@ The Azure IoT Hub client is an Electric Imp agent-side library for interfacing t
 
 This library is ported from and designed to be as close as possible to the [NodeJS SDK](https://github.com/Azure/azure-iot-sdks/blob/master/node/). Refer to the [NodeJS SDK](https://github.com/Azure/azure-iot-sdks/blob/master/node/) for further information.
 
-**To add this library to your project, add** `#require "iothub.agent.nut:1.0.0"` **to the top of your agent code.**
+**To add this library to your project, add** `#require "azureiothub.class.nut:1.0.0"` **to the top of your agent code.**
 
 ## Authentication
 
@@ -26,7 +26,7 @@ This contructs a Registry object which exposes the Device Registry functions.
 The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) *(see above)*. 
 
 ```squirrel
-#require "iothub.class.nut:1.0.0"
+#require "azureiothub.class.nut:1.0.0"
 
 // Instantiate a client.
 const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
@@ -118,7 +118,7 @@ This contructs a (HTTP) Client object which exposes the event functions.
 The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) *(see above)*. 
 
 ```squirrel
-#require "iothub.agent.nut:1.0.0"
+#require "azureiothub.class.nut:1.0.0"
 
 // Instantiate a client.
 client <- iothub.Client.fromConnectionString(DEVICE_CONNECT_STRING);
