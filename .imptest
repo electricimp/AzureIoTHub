@@ -1,7 +1,7 @@
 {
   "modelId": "FDmwxg-3sYAx" /* April */,
   "devices": ["233f4aafaf952dee" /* EI.Test.G */],
-  "agentFile": "iothub.agent.nut",
+  "agentFile": "iothub.class.nut",
   "stopOnFailure": false,
   "timeout": 60
 }
