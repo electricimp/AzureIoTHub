@@ -31,68 +31,86 @@
 
 # Azure IoT Hub Client 1.0.0 
 
-The Azure IoT Hub client is an Electric Imp agent side library for interfacing to the Azure IoT Hub version "2015-08-15-preview". Initially, it only supports the device registry (create, update, delete, get, list) and sending device-to-cloud events. Receiving events is currently not functioning.
+The Azure IoT Hub client is an Electric Imp agent-side library for interfacing to the Azure IoT Hub version “2015-08-15-preview”. It currently only supports the device registry (create, update, delete, get, list) and sending device-to-cloud events. Receiving events is currently not functioning.
 
-**To add this library to your project, add `#require "iothub.agent.nut:1.0.0"` to the top of your agent code.**
+This library is ported from and designed to be as close as possible to the [NodeJS SDK](https://github.com/Azure/azure-iot-sdks/blob/master/node/). Refer to the [NodeJS SDK](https://github.com/Azure/azure-iot-sdks/blob/master/node/) for further information.
 
-You can view the library's source code on [GitHub](https://github.com/electricimp/AzureIoTHub/tree/v1.0.0).
-This class is ported from and designed to be as close as possible to the [NodeJS SDK](https://github.com/Azure/azure-iot-sdks/blob/master/node/). Refer to the NodeJS SDK for further information.
+**To add this library to your project, add** `#require "azureiothub.class.nut:1.0.0"` **to the top of your agent code.**
+
+## Authentication
+
+The Azure Portal provides the Connection String, passed into the following constructor’s *connectionString* parameter. To use the Device Registry you will require owner-level permissions. To use the Client you need device-level permissions. The best way to get device-level permissions is from the Device Registry SDK.
+
+0. Open the [Azure Portal](https://portal.azure.com/)
+0. Select or create your Azure IoT Hub resource
+0. Click on ‘Settings’ 
+0. Click on ‘Shared Access Policies’
+0. Select a policy which has all permissions (such as the *iothubowner*) or create a new policy then click on it
+0. Copy the *Connection string--primary key* to the clipboard and paste it into the constructor.
 
 ## iothub.Registry Class Usage
 
-### Constructor: iothub.Registry.fromConnectionString(*ConnectionString*)
+### Constructor: iothub.Registry.fromConnectionString(*connectionString*)
 
 This contructs a Registry object which exposes the Device Registry functions.
 
-The *ConnectionString* parameter is provided in the Azure Portal. 
+The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) *(see above)*. 
 
 ```squirrel
-#require "iothub.agent.nut:1.0.0"
+#require "azureiothub.class.nut:1.0.0"
 
 // Instantiate a client.
-const CONNECT_STRING = "HostName=<hubid>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<keyhash>";
+const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 registry <- iothub.Registry.fromConnectionString(CONNECT_STRING);
 ```
 
-### function create(*[deviceInfo], [callback]*)
+## iothub.Registry Class Methods
 
-Creates a new device identity in the Iot Hub. The optional *deviceInfo* field is an iothub.Device object or table containing the keys specified [here](https://msdn.microsoft.com/en-us/library/mt548493.aspx). If it is not provided then the agentId will be used as the deviceId.
+### create(*[deviceInfo][, callback]*)
 
-### function update(*deviceInfo, [callback]*)
+This method creates a new device identity in the IoT Hub. The optional *deviceInfo* parameter is an iothub.Device object or table containing the keys specified [here](https://msdn.microsoft.com/en-us/library/mt548493.aspx). If the *deviceInfo* table’s *deviceId* key is not provided, the agent’s ID will be used.
 
-Updates an existing device identity in the Iot Hub. The *deviceInfo* field is an iothub.Device object or table containing the keys specified [here](https://msdn.microsoft.com/en-us/library/mt548488.aspx). The deviceId and statusReason cannot be updated via this method.
+You may also provide a function reference via the *callback* parameter *(see below)*. This function will be called when the IoT Hub responds. If you don’t provide a callback, *create()* will block until completion.
 
-### function remove(*[deviceId], callback*)
+### update(*deviceInfo[, callback]*)
 
-Deletes a single device identity from the IoT Hub. The *deviceId* string field is optional and will be set to the agentId if not provided.
+This method updates an existing device identity in the IoT Hub. The *deviceInfo* field is an iothub.Device object or table containing the keys specified [here](https://msdn.microsoft.com/en-us/library/mt548488.aspx). The table’s *deviceId* and *statusReason* values cannot be updated via this method.
 
-### function get(*[deviceId], callback*)
+You may also provide a function reference via the *callback* parameter *(see below)*. This function will be called when the IoT Hub responds. If you don’t provide a callback, *update()* will block until completion. 
 
-Returns the properties of an existing device identity in the Iot Hub. The *deviceId* string field is optional and will be set to the agentId if not provided.
+### remove(*[deviceId][, callback]*)
 
-### function list(*callback*)
+This method deletes a single device identity from the IoT Hub. The *deviceId* string parameter is optional and will be set to the agent’s ID if not provided.
 
-Returns the properties of all existing device identities in the Iot Hub.
+You may also provide a function reference via the *callback* parameter *(see below)*. This function will be called when the IoT Hub responds. If you don’t provide a callback, *remove()* will block until completion.
+
+### get(*[deviceId][, callback]*)
+
+This method returns the properties of an existing device identity in the IoT Hub. The *deviceId* string parameter is optional and will be set to the agent’s ID if not provided.
+
+You may also provide a function reference via the *callback* parameter *(see below)*. This function will be called when the IoT Hub responds. If you don’t provide a callback, *get()* will block until completion.
+
+### list(*callback*)
+
+Returns the properties of all existing device identities in the IoT Hub.
 
 ### Callbacks
 
-The callbacks will be called with the following parameters:
+Callback functions passed into the above methods should be defined with the following parameters:
 
-|   Field     |  Value                                                                                              |
-|-------------|-----------------------------------------------------------------------------------------------------|
-|   err       |  If there we no error: null                                                                         |
-|             |  If there was an error: a table containing the http *response* object and an error *message* string |
-|   response  |  For *create*, *update* and *get*: a [iothub.Device](https://msdn.microsoft.com/en-us/library/mt548491.aspx) object                                           |
-|             |  For *list*: an array of [iothub.Device](https://msdn.microsoft.com/en-us/library/mt548491.aspx) objects                                                      |
-|             |  For *remote*: nothing                                                                              |
-
+| Parameter | Value |
+| --- | --- |
+| *err* | This will be `null` if there was no error. Otherwise it will be a table containing two keys: *response*, the original **httpresponse** object, and *message*, an error report string |
+| *response* | For *create()*, *update()* and *get()*: an [iothub.Device](https://msdn.microsoft.com/en-us/library/mt548491.aspx) object.<br> For *list()*: an array of [iothub.Device](https://msdn.microsoft.com/en-us/library/mt548491.aspx) objects.<br>For *remote()*: nothing |
 
 ### Example
 
-This example code will register the device (using the agent id, which could be replaced with the imp deviceId) or create a new one then will instantiate the Client class for later use.
+This example code will register the device (using the agent’s ID, which could be replaced with the device’s ID) or create a new one. It will then instantiate the Client class for later use.
 
 ```squirrel
 #require "iothub.agent.nut:1.0.0"
+
+const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 
 client <- null;
 local registry = iothub.Registry.fromConnectionString(CONNECT_STRING);
@@ -100,92 +118,88 @@ local hostname = iothub.ConnectionString.Parse(CONNECT_STRING).HostName;
 
 // Find this device in the registry
 registry.get(function(err, deviceInfo) {
-
     if (err) {
-
         if (err.response.statuscode == 404) {
-            
-            // No such device, lets create it
+            // No such device, let's create it
             registry.create(function(err, deviceInfo) {
-                
                 if (err) {  
-                    console.error(err.message);
+                    server.error(err.message);
                 } else {
                     server.log("Created " + deviceInfo.getBody().deviceId);
                     ::client <- iothub.Client.fromConnectionString(deviceInfo.connectionString(hostname));
                 }
-
             }.bindenv(this));
-
         } else {
-            
-            console.error(err.message);
-            
+            server.error(err.message);
         }
-
     } else {
-
         server.log("Connected as " + deviceInfo.getBody().deviceId);
         ::client <- iothub.Client.fromConnectionString(deviceInfo.connectionString(hostname));
-        
     }
-
 }.bindenv(this));
 
 ```
 
 ## iothub.Client Class Usage
 
-### Constructor: iothub.Client.fromConnectionString(*ConnectionString*)
+### Constructor: iothub.Client.fromConnectionString(*connectionString*)
 
 This contructs a (HTTP) Client object which exposes the event functions.
 
-The *ConnectionString* parameter is provided in the Azure Portal. 
+The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) *(see above)*. 
 
 ```squirrel
-#require "iothub.agent.nut:1.0.0"
+#require "azureiothub.class.nut:1.0.0"
 
 // Instantiate a client.
 client <- iothub.Client.fromConnectionString(DEVICE_CONNECT_STRING);
 ```
 
-### function sendEvent(*message, [callback]*)
+## iothub.Client Class Methods
 
-Sends a single event (message) the Iot Hub. The message should be a iothub.Message object which can be created from a string or any object that can be converted to JSON. The message object can also hold *properties* as defined [here](https://msdn.microsoft.com/en-us/library/mt590784.aspx).
+### sendEvent(*message[, callback]*)
+
+This method sends a single event (*message*) to the IoT Hub. The event should be an iothub.Message object which can be created from a string or any object that can be converted to JSON. The message object can also hold application properties as defined [here](https://msdn.microsoft.com/en-us/library/mt590784.aspx).
+
+You may also provide a function reference via the *callback* parameter *(see below)*. This function will be called when the IoT Hub responds. If you don’t provide a callback, *sendEvent()* will block until completion.
+
+**Example**
 
 ```squirrel
-local message1 = iothub.Message("this is an event");
+local message1 = iothub.Message("This is an event");
 client.sendEvent(message1);
 
 local message2 = iothub.Message({ "id": 1, "text": "Hello, world." });
 client.sendEvent(message2);
 ```
 
-### function sendEventBatch(*messages, [callback]*)
+### sendEventBatch(*messages[, callback]*)
 
-Sends an array of events (messages) the Iot Hub. The messages parameter should be an array of iothub.Message objects which can be created from a string or any object that can be converted to JSON. The message objects can also hold *properties* as defined [here](https://msdn.microsoft.com/en-us/library/mt590784.aspx).
+Sends an array of events (messages) the Iot Hub. The messages parameter should be an array of iothub.Message objects which can be created from a string or any object that can be converted to JSON. The message objects can also hold application properties as defined [here](https://msdn.microsoft.com/en-us/library/mt590784.aspx).
+
+You may also provide a function reference via the *callback* parameter *(see below)*. This function will be called when the IoT Hub responds. If you don’t provide a callback, *sendEventBatch()* will block until completion.
+
+**Example**
 
 ```squirrel
 local messages = [];
-messages.push( iothub.Message("this is an event") );
-messages.push( iothub.Message({ "id": 1, "text": "Hello, world." }) );
+messages.push(iothub.Message("This is an event"));
+messages.push(iothub.Message({ "id": 1, "text": "Hello, world." }));
 client.sendEventBatch(messages);
 ```
 
 ### Callbacks
 
-The callbacks will be called with the following parameters:
+The above callbacks will be called with the following parameters:
 
-|   Field     |  Value                                                                                              |
-|-------------|-----------------------------------------------------------------------------------------------------|
-|   err       |  If there we no error: null                                                                         |
-|             |  If there was an error: a table containing the http *response* object and an error *message* string |
-|   response  |  Empty                                                                                              |
-
+| Parameter | Value |
+| --- | --- |
+| *err* | This will be `null` if there was no error. Otherwise it will be a table containing two keys: *response*, the original **httpresponse** object, and *message*, an error report string |
+| *response* | Empty |
 
 ### Example
 
-This example code will receive an event table from the device and transmit it as an event to Azure IoT Hub.
+This example code will receive an event table from the device and transmit it as an event to the Azure IoT Hub.
 
 ```squirrel
 #require "iothub.agent.nut:1.0.0"
@@ -197,22 +211,14 @@ device.on("event", function(event) {
     event.agentid <- agentid;
     local message = iothub.Message(event);
     client.sendEvent(message, function(err, res) {
-        if (err) server.log("sendEvent error: " + err.message + " (" + err.response.statuscode + ")");
-        else server.log("sendEvent successful");
+        if (err) {
+             server.log("sendEvent error: " + err.message + " (" + err.response.statuscode + ")");
+        } else {
+            server.log("sendEvent successful");
+        }
     });
 })
 ```
-
-## Authentication
-
-The Azure Portal provides the Connection String. To use the Device Registry you will require owner-level permissions. To use the Client you need device-level permissions. The best way to get device-level permissions is from the Device Registry SDK.
-
-0. Open the Azure Portal (https://portal.azure.com)
-0. Select or create your Azure IoT Hub resource
-0. Click on Settings 
-0. Click on shared access policies
-0. Select a policy which has all permissions (such as the *iothubowner*) or create a new policy then click on it
-0. Copy the *Connection string--primary key* to the clipboard and paste it in the agent code for this constructor.
 
 ## Examples
 
