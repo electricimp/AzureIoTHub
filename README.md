@@ -77,7 +77,7 @@ Callback functions passed into the above methods should be defined with the foll
 This example code will register the device (using the agent’s ID, which could be replaced with the device’s ID) or create a new one. It will then instantiate the Client class for later use.
 
 ```squirrel
-#require "iothub.agent.nut:1.1.0"
+#require "azureiothub.class.nut:1.1.0"
 
 const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 
@@ -195,7 +195,7 @@ The above callbacks will be called with the following parameters:
 This example code will receive an event table from the device and transmit it as an event to the Azure IoT Hub.
 
 ```squirrel
-#require "iothub.agent.nut:1.1.0"
+#require "azureiothub.class.nut:1.1.0"
 
 client <- iothub.Client.fromConnectionString(DEVICE_CONNECT_STRING);
 agentid <- split(http.agenturl(), "/").pop();
