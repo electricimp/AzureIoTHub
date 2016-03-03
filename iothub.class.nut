@@ -705,7 +705,7 @@ class iothub.Registry {
             done = deviceId;
             deviceId = null;
         }
-        if (typeof deviceInfo != "string") {
+        if (typeof deviceId != "string") {
             deviceId = split(http.agenturl(), "/").pop();
         }
 
