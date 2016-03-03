@@ -401,16 +401,16 @@ class iothub.Message {
         return _data;
     }
     
+    function getProperties() {
+        return _properties;
+    }
+    
     function setProperty(key, value) {
         _properties[key] <- value;
     }
     
     function getProperty(key) {
         return (key in _properties) ? _properties[key] : null;
-    }
-    
-    function getProperties() {
-        return _properties;
     }
     
     function unsetProperty(key) {
