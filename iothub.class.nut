@@ -237,9 +237,6 @@ class iothub.HTTP {
                     receive(done);
                 }.bindenv(this));
             } else {
-                // Parse out the response
-                local message = response.body;
-                
                 // Something there, handle it
                 if (done) done(null, iothub.Message(response.body, response.headers));
                 
