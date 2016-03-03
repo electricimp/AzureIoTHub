@@ -16,7 +16,7 @@
 //------------------------------------------------------------------------------
 class iothub {
     
-    static version = [1,0,0];
+    static version = [1,1,0];
     
 }
 
@@ -169,6 +169,10 @@ class iothub.HTTP {
 
     _config = null;
     
+    static FEEDBACK_ACTION_ABANDON = "abandon";
+    static FEEDBACK_ACTION_REJECT = "reject";
+    static FEEDBACK_ACTION_COMPLETE = "complete";
+    
     constructor(config) {
         _config = config;
     }
@@ -223,10 +227,7 @@ class iothub.HTTP {
 
     }
     
-    function receive(done = null) {
-        
-        // NOTE: This method has not been successfully tested. It should be 
-        //       completed in a future version.
+    function receive(done) {
         
         refreshSignature();
         local path = iothub.Endpoint.messagePath(_config.deviceId);
@@ -245,8 +246,11 @@ class iothub.HTTP {
                     receive(done);
                 }.bindenv(this));
             } else {
+                // Parse out the response
+                local message = response.body;
+                
                 // Something there, handle it
-                handleResponse(done)(response);
+                if (done) done(null, iothub.Message(response.body, response.headers));
                 
                 // Restart polling immediately
                 receive(done);
@@ -257,6 +261,34 @@ class iothub.HTTP {
         return this;
     }
     
+    function sendFeedback(action, message, done = null) {
+        
+        refreshSignature();
+        local path = iothub.Endpoint.feedbackPath(_config.deviceId, message.getProperty("lockToken"));
+        local httpHeaders = {
+            "Authorization": _config.sharedAccessSignature,
+            "iothub-to": path,
+            "If-Match": message.getProperty("lockToken")
+        };
+        local url = "https://" + _config.host + path;
+        local method;
+        if (action == FEEDBACK_ACTION_ABANDON) { 
+            url += "/abandon" + iothub.Endpoint.versionQueryString();
+            method = "POST";
+        } else if (action == FEEDBACK_ACTION_REJECT) { 
+            url += iothub.Endpoint.versionQueryString() + "&reject";
+            method = "DELETE";
+        } else {
+            url += iothub.Endpoint.versionQueryString();
+            method = "DELETE";
+        }
+
+        local request = http.request(method, url, httpHeaders, "");
+        request.sendasync(handleResponse(done));
+        return this;
+
+    }
+
     function constructBatchBody(messages) {
         
         local body = [];
@@ -272,10 +304,10 @@ class iothub.HTTP {
     }
     
     function handleResponse(done) {
+
         return function(response) {
-            if (!done) return;
             if (response.statuscode >= 200 && response.statuscode < 300) {
-                done(null, response);
+                if (done) done(null, response);
             } else {
                 local message = null;
                 try {
@@ -284,7 +316,7 @@ class iothub.HTTP {
                 } catch (e) {
                     message = "Error " + response.statuscode;
                 }
-                done({ "response": response, "message": message}, null);
+                if (done) done({ "response": response, "message": message}, null);
             }
         }.bindenv(this);
        
@@ -345,25 +377,55 @@ class iothub.Message {
     _data = null;
     _properties = null;
     
-    constructor(data) {
+    messageId = null;
+    to = null;
+    expiryTimeUtc = null;
+    correlationId = null;
+    
+    constructor(data, headers={}) {
         if (typeof data == "string") {
             _data = data;
         } else {
             _data = http.jsonencode(data);
         }
+        
         _properties = {};
+        foreach (k,v in headers) {
+            switch (k.tolower()) {
+                case "iothub-messageid":
+                    messageId = v;
+                    break;
+                case "iothub-to":
+                    to = v;
+                    break;
+                case "iothub-expiry":
+                    expiryTimeUtc = v;
+                    break;
+                case "iothub-correlationid":
+                    correlationId = v;
+                    break;
+                case "etag":
+                    _properties["lockToken"] <- http.jsondecode(v);
+                    break;
+            }
+        }
+        
     }
     
     function getData() {
         return _data;
     }
     
-    function getProperties() {
-        return _properties;
-    }
-    
     function setProperty(key, value) {
         _properties[key] <- value;
+    }
+    
+    function getProperty(key) {
+        return (key in _properties) ? _properties[key] : null;
+    }
+    
+    function getProperties() {
+        return _properties;
     }
     
     function unsetProperty(key) {
@@ -413,6 +475,11 @@ class iothub.Client {
     
     function receive(done) {
         _transport.receive(done);
+        return this;
+    }
+
+    function sendFeedback(action, message, done = null) {
+        _transport.sendFeedback(action, message, done);
         return this;
     }
 
@@ -521,7 +588,7 @@ class iothub.RegistryHTTP {
 
         return function(response) {
             if (response.statuscode >= 200 && response.statuscode < 300) {
-                done(null, response.body);
+                if (done) done(null, response.body);
             } else {
                 local message = null;
                 try {
@@ -530,7 +597,7 @@ class iothub.RegistryHTTP {
                 } catch (e) {
                     message = "Error " + response.statuscode;
                 }
-                done({ "response": response, "message": message}, null);
+                if (done) done({ "response": response, "message": message}, null);
             }
         }.bindenv(this);
        
@@ -658,7 +725,7 @@ class iothub.Registry {
             done = deviceId;
             deviceId = null;
         }
-        if (typeof deviceId != "string") {
+        if (typeof deviceInfo != "string") {
             deviceId = split(http.agenturl(), "/").pop();
         }
 
