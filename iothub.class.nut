@@ -12,14 +12,12 @@
  *
  */
 
-
 //------------------------------------------------------------------------------
 class iothub {
     
     static version = [1,1,0];
     
 }
-
 
 //------------------------------------------------------------------------------
 class iothub.ConnectionString {
@@ -83,7 +81,6 @@ class iothub.Endpoint {
     }    
 }
 
-
 //------------------------------------------------------------------------------
 class iothub.Authorization {
 
@@ -107,9 +104,7 @@ class iothub.Authorization {
         local hmac = http.hash.hmacsha256(stringToSign, decodedPassword);
         return http.base64encode(hmac);
     }
-    
 }
-
 
 //------------------------------------------------------------------------------
 class iothub.SharedAccessSignature {
@@ -160,9 +155,7 @@ class iothub.SharedAccessSignature {
         
         return sas;
     }
-    
 }
-
 
 //------------------------------------------------------------------------------
 class iothub.HTTP {
@@ -207,7 +200,6 @@ class iothub.HTTP {
         local request = http.post(url, httpHeaders, message.getData());
         request.sendasync(handleResponse(done));
         return this;
-
     }
 
     function sendEventBatch(messages, done = null) {
@@ -224,7 +216,6 @@ class iothub.HTTP {
         local request = http.post(url, httpHeaders, constructBatchBody(messages));
         request.sendasync(handleResponse(done));
         return this;
-
     }
     
     function receive(done) {
@@ -321,9 +312,7 @@ class iothub.HTTP {
         }.bindenv(this);
        
     }
-    
 }
-
 
 //------------------------------------------------------------------------------
 class iothub.Device {
@@ -369,7 +358,6 @@ class iothub.Device {
         return "Device";
     }
 }
-
 
 //------------------------------------------------------------------------------
 class iothub.Message {
@@ -431,9 +419,7 @@ class iothub.Message {
     function unsetProperty(key) {
         if (key in _properties) delete _properties[key];
     }
-    
 }
-
 
 //------------------------------------------------------------------------------
 class iothub.Client {
@@ -484,7 +470,6 @@ class iothub.Client {
     }
 
 }
-
 
 //------------------------------------------------------------------------------
 class iothub.RegistryHTTP {
@@ -538,7 +523,6 @@ class iothub.RegistryHTTP {
         local request = http.put(url, httpHeaders, http.jsonencode(deviceInfo));
         request.sendasync(handleResponse(done));
         return this;
-        
     }
     
     function getDevice(path, done) {
@@ -552,7 +536,6 @@ class iothub.RegistryHTTP {
         local request = http.get(url, httpHeaders);
         request.sendasync(handleResponse(done));
         return this;
-        
     }
     
     function listDevices(path, done) {
@@ -566,7 +549,6 @@ class iothub.RegistryHTTP {
         local request = http.get(url, httpHeaders);
         request.sendasync(handleResponse(done));
         return this;
-
     }
     
     function deleteDevice(path, done) {
@@ -581,7 +563,6 @@ class iothub.RegistryHTTP {
         local request = http.httpdelete(url, httpHeaders);
         request.sendasync(handleResponse(done));
         return this;
-      
     }
 
     function handleResponse(done) {
@@ -600,11 +581,8 @@ class iothub.RegistryHTTP {
                 if (done) done({ "response": response, "message": message}, null);
             }
         }.bindenv(this);
-       
     }
-    
 }
-
 
 //------------------------------------------------------------------------------
 class iothub.Registry {
@@ -698,8 +676,10 @@ class iothub.Registry {
         return this;
     }
 
-    function list(done) {
+    function list(done = null) {
 
+        if (done == null) return null;
+        
         local path = iothub.Endpoint.devicePath("") + iothub.Endpoint.versionQueryString();
         _transport.listDevices(path, function (err, body) {
 
@@ -733,7 +713,5 @@ class iothub.Registry {
         _transport.deleteDevice(path, done);
 
         return this;
-        
     }
-
 }
