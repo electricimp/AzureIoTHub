@@ -120,5 +120,18 @@ class ClientTestCase extends ImpTestCase {
         this.runCommand("./node_modules/.bin/iothub-explorer logout; echo 'Logged out'");
     }
 
+    /**
+     * Send feedback
+     * Uses this._receivedMessage set from test2Receive()
+     */
+    function test3SendFeedback() {
+        this._client.sendFeedback(iothub.HTTP.FEEDBACK_ACTION_COMPLETE, this._receivedMessage, function(err, res) {
+            if (err) {
+                reject("sendFeedback error: " + err.message + " (" + err.response.statuscode + ")");
+            } else {
+                resolve("sendFeedback successful");
+            }
+        }.bindenv(this));
+    }
 
 }
