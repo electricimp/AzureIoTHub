@@ -29,7 +29,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Azure IoT Hub Client 1.1.0 
+# Azure IoT Hub Client 1.1.0
 
 The Azure IoT Hub client is an Electric Imp agent-side library for interfacing to the Azure IoT Hub version “2015-08-15-preview”. It currently only supports the device registry (create, update, delete, get, list) and sending device-to-cloud events. Receiving events is currently not functioning.
 
@@ -41,12 +41,12 @@ This library is ported from and designed to be as close as possible to the [Node
 
 The Azure Portal provides the Connection String, passed into the following constructor’s *connectionString* parameter. To use the Device Registry you will require owner-level permissions. To use the Client you need device-level permissions. The best way to get device-level permissions is from the Device Registry SDK.
 
-0. Open the [Azure Portal](https://portal.azure.com/)
-0. Select or create your Azure IoT Hub resource
-0. Click on ‘Settings’ 
-0. Click on ‘Shared Access Policies’
-0. Select a policy which has all permissions (such as the *iothubowner*) or create a new policy then click on it
-0. Copy the *Connection string--primary key* to the clipboard and paste it into the constructor.
+1. Open the [Azure Portal](https://portal.azure.com/)
+1. Select or create your Azure IoT Hub resource
+1. Click on ‘Settings’
+1. Click on ‘Shared Access Policies’
+1. Select a policy which has all permissions (such as the *iothubowner*) or create a new policy then click on it
+1. Copy the *Connection string--primary key* to the clipboard and paste it into the constructor.
 
 ## iothub.Registry Class Usage
 
@@ -54,7 +54,7 @@ The Azure Portal provides the Connection String, passed into the following const
 
 This contructs a Registry object which exposes the Device Registry functions.
 
-The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) *(see above)*. 
+The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) *(see above)*.
 
 ```squirrel
 #require "iothub.classs.nut:1.1.0"
@@ -76,7 +76,7 @@ You may also provide a function reference via the *callback* parameter *(see bel
 
 This method updates an existing device identity in the IoT Hub. The *deviceInfo* field is an iothub.Device object or table containing the keys specified [here](https://msdn.microsoft.com/en-us/library/mt548488.aspx). The table’s *deviceId* and *statusReason* values cannot be updated via this method.
 
-You may also provide a function reference via the *callback* parameter *(see below)*. This function will be called when the IoT Hub responds. If you don’t provide a callback, *update()* will block until completion. 
+You may also provide a function reference via the *callback* parameter *(see below)*. This function will be called when the IoT Hub responds. If you don’t provide a callback, *update()* will block until completion.
 
 ### remove(*[deviceId][, callback]*)
 
@@ -146,7 +146,7 @@ registry.get(function(err, deviceInfo) {
 
 This contructs a (HTTP) Client object which exposes the event functions.
 
-The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) *(see above)*. 
+The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) *(see above)*.
 
 ```squirrel
 #require "iothub.classs.nut:1.1.0"
