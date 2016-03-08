@@ -9,10 +9,12 @@ const ACCESS_KEY_NAME = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME}"
 class ClientTestCase extends ImpTestCase {
 
     _client = null;
-    _connectionString = "";
-    _deviceId = "";
+    _deviceId = ""; // conneceted device id
+    _registry = null; // registry instance
+    _receivedMessage = null; // message received
 
     function setUp() {
+        this._deviceId = "device" + math.rand() + math.rand();
         return this.initClient();
     }
 
@@ -22,45 +24,27 @@ class ClientTestCase extends ImpTestCase {
     function initClient() {
         return Promise(function (resolve, reject) {
 
-            this._connectionString =
+            local connectionString =
                 "HostName=" + HUB_NAME + ".azure-devices.net;" +
                 "SharedAccessKeyName=" + ACCESS_KEY_NAME + ";" +
                 "SharedAccessKey=" + ACCESS_KEY;
 
-            local registry = iothub.Registry.fromConnectionString(this._connectionString);
-            local hostname = iothub.ConnectionString.Parse(this._connectionString).HostName;
+            this._registry = iothub.Registry.fromConnectionString(connectionString);
+            local hostname = iothub.ConnectionString.Parse(connectionString).HostName;
 
-            registry.get(function (err, deviceInfo) {
-                if (err) {
-                    if (err.response.statuscode == 404) {
-                        registry.create(function(err, deviceInfo) {
-                            if (err && err.response.statuscode == 429) {
-                                // todo add 10s delay
-                                resolve(this.setUp());
-                            } else if (err) {
-                                reject("createDevice error: " + err.message + " (" + err.response.statuscode + ")");
-                            } else if (deviceInfo) {
-                                this._client = iothub.Client.fromConnectionString(deviceInfo.connectionString(hostname));
-                                this._deviceId = deviceInfo.getBody().deviceId;
-                                resolve("Created " + deviceInfo.getBody().deviceId + " on " + hostname);
-                            } else {
-                                reject("createDevice error unknown")
-                            }
-                        }.bindenv(this));
-                    } else if (err.response.statuscode == 429) {
-                        // todo add 10s delay
-                        resolve(this.setUp());
-                    } else {
-                        reject("getDevice error: " + err.message + " (" + err.response.statuscode + ")");
-                    }
+            this._registry.create({"deviceId" : this._deviceId}, function(err, deviceInfo) {
+                if (err && err.response.statuscode == 429) {
+                    resolve(this.initClient());
+                } else if (err) {
+                    reject("createDevice error: " + err.message + " (" + err.response.statuscode + ")");
                 } else if (deviceInfo) {
                     this._client = iothub.Client.fromConnectionString(deviceInfo.connectionString(hostname));
-                    this._deviceId = deviceInfo.getBody().deviceId;
-                    resolve("Connected as " + deviceInfo.getBody().deviceId + " to " + hostname);
+                    resolve("Created " + deviceInfo.getBody().deviceId + " on " + hostname);
                 } else {
-                    reject("getDevice error unknown")
+                    reject("createDevice error unknown")
                 }
             }.bindenv(this));
+
         }.bindenv(this));
     }
 
@@ -94,6 +78,7 @@ class ClientTestCase extends ImpTestCase {
             this._client.receive(function(err, message) {
                 try {
                     if (err) throw err;
+                    this._receivedMessage = message;
                     this.assertEqual(testMessage, message.getData() + "");
                     resolve("Received message: " + message.getData());
                 } catch (e) {
@@ -134,4 +119,22 @@ class ClientTestCase extends ImpTestCase {
         }.bindenv(this));
     }
 
+    /**
+     * Removes test device
+     */
+    function tearDown() {
+        return Promise(function (resolve, reject) {
+            this._registry.remove(this._deviceId, function(err, deviceInfo) {
+                if (err && err.response.statuscode == 429) {
+                    resolve(this.tearDown());
+                } else if (err) {
+                    reject("remove() error: " + err.message + " (" + err.response.statuscode + ")");
+                } else if (deviceInfo) {
+                    resolve("Removed " + this._deviceId);
+                } else {
+                    reject("remove() error unknown")
+                }
+            }.bindenv(this));
+        }.bindenv(this));
+    }
 }
