@@ -1,3 +1,34 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Azure IoT Hub Client 1.1.0](#azure-iot-hub-client-110)
+  - [Authentication](#authentication)
+  - [iothub.Registry Class Usage](#iothubregistry-class-usage)
+    - [Constructor: iothub.Registry.fromConnectionString(*connectionString*)](#constructor-iothubregistryfromconnectionstringconnectionstring)
+  - [iothub.Registry Class Methods](#iothubregistry-class-methods)
+    - [create(*[deviceInfo][, callback]*)](#createdeviceinfo-callback)
+    - [update(*deviceInfo[, callback]*)](#updatedeviceinfo-callback)
+    - [remove(*[deviceId][, callback]*)](#removedeviceid-callback)
+    - [get(*[deviceId][, callback]*)](#getdeviceid-callback)
+    - [list(*callback*)](#listcallback)
+    - [Callbacks](#callbacks)
+    - [Example](#example)
+  - [iothub.Client Class Usage](#iothubclient-class-usage)
+    - [Constructor: iothub.Client.fromConnectionString(*connectionString*)](#constructor-iothubclientfromconnectionstringconnectionstring)
+  - [iothub.Client Class Methods](#iothubclient-class-methods)
+    - [sendEvent(*message[, callback]*)](#sendeventmessage-callback)
+    - [sendEventBatch(*messages[, callback]*)](#sendeventbatchmessages-callback)
+    - [function receive(*callback*)](#function-receivecallback)
+    - [function sendFeedback(*action, messages, [callback]*)](#function-sendfeedbackaction-messages-callback)
+    - [Callbacks](#callbacks-1)
+    - [Example](#example-1)
+  - [Examples](#examples)
+  - [Development](#development)
+  - [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Azure IoT Hub Client 1.1.0 
 
 The Azure IoT Hub client is an Electric Imp agent-side library for interfacing to the Azure IoT Hub version “2015-08-15-preview”. It currently only supports the device registry (create, update, delete, get, list) and sending device-to-cloud events. Receiving events is currently not functioning.
