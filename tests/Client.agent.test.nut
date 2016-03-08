@@ -110,12 +110,14 @@ class ClientTestCase extends ImpTestCase {
      * Uses this._receivedMessage set from test2Receive()
      */
     function test3SendFeedback() {
-        this._client.sendFeedback(iothub.HTTP.FEEDBACK_ACTION_COMPLETE, this._receivedMessage, function(err, res) {
-            if (err) {
-                reject("sendFeedback error: " + err.message + " (" + err.response.statuscode + ")");
-            } else {
-                resolve("sendFeedback successful");
-            }
+        return Promise(function (resolve, reject) {
+            this._client.sendFeedback(iothub.HTTP.FEEDBACK_ACTION_COMPLETE, this._receivedMessage, function(err, res) {
+                if (err) {
+                    reject("sendFeedback error: " + err.message + " (" + err.response.statuscode + ")");
+                } else {
+                    resolve("sendFeedback successful");
+                }
+            }.bindenv(this));
         }.bindenv(this));
     }
 
