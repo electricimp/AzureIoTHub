@@ -34,7 +34,7 @@ class ClientTestCase extends ImpTestCase {
 
             this._registry.create({"deviceId" : this._deviceId}, function(err, deviceInfo) {
                 if (err && err.response.statuscode == 429) {
-                    resolve(this.initClient());
+                    imp.wakeup(10, function() { resolve(this.initClient()) }.bindenv(this));
                 } else if (err) {
                     reject("createDevice error: " + err.message + " (" + err.response.statuscode + ")");
                 } else if (deviceInfo) {
@@ -126,7 +126,7 @@ class ClientTestCase extends ImpTestCase {
         return Promise(function (resolve, reject) {
             this._registry.remove(this._deviceId, function(err, deviceInfo) {
                 if (err && err.response.statuscode == 429) {
-                    resolve(this.tearDown());
+                    imp.wakeup(10, function() { resolve(this.tearDown()) }.bindenv(this));
                 } else if (err) {
                     reject("remove() error: " + err.message + " (" + err.response.statuscode + ")");
                 } else if (deviceInfo) {
