@@ -98,4 +98,13 @@ bootstrap(function(client) {
 
     })
 
+    // Start receiving messages
+    client.receive(function(err, message) {
+        server.log(format("received an event: %s", message.getData()));
+        client.sendFeedback(iothub.HTTP.FEEDBACK_ACTION_COMPLETE, message, function(err, res) {
+            if (err) server.log("sendFeedback error: " + err.message + " (" + err.response.statuscode + ")");
+            else server.log("sendFeedback successful");
+        }.bindenv(this));
+    }.bindenv(this));
+
 }.bindenv(this));
