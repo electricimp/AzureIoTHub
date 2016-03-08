@@ -217,6 +217,11 @@ device.on("event", function(event) {
 
 There are further examples in the [GitHub repository](https://github.com/electricimp/AzureIoTHub/tree/v1.0.0).
 
+## Development
+
+This repository uses [git-flow](http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/).
+Please make your pull requests to the __develop__ branch.
+
 ## License
 
 This library is licensed under the [MIT License](./LICENSE.txt).
