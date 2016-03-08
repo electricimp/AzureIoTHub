@@ -23,9 +23,15 @@
     - [function sendFeedback(*action, messages, [callback]*)](#function-sendfeedbackaction-messages-callback)
     - [Callbacks](#callbacks-1)
     - [Example](#example-1)
+  - [Testing](#testing)
+    - [TL;DR](#tldr)
+    - [Running Tests](#running-tests)
+    - [Prerequisites](#prerequisites)
+      - [Commands](#commands)
+      - [Environment Variables](#environment-variables)
   - [Examples](#examples)
   - [Development](#development)
-  - [License](#license)
+- [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -244,18 +250,25 @@ device.on("event", function(event) {
 })
 ```
 
-## Examples
-
-There are further examples in the [GitHub repository](https://github.com/electricimp/AzureIoTHub/tree/v1.0.0).
-
-## Development
-
-This repository uses [git-flow](http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/).
-Please make your pull requests to the __develop__ branch.
-
-## License
+## Testing
 
 Repository contains [impUnit](https://github.com/electricimp/impUnit) tests and a configuration for [impTest](https://github.com/electricimp/impTest) tool.
+
+### TL;DR
+
+```bash
+npm i
+
+nano .imptest # edit device/model
+
+IMP_BUILD_API_KEY=<build_api_key> \
+AZURE_IOTHUB_HUB_NAME=<hub_name> \
+AZURE_IOTHUB_SHARED_ACCESS_KEY=<key> \
+AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME=<key_name> \
+imptest test
+```
+
+### Running Tests
 
 Tests can be launched with:
 
@@ -266,19 +279,36 @@ imptest test
 By default configuration for the testing is read from [.imptest](https://github.com/electricimp/impTest/blob/develop/docs/imptest-spec.md).
 
 To run test with your settings (for example while you are developing), create your copy of **.imptest** file and name it something like **.imptest.local**, then run tests with:
- 
+
  ```bash
  imptest test -c .imptest.local
  ```
 
-Tests do not require any specific hardware.
+Tests will run with any imp.
 
-### Environment Varialbles
+### Prerequisites
+
+#### Commands
+
+Run `npm install` to install:
+
+- Local copy of `iothub-explorer` command line tool
+
+#### Environment Variables
 
 Test cases expect the following environment variables:
 - __AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME__ – shared access key name
 - __AZURE_IOTHUB_SHARED_ACCESS_KEY__ – shared access key
 - __AZURE_IOTHUB_HUB_NAME__ – IoT hub name
+
+## Examples
+
+There are further examples in the [GitHub repository](https://github.com/electricimp/AzureIoTHub/tree/v1.0.0).
+
+## Development
+
+This repository uses [git-flow](http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/).
+Please make your pull requests to the __develop__ branch.
 
 # License
 
