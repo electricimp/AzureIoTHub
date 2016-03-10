@@ -37,7 +37,7 @@
 
 <br />
 
-[![Build Status](https://travis-ci.org/electricimp/impTest.svg?branch=develop)](https://travis-ci.org/electricimp/impTest)
+[![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=develop)](https://travis-ci.org/electricimp/AzureIoTHub)
 
 # Azure IoT Hub Client 1.1.0
 
