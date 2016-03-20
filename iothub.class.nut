@@ -193,6 +193,12 @@ class iothub.HTTP {
             "Authorization": _config.sharedAccessSignature,
             "iothub-to": path
         };
+        if(message.getMessageId() != null) {
+            httpHeaders["iothub-messageId"] <- message.getMessageId();
+        }
+        if(message.getCorrelationId() != null) {
+            httpHeaders["iothub-correlationId"] <- message.getCorrelationId();
+        }
         foreach (k,v in message.getProperties()) {
             httpHeaders["IoTHub-app-" + k] <- v;
         }
@@ -415,6 +421,12 @@ class iothub.Message {
     
     function unsetProperty(key) {
         if (key in _properties) delete _properties[key];
+    }
+    function getMessageId() {
+	return messageId;
+    }
+    function getCorrelationId() {
+	return correlationId;
     }
 }
 
