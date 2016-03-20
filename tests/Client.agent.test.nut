@@ -122,6 +122,65 @@ class ClientTestCase extends ImpTestCase {
     }
 
     /**
+     * Test client::sendEvent() with Message Id
+     */
+    function test4SendEventwithMessageId() {
+        return Promise(function (resolve, reject) {
+            local message = { somevalue = "123" };
+            local headers = {
+              "IoTHub-MessageId": "id_" + math.rand()
+            }
+            this._client.sendEvent(iothub.Message(message,headers), function(err, res) {
+                if (err) {
+                    reject("sendEvent error: " + err.message + " (" + err.response.statuscode + ")");
+                } else {
+                    resolve("sendEvent successful");
+                }
+            });
+        }.bindenv(this));
+    }
+
+    /**
+     * Test client::sendEvent() with Correlation Id
+     */
+    function test5SendEventwithCorrelationId() {
+        return Promise(function (resolve, reject) {
+            local message = { somevalue = "123" };
+            local headers = {
+              "IoTHub-CorrelationId": "correlationid_" + math.rand()
+            }
+            this._client.sendEvent(iothub.Message(message,headers), function(err, res) {
+                if (err) {
+                    reject("sendEvent error: " + err.message + " (" + err.response.statuscode + ")");
+                } else {
+                    resolve("sendEvent successful");
+                }
+            });
+        }.bindenv(this));
+    }
+
+    /**
+     * Tests client::sendEvent() with message Id and correlation Id
+     */
+    function test6SendEventwithMessageIdCorrelationId() {
+        return Promise(function (resolve, reject) {
+            // gen unique test message
+            local message = { somevalue = "123" };
+            local headers = {
+              "IoTHub-MessageId": "messageid_" + math.rand(),
+              "IoTHub-CorrelationId": "correlationid_" + math.rand()
+            };
+            this._client.sendEvent(iothub.Message(message,headers), function(err, res) {
+                if (err) {
+                    reject("sendEvent error: " + err.message + " (" + err.response.statuscode + ")");
+                } else {
+                    resolve("sendEvent successful");
+                }
+            });
+        }.bindenv(this));
+    }
+
+    /**
      * Removes test device
      */
     function tearDown() {
