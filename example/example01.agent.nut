@@ -1,4 +1,4 @@
-#require "azureiothub.class.nut:1.1.0"
+#require "azureiothub.class.nut:1.2.0"
 
 // *****************************************************************************
 const CONNECT_STRING = "HostName=<hubid>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<keyhash>";
