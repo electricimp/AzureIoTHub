@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
-- [Azure IoT Hub Client 1.1.0](#azure-iot-hub-client-110)
+- [Azure IoT Hub Client 1.2.0](#azure-iot-hub-client-110)
   - [Authentication](#authentication)
   - [iothub.Registry Class Usage](#iothubregistry-class-usage)
     - [Constructor: iothub.Registry.fromConnectionString(*connectionString*)](#constructor-iothubregistryfromconnectionstringconnectionstring)
@@ -45,7 +45,7 @@ The Azure IoT Hub client is an Electric Imp agent-side library for interfacing t
 
 This library is ported from and designed to be as close as possible to the [NodeJS SDK](https://github.com/Azure/azure-iot-sdks/blob/master/node/). Refer to the [NodeJS SDK](https://github.com/Azure/azure-iot-sdks/blob/master/node/) for further information.
 
-**To add this library to your project, add** `#require "azureiothub.class.nut:1.1.0"` **to the top of your agent code.**
+**To add this library to your project, add** `#require "azureiothub.class.nut:1.2.0"` **to the top of your agent code.**
 
 ## Authentication
 
@@ -67,7 +67,7 @@ This contructs a Registry object which exposes the Device Registry functions.
 The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) *(see above)*.
 
 ```squirrel
-#require "azureiothub.class.nut:1.1.0"
+#require "azureiothub.class.nut:1.2.0"
 
 // Instantiate a client.
 const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
@@ -118,7 +118,7 @@ Callback functions passed into the above methods should be defined with the foll
 This example code will register the device (using the agent’s ID, which could be replaced with the device’s ID) or create a new one. It will then instantiate the Client class for later use.
 
 ```squirrel
-#require "azureiothub.class."nut:1.1.0"
+#require "azureiothub.class.nut:1.2.0"
 
 const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 
@@ -159,7 +159,7 @@ This contructs a (HTTP) Client object which exposes the event functions.
 The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) *(see above)*.
 
 ```squirrel
-#require "azureiothub.class.nut:1.1.0"
+#require "azureiothub.class.nut:1.2.0"
 
 // Instantiate a client.
 client <- iothub.Client.fromConnectionString(DEVICE_CONNECT_STRING);
@@ -236,7 +236,7 @@ The above callbacks will be called with the following parameters:
 This example code will receive an event table from the device and transmit it as an event to the Azure IoT Hub.
 
 ```squirrel
-#require "azureiothub.class.nut:1.1.0"
+#require "azureiothub.class.nut:1.2.0"
 
 client <- iothub.Client.fromConnectionString(DEVICE_CONNECT_STRING);
 agentid <- split(http.agenturl(), "/").pop();
