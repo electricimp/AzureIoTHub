@@ -3,7 +3,7 @@
 // http://opensource.org/licenses/MIT
 
 /* Notes
- * 
+ *
  * This class implements some of the device-side functionality of the Azure IoT Hub.
  *
  * Code ported from: https://github.com/Azure/azure-iot-sdks/blob/master/node/
@@ -14,23 +14,23 @@
 
 //------------------------------------------------------------------------------
 class iothub {
-    
+
     static version = [1,1,0];
-    
+
 }
 
 //------------------------------------------------------------------------------
 class iothub.ConnectionString {
-    
+
     static function Parse(connectionString) {
-        
+
         local cn = {};
-        
+
         // Clean up the string first
         if (typeof connectionString != "string") return cn;
         connectionString = strip(connectionString);
         if (connectionString.len() == 0) return cn;
-        
+
         // Locate each = and ; in the connection string
         local pairs = split(connectionString, ";")
         foreach (pair in pairs) {
@@ -42,7 +42,7 @@ class iothub.ConnectionString {
                 if (kv[0] == "SharedAccessKey") {
                     cn[kv[0]] += "=";
                 }
-            } 
+            }
         }
 
         // Make sure we have these fields so we don't have to check for them later
@@ -59,26 +59,26 @@ class iothub.ConnectionString {
 
 //------------------------------------------------------------------------------
 class iothub.Endpoint {
-    
+
     static function devicePath(id) {
         return "/devices/" + id;
     }
-    
+
     static function eventPath(id) {
         return devicePath(id) + "/messages/events";
     }
-    
+
     static function messagePath(id) {
         return devicePath(id) + "/messages/devicebound";
     }
-    
+
     static function feedbackPath(id, lockToken) {
         return messagePath(id) + "/" + lockToken;
     }
-    
+
     static function versionQueryString() {
         return "?api-version=2015-08-15-preview";
-    }    
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -88,17 +88,17 @@ class iothub.Authorization {
     static function anHourFromNow() {
         return time() + 3600;
     }
-    
+
     static function encodeUriComponentStrict(str) {
-        // NOTE: This may not encode enough characters. If it is a problem, check 
+        // NOTE: This may not encode enough characters. If it is a problem, check
         //       it is encoding: !, ", *, ( and ).
         return http.urlencode({s=str}).slice(2);
     }
-    
+
     static function stringToSign(resourceUri, expiry) {
         return resourceUri + "\n" + expiry;
     }
-    
+
     static function hmacHash(password, stringToSign) {
         local decodedPassword = http.base64decode(password);
         local hmac = http.hash.hmacsha256(stringToSign, decodedPassword);
@@ -113,34 +113,34 @@ class iothub.SharedAccessSignature {
     sig = null;
     skn = null;
     se = null;
-    
+
     static function create(resourceUri, keyName, key, expiry) {
-        
+
         // The create method shall create a new instance of SharedAccessSignature with properties: sr, sig, se, and optionally skn.
         local sas = iothub.SharedAccessSignature();
-        
+
         // The sr property shall have the value of resourceUri.
         sas.sr = resourceUri;
-        
+
         // <signature> shall be an HMAC-SHA256 hash of the value <stringToSign>, which is then base64-encoded.
         // <stringToSign> shall be a concatenation of resourceUri + "\n" + expiry.
         local hash = iothub.Authorization.hmacHash(key, iothub.Authorization.stringToSign(resourceUri, expiry));
-        
+
         // The sig property shall be the result of URL-encoding the value <signature>.
         sas.sig = iothub.Authorization.encodeUriComponentStrict(hash);
-        
+
         // If the keyName argument to the create method was falsy, skn shall not be defined.
         // <urlEncodedKeyName> shall be the URL-encoded value of keyName.
         // The skn property shall be the value <urlEncodedKeyName>.
         if (keyName) sas.skn = iothub.Authorization.encodeUriComponentStrict(keyName);
-        
+
         // The se property shall have the value of expiry.
         sas.se = expiry;
-        
+
         return sas;
-    }    
-    
-    
+    }
+
+
     function toString() {
         // The toString method shall return a shared-access signature token of the form:
         // SharedAccessSignature sr=<resourceUri>&sig=<urlEncodedSignature>&se=<expiry>&skn=<urlEncodedKeyName>
@@ -152,7 +152,7 @@ class iothub.SharedAccessSignature {
                 sas += key + "=" + this[key];
             }
         }
-        
+
         return sas;
     }
 }
@@ -161,15 +161,15 @@ class iothub.SharedAccessSignature {
 class iothub.HTTP {
 
     _config = null;
-    
+
     static FEEDBACK_ACTION_ABANDON = "abandon";
     static FEEDBACK_ACTION_REJECT = "reject";
     static FEEDBACK_ACTION_COMPLETE = "complete";
-    
+
     constructor(config) {
         _config = config;
     }
-    
+
     function refreshSignature() {
 
         if ("sharedAccessExpiry" in _config && "connectionString" in _config) {
@@ -183,9 +183,9 @@ class iothub.HTTP {
             }
         }
     }
-    
+
     function sendEvent(message, done = null) {
-        
+
         refreshSignature();
         local path = iothub.Endpoint.eventPath(_config.deviceId);
         local url = "https://" + _config.host + path + iothub.Endpoint.versionQueryString();
@@ -193,6 +193,12 @@ class iothub.HTTP {
             "Authorization": _config.sharedAccessSignature,
             "iothub-to": path
         };
+        if(message.getMessageId() != null) {
+            httpHeaders["iothub-messageId"] <- message.getMessageId();
+        }
+        if(message.getCorrelationId() != null) {
+            httpHeaders["iothub-correlationId"] <- message.getCorrelationId();
+        }
         foreach (k,v in message.getProperties()) {
             httpHeaders["IoTHub-app-" + k] <- v;
         }
@@ -217,9 +223,9 @@ class iothub.HTTP {
         request.sendasync(handleResponse(done));
         return this;
     }
-    
+
     function receive(done) {
-        
+
         refreshSignature();
         local path = iothub.Endpoint.messagePath(_config.deviceId);
         local url = "https://" + _config.host + path + iothub.Endpoint.versionQueryString();
@@ -239,18 +245,18 @@ class iothub.HTTP {
             } else {
                 // Something there, handle it
                 if (done) done(null, iothub.Message(response.body, response.headers));
-                
+
                 // Restart polling immediately
                 receive(done);
             }
-            
+
         }.bindenv(this));
-        
+
         return this;
     }
-    
+
     function sendFeedback(action, message, done = null) {
-        
+
         refreshSignature();
         local path = iothub.Endpoint.feedbackPath(_config.deviceId, message.getProperty("lockToken"));
         local httpHeaders = {
@@ -260,10 +266,10 @@ class iothub.HTTP {
         };
         local url = "https://" + _config.host + path;
         local method;
-        if (action == FEEDBACK_ACTION_ABANDON) { 
+        if (action == FEEDBACK_ACTION_ABANDON) {
             url += "/abandon" + iothub.Endpoint.versionQueryString();
             method = "POST";
-        } else if (action == FEEDBACK_ACTION_REJECT) { 
+        } else if (action == FEEDBACK_ACTION_REJECT) {
             url += iothub.Endpoint.versionQueryString() + "&reject";
             method = "DELETE";
         } else {
@@ -278,11 +284,11 @@ class iothub.HTTP {
     }
 
     function constructBatchBody(messages) {
-        
+
         local body = [];
         foreach (message in messages) {
 
-            local msg = { 
+            local msg = {
                 "body": http.base64encode(message.getData()),
                 "properties": message.getProperties()
             }
@@ -290,7 +296,7 @@ class iothub.HTTP {
         }
         return http.jsonencode(body);
     }
-    
+
     function handleResponse(done) {
 
         return function(response) {
@@ -307,7 +313,7 @@ class iothub.HTTP {
                 if (done) done({ "response": response, "message": message}, null);
             }
         }.bindenv(this);
-       
+
     }
 }
 
@@ -315,9 +321,9 @@ class iothub.HTTP {
 class iothub.Device {
 
     _body = null;
-    
+
     constructor(jsonData = null) {
-        
+
         if (jsonData) {
             _body = http.jsondecode(jsonData);
         } else {
@@ -341,16 +347,16 @@ class iothub.Device {
             };
         }
     }
-    
+
     function connectionString(hostname) {
         // NOTE: This method did not appear in the original Node.js SDK
         return format("HostName=%s;DeviceId=%s;SharedAccessKey=%s", hostname, _body.deviceId, _body.authentication.symmetricKey.primaryKey);
     }
-    
+
     function getBody() {
         return _body;
     }
-    
+
     function _typeof() {
         return "Device";
     }
@@ -358,22 +364,22 @@ class iothub.Device {
 
 //------------------------------------------------------------------------------
 class iothub.Message {
-    
+
     _data = null;
     _properties = null;
-    
+
     messageId = null;
     to = null;
     expiryTimeUtc = null;
     correlationId = null;
-    
+
     constructor(data, headers={}) {
         if (typeof data == "string") {
             _data = data;
         } else {
             _data = http.jsonencode(data);
         }
-        
+
         _properties = {};
         foreach (k,v in headers) {
             switch (k.tolower()) {
@@ -394,43 +400,49 @@ class iothub.Message {
                     break;
             }
         }
-        
+
     }
-    
+
     function getData() {
         return _data;
     }
-    
+
     function getProperties() {
         return _properties;
     }
-    
+
     function setProperty(key, value) {
         _properties[key] <- value;
     }
-    
+
     function getProperty(key) {
         return (key in _properties) ? _properties[key] : null;
     }
-    
+
     function unsetProperty(key) {
         if (key in _properties) delete _properties[key];
+    }
+    function getMessageId() {
+	return messageId;
+    }
+    function getCorrelationId() {
+	return correlationId;
     }
 }
 
 //------------------------------------------------------------------------------
 class iothub.Client {
-    
+
     _transport = null;
 
     constructor(transport) {
         _transport = transport;
     }
-    
+
     // Factory function
     static function fromConnectionString(connectionString, transport = null) {
         if (!transport) transport = iothub.HTTP;
-        
+
         local cn = iothub.ConnectionString.Parse(connectionString);
         local resourceUri = cn.HostName + "/devices/" + iothub.Authorization.encodeUriComponentStrict(cn.DeviceId);
         local sas = iothub.SharedAccessSignature.create(resourceUri, null, cn.SharedAccessKey, iothub.Authorization.anHourFromNow());
@@ -445,7 +457,7 @@ class iothub.Client {
         };
         return iothub.Client(transport(config));
     }
-    
+
     function sendEvent(message, done = null) {
         _transport.sendEvent(message, done);
         return this;
@@ -455,7 +467,7 @@ class iothub.Client {
         _transport.sendEventBatch(messages, done);
         return this;
     }
-    
+
     function receive(done) {
         _transport.receive(done);
         return this;
@@ -472,11 +484,11 @@ class iothub.Client {
 class iothub.RegistryHTTP {
 
     _config = null;
-    
+
     constructor(config) {
         _config = config;
     }
-    
+
     function refreshSignature() {
 
         // NOTE: This method did not appear in the original Node.js SDK
@@ -490,7 +502,7 @@ class iothub.RegistryHTTP {
             }
         }
     }
-    
+
     function createDevice(path, deviceInfo, done) {
 
         refreshSignature();
@@ -504,9 +516,9 @@ class iothub.RegistryHTTP {
         local request = http.put(url, httpHeaders, http.jsonencode(deviceInfo));
         request.sendasync(handleResponse(done));
         return this;
-        
+
     };
-    
+
     function updateDevice(path, deviceInfo, done) {
 
         refreshSignature();
@@ -521,7 +533,7 @@ class iothub.RegistryHTTP {
         request.sendasync(handleResponse(done));
         return this;
     }
-    
+
     function getDevice(path, done) {
 
         refreshSignature();
@@ -534,7 +546,7 @@ class iothub.RegistryHTTP {
         request.sendasync(handleResponse(done));
         return this;
     }
-    
+
     function listDevices(path, done) {
 
         refreshSignature();
@@ -547,7 +559,7 @@ class iothub.RegistryHTTP {
         request.sendasync(handleResponse(done));
         return this;
     }
-    
+
     function deleteDevice(path, done) {
 
         refreshSignature();
@@ -583,17 +595,17 @@ class iothub.RegistryHTTP {
 
 //------------------------------------------------------------------------------
 class iothub.Registry {
-    
+
     _transport = null;
 
     constructor(transport) {
         _transport = transport;
     }
-    
+
     // Factory function
     static function fromConnectionString(connectionString, transport = null) {
         if (!transport) transport = iothub.RegistryHTTP;
-        
+
         local cn = iothub.ConnectionString.Parse(connectionString);
         local sas = iothub.SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, iothub.Authorization.anHourFromNow());
 
@@ -606,7 +618,7 @@ class iothub.Registry {
         };
         return iothub.Registry(transport(config));
     }
-    
+
     function create(deviceInfo = null, done = null) {
 
         // NOTE: These default values are not from the original Node.js SDK
@@ -619,7 +631,7 @@ class iothub.Registry {
         if (!("deviceId" in deviceInfo) || deviceInfo.deviceId == null) {
             deviceInfo.deviceId <- split(http.agenturl(), "/").pop();
         }
-        
+
         local path = iothub.Endpoint.devicePath(deviceInfo.deviceId) + iothub.Endpoint.versionQueryString();
         _transport.createDevice(path, deviceInfo, function (err, body) {
             if (err) {
@@ -629,7 +641,7 @@ class iothub.Registry {
             }
             if (done) done(err, deviceInfo);
         }.bindenv(this))
-        
+
         return this;
     }
 
@@ -646,7 +658,7 @@ class iothub.Registry {
             }
             if (done) done(err, deviceInfo);
         }.bindenv(this))
-        
+
         return this;
     }
 
@@ -669,14 +681,14 @@ class iothub.Registry {
             }
             done(err, deviceInfo);
         }.bindenv(this))
-        
+
         return this;
     }
 
     function list(done = null) {
 
         if (done == null) return null;
-        
+
         local path = iothub.Endpoint.devicePath("") + iothub.Endpoint.versionQueryString();
         _transport.listDevices(path, function (err, body) {
 
@@ -691,10 +703,10 @@ class iothub.Registry {
 
             done(err, devices);
         }.bindenv(this))
-        
+
         return this;
     }
-    
+
     function remove(deviceId = null, done = null) {
 
         // NOTE: These default values are not from the original Node.js SDK

@@ -1,3 +1,44 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Azure IoT Hub Client 1.1.0](#azure-iot-hub-client-110)
+  - [Authentication](#authentication)
+  - [iothub.Registry Class Usage](#iothubregistry-class-usage)
+    - [Constructor: iothub.Registry.fromConnectionString(*connectionString*)](#constructor-iothubregistryfromconnectionstringconnectionstring)
+  - [iothub.Registry Class Methods](#iothubregistry-class-methods)
+    - [create(*[deviceInfo][, callback]*)](#createdeviceinfo-callback)
+    - [update(*deviceInfo[, callback]*)](#updatedeviceinfo-callback)
+    - [remove(*[deviceId][, callback]*)](#removedeviceid-callback)
+    - [get(*[deviceId][, callback]*)](#getdeviceid-callback)
+    - [list(*callback*)](#listcallback)
+    - [Callbacks](#callbacks)
+    - [Example](#example)
+  - [iothub.Client Class Usage](#iothubclient-class-usage)
+    - [Constructor: iothub.Client.fromConnectionString(*connectionString*)](#constructor-iothubclientfromconnectionstringconnectionstring)
+  - [iothub.Client Class Methods](#iothubclient-class-methods)
+    - [sendEvent(*message[, callback]*)](#sendeventmessage-callback)
+    - [sendEventBatch(*messages[, callback]*)](#sendeventbatchmessages-callback)
+    - [function receive(*callback*)](#function-receivecallback)
+    - [function sendFeedback(*action, messages, [callback]*)](#function-sendfeedbackaction-messages-callback)
+    - [Callbacks](#callbacks-1)
+    - [Example](#example-1)
+  - [Testing](#testing)
+    - [TL;DR](#tldr)
+    - [Running Tests](#running-tests)
+    - [Prerequisites](#prerequisites)
+      - [Commands](#commands)
+      - [Environment Variables](#environment-variables)
+  - [Examples](#examples)
+  - [Development](#development)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+<br />
+
+[![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=develop)](https://travis-ci.org/electricimp/AzureIoTHub)
+
 # Azure IoT Hub Client 1.1.0
 
 The Azure IoT Hub client is an Electric Imp agent-side library for interfacing to the Azure IoT Hub version “2015-08-15-preview”. It currently only supports the device registry (create, update, delete, get, list) and sending device-to-cloud events. Receiving events is currently not functioning.
@@ -213,10 +254,66 @@ device.on("event", function(event) {
 })
 ```
 
+## Testing
+
+Repository contains [impUnit](https://github.com/electricimp/impUnit) tests and a configuration for [impTest](https://github.com/electricimp/impTest) tool.
+
+### TL;DR
+
+```bash
+npm i
+
+nano .imptest # edit device/model
+
+IMP_BUILD_API_KEY=<build_api_key> \
+AZURE_IOTHUB_HUB_NAME=<hub_name> \
+AZURE_IOTHUB_SHARED_ACCESS_KEY=<key> \
+AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME=<key_name> \
+imptest test
+```
+
+### Running Tests
+
+Tests can be launched with:
+
+```bash
+imptest test
+```
+
+By default configuration for the testing is read from [.imptest](https://github.com/electricimp/impTest/blob/develop/docs/imptest-spec.md).
+
+To run test with your settings (for example while you are developing), create your copy of **.imptest** file and name it something like **.imptest.local**, then run tests with:
+
+ ```bash
+ imptest test -c .imptest.local
+ ```
+
+Tests will run with any imp.
+
+### Prerequisites
+
+#### Commands
+
+Run `npm install` to install:
+
+- Local copy of `iothub-explorer` command line tool
+
+#### Environment Variables
+
+Test cases expect the following environment variables:
+- __AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME__ – shared access key name
+- __AZURE_IOTHUB_SHARED_ACCESS_KEY__ – shared access key
+- __AZURE_IOTHUB_HUB_NAME__ – IoT hub name
+
 ## Examples
 
 There are further examples in the [GitHub repository](https://github.com/electricimp/AzureIoTHub/tree/v1.0.0).
 
-## License
+## Development
+
+This repository uses [git-flow](http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/).
+Please make your pull requests to the __develop__ branch.
+
+# License
 
 This library is licensed under the [MIT License](./LICENSE.txt).
