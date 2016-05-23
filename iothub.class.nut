@@ -15,7 +15,7 @@
 //------------------------------------------------------------------------------
 class iothub {
 
-    static version = [1,2,0];
+    static version = [1,2,1];
 
 }
 
@@ -77,7 +77,7 @@ class iothub.Endpoint {
     }
 
     static function versionQueryString() {
-        return "?api-version=2015-08-15-preview";
+        return "?api-version=2016-02-03";
     }
 }
 
@@ -166,6 +166,8 @@ class iothub.HTTP {
     static FEEDBACK_ACTION_REJECT = "reject";
     static FEEDBACK_ACTION_COMPLETE = "complete";
 
+    static HTTP_RETRY_TIME = 10.8; // 24*60*60 (seconds in a day) / 8000 (events per day)
+
     constructor(config) {
         _config = config;
     }
@@ -239,7 +241,7 @@ class iothub.HTTP {
 
             if (response.statuscode == 204 || response.statuscode == 429) {
                 // Nothing there, try again soon
-                imp.wakeup(1, function() {
+                imp.wakeup(HTTP_RETRY_TIME, function() {
                     receive(done);
                 }.bindenv(this));
             } else {
