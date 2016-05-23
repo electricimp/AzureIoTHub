@@ -19,6 +19,10 @@ The Azure Portal provides the Connection String, passed into the following const
 0. Select a policy which has all permissions (such as the *iothubowner*) or create a new policy then click on it
 0. Copy the *Connection string--primary key* to the clipboard and paste it into the constructor.
 
+## New Message Polling
+
+The library currently polls the Azure IoT Hub every 10.8 seconds for new messages. This is because the IoT Hub does not support long polling. This retry rate limits the number of requests in a day to 8000.
+
 ## iothub.Registry Class Usage
 
 ### Constructor: iothub.Registry.fromConnectionString(*connectionString*)
