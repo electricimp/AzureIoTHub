@@ -77,7 +77,7 @@ class iothub.Endpoint {
     }
 
     static function versionQueryString() {
-        return "?api-version=2015-08-15-preview";
+        return "?api-version=2016-02-03";
     }
 }
 
