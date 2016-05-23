@@ -15,7 +15,7 @@
 //------------------------------------------------------------------------------
 class iothub {
 
-    static version = [1,2,0];
+    static version = [1,2,1];
 
 }
 
@@ -165,7 +165,7 @@ class iothub.HTTP {
     static FEEDBACK_ACTION_ABANDON = "abandon";
     static FEEDBACK_ACTION_REJECT = "reject";
     static FEEDBACK_ACTION_COMPLETE = "complete";
-    
+
     static HTTP_RETRY_TIME = 10.8; // 24*60*60 (seconds in a day) / 8000 (events per day)
 
     constructor(config) {
