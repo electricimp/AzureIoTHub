@@ -1,6 +1,6 @@
 # Azure IoT Hub Client 1.2.1
 
-The Azure IoT Hub client is an Electric Imp agent-side library for interfacing to the Azure IoT Hub version “2015-08-15-preview”. It currently only supports the device registry (create, update, delete, get, list) and sending device-to-cloud events. Receiving events is currently not functioning.
+The Azure IoT Hub client is an Electric Imp agent-side library for interfacing to the Azure IoT Hub version “2016-02-03”. It currently only supports the device registry (create, update, delete, get, list) and sending device-to-cloud events. Receiving events is currently not functioning.
 
 This library is ported from and designed to be as close as possible to the [NodeJS SDK](https://github.com/Azure/azure-iot-sdks/blob/master/node/). Refer to the [NodeJS SDK](https://github.com/Azure/azure-iot-sdks/blob/master/node/) for further information.
 
@@ -269,11 +269,6 @@ Test cases expect the following environment variables:
 ## Examples
 
 There are further examples in the [GitHub repository](https://github.com/electricimp/AzureIoTHub/tree/v1.0.0).
-
-## Development
-
-This repository uses [git-flow](http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/).
-Please make your pull requests to the __develop__ branch.
 
 # License
 
