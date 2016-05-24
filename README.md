@@ -186,7 +186,6 @@ client.receive(function(err, message) {
 })
 ```
 
-
 ### Callbacks
 
 The above callbacks will be called with the following parameters:
@@ -216,7 +215,7 @@ device.on("event", function(event) {
             server.log("sendEvent successful");
         }
     });
-})
+});
 ```
 
 ## Testing
