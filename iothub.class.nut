@@ -238,7 +238,7 @@ class iothub {
             if (typeof _body == "table" || typeof _body == "array") _body = http.jsonencode(_body);
             // set properties to empty table, if no application properties set
             if (_properties == null ) _properties = {};
-            return amqp.createmessage(_body, _properties);
+            return amqp.createbinarymessage(_body, _properties);
         }
 
     }
@@ -504,7 +504,7 @@ class iothub {
         _connecting = false;
         _senderTokenError = false;
         _receiverTokenError = false;
-        _debug = true;
+        _debug = false;
 
         constructor(config) {
             _config = config;
@@ -555,7 +555,6 @@ class iothub {
         // done cb params - err, transmission msg
         function sendEvent(message, done = null) {
             debugLog("in sendEvent")
-            server.log("event session: " + _sessions.event.isopen())
 
             if ( !_isOpen(_sessions.event) ) {
                 done("Cannot send while disconnected.", null);
