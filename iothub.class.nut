@@ -243,7 +243,7 @@ class iothub {
             if (_properties == null ) _properties = {};
             if (encoding = DATA) {
                 return amqp.createbinarymessage(_body, _properties);
-            } else (encoding == VALUE) {
+            } else {
                 return amqp.createmessage(_body, _properties);
             }
         }
