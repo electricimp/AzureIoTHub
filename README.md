@@ -1,4 +1,4 @@
-# Azure IoT Hub Client 1.2.1
+# Azure IoT Hub Client 2.0.0
 
 The Azure IoT Hub client is an Electric Imp agent-side library for interfacing to the Azure IoT Hub version “2016-02-03”. It currently only supports the device registry (create, update, delete, get, list) and sending device-to-cloud events.
 
@@ -17,6 +17,8 @@ The Azure Portal provides the Connection String, passed into the following const
 
 ## iothub.Registry Class Usage
 
+The *Registry* class is used to manage IoTHub devices. This class allows your to create, remove, update, delete and list the IoTHub devices in your Azure account.
+
 ### Constructor: iothub.Registry(*connectionString*)
 
 This contructs a Registry object which exposes the Device Registry functions.
@@ -26,7 +28,7 @@ The *connectionString* parameter is provided by the [Azure Portal](https://porta
 ```squirrel
 #require "azureiothub.class.nut:2.0.0"
 
-// Instantiate a client.
+// Instantiate a client using your connection string.
 const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 registry <- iothub.Registry(CONNECT_STRING);
 ```
@@ -93,7 +95,7 @@ registry.get(function(err, deviceInfo) {
                     server.error(err.message);
                 } else {
                     server.log("Created " + deviceInfo.getBody().deviceId);
-                    ::client <- iothub.Client.fromConnectionString(deviceInfo.connectionString(hostname));
+                    ::client <- iothub.Client(deviceInfo.connectionString(hostName));
                 }
             }.bindenv(this));
         } else {
@@ -101,7 +103,7 @@ registry.get(function(err, deviceInfo) {
         }
     } else {
         server.log("Connected as " + deviceInfo.getBody().deviceId);
-        ::client <- iothub.Client.fromConnectionString(deviceInfo.connectionString(hostname));
+        ::client <- iothub.Client(deviceInfo.connectionString(hostname));
     }
 }.bindenv(this));
 
@@ -109,11 +111,13 @@ registry.get(function(err, deviceInfo) {
 
 ## iothub.Client Class Usage
 
+The *Client* class is used to send and receive events.  To use this class the device must be registered as an IoTHub device on your Azure account.
+
 ### Constructor: iothub.Client(*connectionString*)
 
-This contructs a (HTTP) Client object which exposes the event functions.
+This contructs a (AMQP) Client object which exposes the event functions.
 
-The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) *(see above)*.
+The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) *(see above)*.  If your device was registered using the *iothub.Registry* class the *connectionString* parameter can be retrived from the *deviceInfo* parameter passed to the *.get()* or *.create()* method callbacks. See the Registry example above.
 
 ```squirrel
 #require "azureiothub.class.nut:2.0.0"
@@ -124,29 +128,52 @@ client <- iothub.Client(DEVICE_CONNECT_STRING);
 
 ## iothub.Client Class Methods
 
+### connect(*[callback]*)
+
+This method opens an AMQP connection to your device's IoTHub "/messages/events" path.  A connection must be opened before messages can be sent or received. This method takes one optional parameter: a callback function that will be executed when the connection has been established.  The callback function takes one parameter: *err*. If no errors were encountered *err* will be `null` otherwise it will contain a error message.
+
+```squirrel
+client.connect(function(err) {
+    if (err) {
+        server.error(err);
+    } else {
+        server.log("Connection open. Ready to send and receive messages.");
+    });
+```
+
+### disconnect()
+
+This method closes the AMQP connection to IoTHub.
+
+```squirrel
+client.disconnect();
+```
+
 ### sendEvent(*message[, callback]*)
 
-This method sends a single event (*message*) to the IoT Hub. The event should be an iothub.Message object which can be created from a string or any object that can be converted to JSON.
+This method sends a single event (*message*) to IoT Hub. The event should be an iothub.Message object which can be created from a string or any object that can be converted to JSON.  *(See iothub.Message class for more details)*
 
-You may also provide a function reference via the *callback* parameter *(see below)*. This function will be called when the IoT Hub responds. If you don’t provide a callback, *sendEvent()* will block until completion.
-
-**Example**
+You may also provide an optional *callback* function. This function will be called when the trasmission of the event to IoT Hub has occurred. The callback function takes one parameter: *err*. If no errors were encountered *err* will be `null` otherwise it will contain a error message.
 
 ```squirrel
 local message1 = iothub.Message("This is an event");
 client.sendEvent(message1);
 
 local message2 = iothub.Message({ "id": 1, "text": "Hello, world." });
-client.sendEvent(message2);
+client.sendEvent(message2, function(err) {
+    if (err) {
+        server.error(err);
+    } else {
+        server.log("Event transmitted at " + time());
+    }
+});
 ```
 
 ### sendEventBatch(*messages[, callback]*)
 
-Sends an array of events (messages) the Iot Hub. The messages parameter should be an array of iothub.Message objects which can be created from a string or any object that can be converted to JSON.
+Sends an array of events (messages) to Iot Hub. The messages parameter should be an array of iothub.Message objects which can be created from a string or any object that can be converted to JSON.
 
-You may also provide a function reference via the *callback* parameter *(see below)*. This function will be called when the IoT Hub responds. If you don’t provide a callback, *sendEventBatch()* will block until completion.
-
-**Example**
+You may also provide an optional *callback* function. This function will be called when the trasmission of the event to IoT Hub has occurred. The callback function takes one parameter: *err*. If no errors were encountered *err* will be `null` otherwise it will contain a error message.
 
 ```squirrel
 local messages = [];
@@ -157,38 +184,30 @@ client.sendEventBatch(messages);
 
 ### function receive(*callback*)
 
-Opens a listener for cloud-to-device events targetted at this device. Whenever an event is received, a deliveryItem will be sent to the provided callback. The event must be acknowledged or rejected by executing a feedback function on the delivery item.
+Opens a listener for cloud-to-device events targetted at this device. Whenever an event is received, a delivery object will be sent to the provided callback. *(See iothub.Delivery Class for more details)* The event must be acknowledged or rejected by executing a feedback function on the delivery object. If no feedback function is called within the scope of the callback the message will be automatically accepted.
 
-| Delivery Item Functions | Description |
+| Delivery Functions | Description |
 | -------------------------- | --------------- |
-| accept    | feedback function accept a message |
-| reject      | feedback function reject a message |
-| release   | feeback function ??? |
-| message | returns message object |
-
-message object has functions to retrieve properties and the message body.
+| complete    | feedback function to accept a message, the message is removed from the message queue and a positive ack is sent |
+| reject      | feedback function that rejects a message, the message is removed from the message queue and a negative ack is sent |
+| abandon   | feeback function that abandons a message, the message is then re-qeueued for delivery.  If the message is not acknowleged within a set number of retries (the defualt is 10) the message will be rejected |
+| getMessage | returns message object |
 
 ```squirrel
-client.receive(function(err, deliveryItem) {
+client.receive(function(err, delivery) {
     if (err) {
         server.error(err);
         return;
     }
-    deliveryItem.accept();
-    local message = deliveryItem.message();
-    server.log(http.jsonencode(message.properties()));
-    server.log(message.body());
+
+    local message = delivery.getMessage();
+    if (message.getBody() == "OK") {
+        delivery.complete();
+    } else {
+        delivery.reject();
+    }
 })
 ```
-
-### Callbacks
-
-check this - The above callbacks will be called with the following parameters:
-
-| Parameter | Value |
-| --- | --- |
-| *err* | This will be `null` if there was no error. Otherwise it will be a table containing two keys: *response*, the original **httpresponse** object, and *message*, an error report string |
-| *response* | Empty |
 
 ### Example
 
@@ -203,9 +222,9 @@ agentid <- split(http.agenturl(), "/").pop();
 device.on("event", function(event) {
     event.agentid <- agentid;
     local message = iothub.Message(event);
-    client.sendEvent(message, function(err, res) {
+    client.sendEvent(message, function(err) {
         if (err) {
-             server.log("sendEvent error: " + err);
+             server.error("sendEvent error: " + err);
         } else {
             server.log("sendEvent successful");
         }
@@ -213,60 +232,74 @@ device.on("event", function(event) {
 });
 ```
 
-## Testing
+## iothub.Message Class Usage
 
-Repository contains [impUnit](https://github.com/electricimp/impUnit) tests and a configuration for [impTest](https://github.com/electricimp/impTest) tool.
+### Constructor: iothub.Message(*message, [properties]*)
 
-### TL;DR
+The Message class is used to create messages that are sent to IoTHub.  The constructor takes one required parameter, *message* which can be created from a string or any object that can be converted to JSON, and an optional parameter, a *properties* table.
 
-```bash
-npm i
-
-nano .imptest # edit device/model
-
-IMP_BUILD_API_KEY=<build_api_key> \
-AZURE_IOTHUB_HUB_NAME=<hub_name> \
-AZURE_IOTHUB_SHARED_ACCESS_KEY=<key> \
-AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME=<key_name> \
-imptest test
+```squirrel
+local message1 = iothub.Message("This is an event");
+local message2 = iothub.Message({ "id": 1, "text": "Hello, world." });
 ```
 
-### Running Tests
+## iothub.Message Class Methods
 
-Tests can be launched with:
+### getProperties()
 
-```bash
-imptest test
+Use this method to retrieve message's application properties.  This method returns a table.
+
+```squirrel
+local props = message2.getProperties();
 ```
 
-By default configuration for the testing is read from [.imptest](https://github.com/electricimp/impTest/blob/develop/docs/imptest-spec.md).
+### getBody()
 
-To run test with your settings (for example while you are developing), create your copy of **.imptest** file and name it something like **.imptest.local**, then run tests with:
+Use this method to retrieve message's content.
 
- ```bash
- imptest test -c .imptest.local
- ```
+```squirrel
+local body = message1.getBody();
+```
 
-Tests will run with any imp.
+## iothub.Delivery Class Usage
 
-### Prerequisites
+### Constructor: iothub.Message(*amqpDeliveryItem*)
 
-#### Commands
+Delivery objects are automatically created when a data is received from IoTHub.  You should never call the iothub.Delivery constructor directly.
 
-Run `npm install` to install:
+## iothub.Delivery Class Methods
 
-- Local copy of `iothub-explorer` command line tool
+### getMessage()
 
-#### Environment Variables
+Use this method to retrieve message content from an IoTHub delivery.  This method returns a iothub.Message object.
 
-Test cases expect the following environment variables:
-- __AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME__ – shared access key name
-- __AZURE_IOTHUB_SHARED_ACCESS_KEY__ – shared access key
-- __AZURE_IOTHUB_HUB_NAME__ – IoT hub name
+```squirrel
+client.receive(function(err, delivery) {
+    if (err) {
+        server.error(err);
+        return;
+    }
 
-## Examples
+    local message = delivery.getMessage();
+    server.log( http.jsonencode(message.getProperties()) );
+    server.log( message.getBody() );
 
-There are further examples in the [GitHub repository](https://github.com/electricimp/AzureIoTHub/tree/v1.0.0).
+    delivery.complete();
+})
+```
+
+### complete()
+
+A feedback function to accept a delivery sent from IoTHub. When this method is called a positive ack is sent and the delivery item is removed from the IoTHub message queue. *(See iothub.client receive method for usage example)*
+
+### abandon()
+
+A feedback function to abandon a delivery sent from IoTHub. When called this method sends the delivery item back to IoTHub to be re-queued. The message will be retried until the max delivery count has been reached, then it will be rejected.
+
+### reject()
+
+A feedback function to reject a delivery sent from IoTHub. When this method is called a negative ack is sent and the delivery item is removed from the IoTHub message queue. *(See iothub.client receive method for usage example)*
+
 
 # License
 

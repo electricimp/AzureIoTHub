@@ -254,6 +254,31 @@ class iothub {
 
     }
 
+    Delivery = class {
+
+        _delivery = null;
+
+        constructor(amqpDelivery) {
+            _delivery = amqpDelivery;
+        }
+
+        function complete() {
+            _delivery.accept();
+        }
+
+        function abandon() {
+            _delivery.release();
+        }
+
+        function reject() {
+            _delivery.reject();
+        }
+
+        function getMessage() {
+            local msg = _delivery.message();
+            return iothub.Message(msg.body(), msg.properties());
+        }
+    }
 
     //------------------------------------------------------------------------------
 
@@ -953,7 +978,7 @@ class iothub {
 
         function _handleDeliveries(deliveries, cb) {
             while (deliveries.len()) {
-                local item = deliveries.remove(0);
+                local item = iothub.Delivery(deliveries.remove(0));
                 cb(null, item);
             }
         }
