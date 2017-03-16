@@ -163,7 +163,7 @@ class iothub {
         }
 
         static function versionQueryString() {
-            return "?api-version=2016-02-03";
+            return "?api-version=2016-11-14";
         }
     }
 
@@ -300,7 +300,6 @@ class iothub {
                     local sas = iothub.SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, iothub.Authorization.anHourFromNow());
                     _config.sharedAccessSignature = sas.toString();
                     _config.sharedAccessExpiry = sas.se;
-                    // server.log("Signature refreshed");
                 }
             }
         }
