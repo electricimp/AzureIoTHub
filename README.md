@@ -31,19 +31,19 @@ The Azure Portal provides a *Connection String*. This is needed to create an iot
 
 To get the *Registry Connection String* you will require owner-level permissions.
 
-0. Open the [Azure Portal](https://portal.azure.com/)
-0. Select or create your Azure IoT Hub resource
-0. Under the ‘Settings’ header click on ‘Shared Access Policies’
-0. Select a policy which has all permissions (such as the *iothubowner*) or create a new policy then click on it
-0. Copy the *Connection string--primary key* to the clipboard and paste it into the iothub.Registry constructor.
+1. Open the [Azure Portal](https://portal.azure.com/)
+2. Select or create your Azure IoT Hub resource
+3. Under the ‘Settings’ header click on ‘Shared Access Policies’
+4. Select a policy which has all permissions (such as the *iothubowner*) or create a new policy then click on it
+5. Copy the *Connection string--primary key* to the clipboard and paste it into the iothub.Registry constructor.
 
 To get the *Device Connection String* you need device-level permissions. You can use the iothub.Registry class [*(see registry example below)*](#registry-example) or follow these steps to find in the Azure Portal.
 
-0. Open the [Azure Portal](https://portal.azure.com/)
-0. Select or create your Azure IoT Hub resource
-0. Click on ‘Device Explorer’
-0. Select your device (You will need the device id used to register the device with IoT Hub)
-0. Copy the *Connection string--primary key* to the clipboard and paste it into the iothub.Client constructor.
+1. Open the [Azure Portal](https://portal.azure.com/)
+2. Select or create your Azure IoT Hub resource
+3. Click on ‘Device Explorer’
+4. Select your device (You will need to know the device id used to register the device with IoT Hub)
+5. Copy the *Connection string--primary key* to the clipboard and paste it into the iothub.Client constructor.
 
 ## iothub.Registry
 
@@ -53,7 +53,7 @@ The *Registry* class is used to manage IoTHub devices. This class allows your to
 
 #### Constructor: iothub.Registry(*connectionString*)
 
-This contructs a Registry object which exposes the Device Registry functions. The *connectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) [*(see above)*](#authentication).
+This contructs a Registry object which exposes the Device Registry functions. The *connectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication).
 
 ```squirrel
 #require "azureiothub.class.nut:2.0.0"
@@ -137,7 +137,7 @@ The *Client* class is used to send and receive events.  To use this class the de
 
 #### Constructor: iothub.Client(*deviceConnectionString*)
 
-This contructs a (AMQP) Client object which exposes the event functions. The *deviceConnectionString* parameter is provided by the [Azure Portal](https://portal.azure.com/) [*(see above)*](#authentication), or if your device was registered using the *iothub.Registry* class the *deviceConnectionString* parameter can be retrived from the *deviceInfo* parameter passed to the *.get()* or *.create()* method callbacks. See the [registry example above](#registry-example).
+This contructs a (AMQP) Client object which exposes the event functions. The *deviceConnectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication), or if your device was registered using the *iothub.Registry* class the *deviceConnectionString* parameter can be retrived from the *deviceInfo* parameter passed to the *.get()* or *.create()* method callbacks. See the [registry example above](#registry-example).
 
 ```squirrel
 const DEVICE_CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;DeviceId=<DEVICE_ID>;SharedAccessKey=<DEVICE_KEY_HASH>";
@@ -307,6 +307,8 @@ A **feedback** function, use to reject a delivery sent from IoTHub. When this me
 
 This example code will register a device with Azure IoT Hub (if needed), then open a connection.  When a connection is established a receiver for Azure IoT Hub messages will be opened. A listener will also be opened for messages coming from the device.  If a connection to Azure has been established the message from the device will be transmitted as an event to the Azure IoT Hub.
 
+### Agent Code
+
 ```squirrel
 #require "azureiothub.class.nut:2.0.0"
 
@@ -398,6 +400,30 @@ device.on("event", function(event) {
         });
     }
 });
+```
+
+### Device Code
+
+```squirrel
+// Time to wait between readings
+loopTimer <- 300;
+
+// Gets an integer value from the imp's light sensor,
+// and sends it to the agent
+function loop() {
+    local reading = {};
+    reading.lxLevel <- hardware.lightlevel();
+    reading.ts <- time();
+
+    agent.send("event", reading);
+
+    // Set up next reading
+    imp.wakeup(loopTimer, loop);
+}
+
+// Give the agent time to connect to Azure
+// then start the loop
+imp.wakeup(5, loop);
 ```
 
 # License
