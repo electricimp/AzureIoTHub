@@ -2,22 +2,22 @@
 
 Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub version “2016-11-14”. The library consists of the following classes:
 
-- [iothub.Registry](#iothubregistry-class-usage) &mdash; Device management class, all requests use HTTP to connect to Azure IoT Hub.
+- [iothub.Registry](#iothubregistry) &mdash; Device management class, all requests use HTTP to connect to Azure IoT Hub.
   - [create](#createdeviceinfo-callback) &mdash; Creates a a new device identity in Azure IoT Hub.
   - [update](#updatedeviceinfo-callback) &mdash; Updates an existing device identity in Azure IoT Hub.
   - [remove](#removedeviceid-callback) &mdash; Deletes a single device identity from Azure IoT Hub.
   - [get](#getdeviceid-callback) &mdash; Returns the properties of an existing device identity in Azure IoT Hub.
   - [list](#listcallback) &mdash; Returns a list of up to 1000 device identities in Azure IoT Hub.
-- [iothub.Client](#iothubclient-class-usage) &mdash; The client class is used to send and receive events. All events use AMQP to connect to Azure IoT Hub.
+- [iothub.Client](#iothubclient) &mdash; Used to open AMQP connection to Azure IoT Hub, and to send & receive events.
   - [connect](#connectcallback) -&mdash; Opens an AMQP connection to Azure IoT Hub.
   - [disconnect](#disconnect) &mdash; Disconnects from Azure IoT Hub.
   - [sendEvent](#sendeventmessage-callback) - Sends a device-to-cloud event to Azure IoT Hub.
   - [sendBatchEvent](#sendeventbatchmessages-callback) &mdash; Sends an array of device-to-cloud events to Azure IoT Hub.
   - [receive](#function-receivecallback) - Opens a listener for cloud-to-device events targetted at this device.
-- [iothub.Message](#iothubmessage-class-usage) - A message object used to create events that are sent to Azure IoT Hub.
+- [iothub.Message](#iothubmessage) - A message object used to create events that are sent to Azure IoT Hub.
   - [getProperties](#getproperties) &mdash; Returns a message's application properties.
   - [getBody](#getbody) &mdash; Returns the message's content.
-- [iothub.Delivery](#iothubdelivery-class-usage) - A delivery object, created from events received from Azure IoT Hub.
+- [iothub.Delivery](#iothubdelivery) - A delivery object, created from events received from Azure IoT Hub.
   - [getMessage](#getmessage) &mdash; Returns an iothub.Message object.
   - [complete](#complete) &mdash; A feedback function used to accept an IoT Hub delivery.
   - [abandon](#abandon) &mdash; A feedback function used to re-queue an IoT Hub delivery.
@@ -27,9 +27,9 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 
 ## Authentication
 
-The Azure Portal provides the *connectionString* parameter needed to create an iothub.Registry or iothub.Client object, see the instructions below to get either a registry or device Connection String.
+The Azure Portal provides a *Connection String*. This is needed to create an iothub.Registry or iothub.Client object, follow the steps below to get either a *Registry Connection String* or *Device Connection String*.
 
-To use the Device Registry you will require owner-level permissions.
+To get the *Registry Connection String* you will require owner-level permissions.
 
 0. Open the [Azure Portal](https://portal.azure.com/)
 0. Select or create your Azure IoT Hub resource
@@ -37,7 +37,7 @@ To use the Device Registry you will require owner-level permissions.
 0. Select a policy which has all permissions (such as the *iothubowner*) or create a new policy then click on it
 0. Copy the *Connection string--primary key* to the clipboard and paste it into the iothub.Registry constructor.
 
-To use the Client you need device-level permissions. To get the *deviceConnectionString* you can use the iothub.Registry class [*(see registry example below)*](#registry-example) or follow the steps below to find in the Azure Portal.
+To get the *Device Connection String* you need device-level permissions. You can use the iothub.Registry class [*(see registry example below)*](#registry-example) or follow these steps to find in the Azure Portal.
 
 0. Open the [Azure Portal](https://portal.azure.com/)
 0. Select or create your Azure IoT Hub resource
@@ -92,7 +92,7 @@ This method returns the properties of an existing device identity in the IoT Hub
 
 Returns the properties up to 1000 existing device identities in the IoT Hub.
 
-#### Registry Example
+##### Registry Example
 
 This example code will register the device (using the agent’s ID, which could be replaced with the device’s ID) or create a new one. It will then instantiate the Client class for later use.
 
@@ -259,7 +259,9 @@ local body = message1.getBody();
 
 ## iothub.Delivery
 
-Delivery objects are automatically created when an event is received from Azure IoT Hub. You should never call the iothub.Delivery constructor directly. The event must be acknowledged or rejected by executing a **feedback** function (*complete*, *abandon*, or *reject*) on the delivery object. If no **feedback** function is called within the scope of the callback the message will be automatically accepted.
+Delivery objects are automatically created when an event is received from Azure IoT Hub. You should never call the iothub.Delivery constructor directly.
+
+When an event is received it must be acknowledged or rejected by executing a **feedback** function (*complete*, *abandon*, or *reject*) on the delivery object. If no **feedback** function is called within the scope of the callback the message will be automatically accepted.
 
 ### iothub.Delivery Class Method
 
@@ -301,9 +303,9 @@ A **feedback** function, use to abandon a delivery sent from IoTHub. When called
 
 A **feedback** function, use to reject a delivery sent from IoTHub. When this method is called a negative ack is sent and the delivery item is removed from the IoTHub message queue.
 
-##### Full Example
+## Full Example
 
-This example code will receive an event table from the device and transmit it as an event to the Azure IoT Hub.
+This example code will register a device with Azure IoT Hub (if needed), then open a connection.  When a connection is established a receiver for Azure IoT Hub messages will be opened. A listener will also be opened for messages coming from the device.  If a connection to Azure has been established the message from the device will be transmitted as an event to the Azure IoT Hub.
 
 ```squirrel
 #require "azureiothub.class.nut:2.0.0"
