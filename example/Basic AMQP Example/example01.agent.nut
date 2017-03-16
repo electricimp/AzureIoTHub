@@ -2,7 +2,7 @@
 
 ////////// Application Variables //////////
 
-const CONNECT_STRING = "HostName=eiproduction.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=mw/YhxSH3ZeeCqWEnRJAhst6UDah5zvRwMa1Um8WGrU=";
+const CONNECT_STRING = "HostName=<YOUR-HOST-NAME>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<YOUR-KEY-HASH>";
 
 client <- null;
 registry <- iothub.Registry(CONNECT_STRING);
