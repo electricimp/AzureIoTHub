@@ -1,14 +1,18 @@
+// Time to wait between readings
+loopTimer <- 300;
 
-// Create a function that will be called in a minute loop
+// Gets an integer value from the imp's light sensor,
+// and sends it to the agent
 function getData() {
-    imp.wakeup(60, getData);
-    
-    local event = {
-        "light": hardware.lightlevel(),
-        "power": hardware.voltage()
-    }
+    local event = { "light": hardware.lightlevel(),
+                    "power": hardware.voltage() }
+    // Send event to agent
     agent.send("event", event);
+
+    // Set timer for next event
+    imp.wakeup(loopTimer, getData);
 }
 
-// Now bootstrap the loop
-imp.wakeup(10, getData);
+// Give the agent time to connect to Azure
+// then start the loop
+imp.wakeup(5, getData);

@@ -1,80 +1,49 @@
-#require "azureiothub.class.nut:1.2.1"
+#require "azureiothub.class.nut:2.0.0"
 
-// *****************************************************************************
-const CONNECT_STRING = "HostName=<hubid>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<keyhash>";
+////////// Application Variables //////////
 
-// This bootstraps the IoT Hub class by getting the deviceInfo or registering a new device.
-// If successful it will return a IoTHub client object.
-function bootstrap(done) {
+const CONNECT_STRING = "HostName=eiproduction.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=mw/YhxSH3ZeeCqWEnRJAhst6UDah5zvRwMa1Um8WGrU=";
 
-    local registry = iothub.Registry.fromConnectionString(CONNECT_STRING);
-    local hostname = iothub.ConnectionString.Parse(CONNECT_STRING).HostName;
+client <- null;
+registry <- iothub.Registry(CONNECT_STRING);
+hostName <- iothub.ConnectionString.Parse(CONNECT_STRING).HostName;
+agentid <- split(http.agenturl(), "/").pop();
+connected <- false;
 
-    // Find this device
-    registry.get(function(err, deviceInfo) {
 
+////////// Application Functions //////////
+
+// Create a receive handler
+function receiveHandler(err, delivery) {
+    if (err) {
+        server.error(err);
+        return;
+    }
+
+    local message = delivery.getMessage();
+
+    // send feedback
+    if (typeof message.getBody() == "string") {
+        server.log( message.getBody() );
+        server.log( http.jsonencode(message.getProperties()) );
+        delivery.complete();
+    } else {
+        delivery.reject();
+    }
+}
+
+// Create a client, open a connection and receive listener
+function createClient(devConnectionString) {
+    client = iothub.Client(devConnectionString);
+    client.connect(function(err) {
         if (err) {
-            if (err.response.statuscode == 404) {
-
-                // No such device, lets create it
-                registry.create(function(err, deviceInfo) {
-
-                    if (err && err.response.statuscode == 429) {
-
-                        // Retry in a few seconds
-                        imp.wakeup(10, function() {
-                            bootstrap(done);
-                        }.bindenv(this))
-
-                    } else if (err) {
-
-                        server.log("createDevice error: " + err.message + " (" + err.response.statuscode + ")");
-                        done(null);
-
-                    } else if (deviceInfo) {
-
-                        server.log("Created " + deviceInfo.getBody().deviceId + " on " + hostname);
-                        local client = iothub.Client.fromConnectionString(deviceInfo.connectionString(hostname));
-                        done(client);
-
-                    } else {
-
-                        server.log("createDevice error unknown")
-                        done(null);
-
-                    }
-
-                });
-
-            } else if (err.response.statuscode == 429) {
-
-                // Retry in a few seconds
-                imp.wakeup(10, function() {
-                    bootstrap(done);
-                }.bindenv(this))
-
-            } else {
-
-                server.log("getDevice error: " + err.message + " (" + err.response.statuscode + ")");
-                done(null);
-
-            }
-
-
-        } else if (deviceInfo) {
-
-            server.log("Connected as " + deviceInfo.getBody().deviceId + " to " + hostname);
-            local client = iothub.Client.fromConnectionString(deviceInfo.connectionString(hostname));
-            done(client);
-
+            server.error(err);
         } else {
-
-            server.error("getDevice error unknown")
-            done(null);
-
+            connected = true;
+            server.log("Device connected");
+            client.receive(receiveHandler);
         }
-
-    });
+    }.bindenv(this));
 }
 
 // Formats the date object as a UTC string
@@ -83,30 +52,45 @@ function formatDate(){
     return format("%04d-%02d-%02d %02d:%02d:%02d", d.year, (d.month+1), d.day, d.hour, d.min, d.sec);
 }
 
+////////// Runtime //////////
 
-// Bootstrap the class and wait for the device to send events
-bootstrap(function(client) {
+// Find this device in the registry
+registry.get(function(err, deviceInfo) {
+    if (err) {
+        if (err.response.statuscode == 404) {
+            // No such device, let's create it, connect & open receiver
+            registry.create(function(err, deviceInfo) {
+                if (err) {
+                    server.error(err.message);
+                } else {
+                    server.log("Dev created " + deviceInfo.getBody().deviceId);
+                    createClient(deviceInfo.connectionString(hostName));
+                }
+            }.bindenv(this));
+        } else {
+            server.error(err.message);
+        }
+    } else {
+        // Found device, let's connect & open receiver
+        server.log("Device registered as " + deviceInfo.getBody().deviceId);
+        createClient(deviceInfo.connectionString(hostName));
+    }
+});
 
-    if (!client) return server.error("Boostrap failed!");
+// Open a listener for events from local device, pass them to IoT Hub if connection is established
+device.on("event", function(event) {
+    event.agentid <- agentid;
+    event.time <- formatDate();
+    local message = iothub.Message(event);
 
-    device.on("event", function(event) {
-
-        event.timestamp <- formatDate();
-        local message = iothub.Message(event);
-        client.sendEvent(message, function(err, res) {
-            if (err) server.log("sendEvent error: " + err.message + " (" + err.response.statuscode + ")");
-            else server.log("sendEvent successful");
+    // make sure device is connected, then send event
+    if (connected) {
+        client.sendEvent(message, function(err) {
+            if (err) {
+                 server.error("sendEvent error: " + err);
+            } else {
+                server.log("sendEvent successful");
+            }
         });
-
-    })
-
-    // Start receiving messages
-    client.receive(function(err, message) {
-        server.log(format("received an event: %s", message.getData()));
-        client.sendFeedback(iothub.HTTP.FEEDBACK_ACTION_COMPLETE, message, function(err, res) {
-            if (err) server.log("sendFeedback error: " + err.message + " (" + err.response.statuscode + ")");
-            else server.log("sendFeedback successful");
-        }.bindenv(this));
-    }.bindenv(this));
-
-}.bindenv(this));
+    }
+});

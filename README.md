@@ -314,11 +314,11 @@ This example code will register a device with Azure IoT Hub (if needed), then op
 
 ////////// Application Variables //////////
 
-const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
+const CONNECT_STRING = "HostName=eiproduction.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=mw/YhxSH3ZeeCqWEnRJAhst6UDah5zvRwMa1Um8WGrU=";
 
 client <- null;
 registry <- iothub.Registry(CONNECT_STRING);
-hostname <- iothub.ConnectionString.Parse(CONNECT_STRING).HostName;
+hostName <- iothub.ConnectionString.Parse(CONNECT_STRING).HostName;
 agentid <- split(http.agenturl(), "/").pop();
 connected <- false;
 
@@ -346,7 +346,7 @@ function receiveHandler(err, delivery) {
 
 // Create a client, open a connection and receive listener
 function createClient(devConnectionString) {
-    client <- iothub.Client(devConnectionString);
+    client = iothub.Client(devConnectionString);
     client.connect(function(err) {
         if (err) {
             server.error(err);
@@ -358,6 +358,11 @@ function createClient(devConnectionString) {
     }.bindenv(this));
 }
 
+// Formats the date object as a UTC string
+function formatDate(){
+    local d = date();
+    return format("%04d-%02d-%02d %02d:%02d:%02d", d.year, (d.month+1), d.day, d.hour, d.min, d.sec);
+}
 
 ////////// Runtime //////////
 
@@ -387,6 +392,7 @@ registry.get(function(err, deviceInfo) {
 // Open a listener for events from local device, pass them to IoT Hub if connection is established
 device.on("event", function(event) {
     event.agentid <- agentid;
+    event.time <- formatDate();
     local message = iothub.Message(event);
 
     // make sure device is connected, then send event
@@ -410,20 +416,19 @@ loopTimer <- 300;
 
 // Gets an integer value from the imp's light sensor,
 // and sends it to the agent
-function loop() {
-    local reading = {};
-    reading.lxLevel <- hardware.lightlevel();
-    reading.ts <- time();
+function getData() {
+    local event = { "light": hardware.lightlevel(),
+                    "power": hardware.voltage() }
+    // Send event to agent
+    agent.send("event", event);
 
-    agent.send("event", reading);
-
-    // Set up next reading
-    imp.wakeup(loopTimer, loop);
+    // Set timer for next event
+    imp.wakeup(loopTimer, getData);
 }
 
 // Give the agent time to connect to Azure
 // then start the loop
-imp.wakeup(5, loop);
+imp.wakeup(5, getData);
 ```
 
 # License
