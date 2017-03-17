@@ -3,8 +3,8 @@
  */
 
 const HUB_NAME = "#{env:AZURE_IOTHUB_HUB_NAME}";
-const ACCESS_KEY = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY}"
-const ACCESS_KEY_NAME = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME}"
+const ACCESS_KEY = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY}";
+const ACCESS_KEY_NAME = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME}";
 
 class RegistryTestCase extends ImpTestCase {
 
@@ -32,7 +32,7 @@ class RegistryTestCase extends ImpTestCase {
             local connectionString = "HostName=" + HUB_NAME
                 + ".azure-devices.net;SharedAccessKeyName=" + ACCESS_KEY_NAME
                 + ";SharedAccessKey=" + ACCESS_KEY;
-            this._registry = iothub.Registry.fromConnectionString(connectionString);
+            this._registry = iothub.Registry(connectionString);
             resolve("Registry created")
         }.bindenv(this));
     }

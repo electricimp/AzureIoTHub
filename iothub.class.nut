@@ -249,7 +249,7 @@ class iothub {
         }
 
         function _typeof() {
-            return "Message";
+            return "message";
         }
 
     }
@@ -277,6 +277,10 @@ class iothub {
         function getMessage() {
             local msg = _delivery.message();
             return iothub.Message(msg.body(), msg.properties());
+        }
+
+        function _typeof() {
+            return "delivery";
         }
     }
 
@@ -622,6 +626,7 @@ class iothub {
                 _handlers.onEvent("Cannot receive while disconnected.", null);
             } else {
                 // TODO: test/handle if receiver already open
+                if ( _isOpen(_receivers.event) ) _receivers.event.close();
                 _openEventReceiver();
             }
             return this;

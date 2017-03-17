@@ -1,7 +1,15 @@
 {
-  "modelId": "FDmwxg-3sYAx" /* April */,
-  "devices": ["233f4aafaf952dee" /* EI.Test.G */],
-  "agentFile": "iothub.class.nut",
-  "stopOnFailure": false,
-  "timeout": 60
+    "apiKey": "7355f0c9df51dd7f0af8a3063cbbd94f",
+    "modelId": "wiyaGMp3vhWz" /* Test Group D */,
+    "devices": [
+        "232c8fb030728cee" /* 232c8fb030728cee */
+    ],
+    "agentFile": "iothub.class.nut",
+    "deviceFile": false,
+    "stopOnFailure": false,
+    "timeout": 60,
+    "tests": [
+        "*.test.nut",
+        "tests/**/*.test.nut"
+    ]
 }
