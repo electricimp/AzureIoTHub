@@ -632,12 +632,6 @@ class iothub {
             return this;
         }
 
-        // done cb params - err
-        function sendEventBatch(messages, done = null) {
-            local message = _constructBatchBody(messages);
-            sendEvent(message, done);
-        }
-
         // PRIVATE FUNCTIONS
         // ------------------------------------------------------------------------------------
         // ------------------------------------------------------------------------------------
@@ -967,19 +961,6 @@ class iothub {
             }.bindenv(this));
         }
 
-        function _constructBatchBody(messages) {
-            local body = [];
-            foreach (message in messages) {
-
-                local msg = {
-                    "body": http.base64encode(message.getData()),
-                    "properties": message.getProperties()
-                }
-                body.push(msg);
-            }
-            return http.jsonencode(body);
-        }
-
         function _handleDeliveries(deliveries, cb) {
             while (deliveries.len()) {
                 local item = iothub.Delivery(deliveries.remove(0));
@@ -1034,11 +1015,6 @@ class iothub {
 
         function sendEvent(message, done = null) {
             _transport.sendEvent(message, done);
-            return this;
-        }
-
-        function sendEventBatch(messages, done = null) {
-            _transport.sendEventBatch(messages, done);
             return this;
         }
 

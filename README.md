@@ -191,19 +191,6 @@ client.sendEvent(message2, function(err) {
 });
 ```
 
-#### sendEventBatch(*messages[, callback]*)
-
-Sends an array of events (*messages*) to Iot Hub. The *messages* parameter should be an array of iothub.Message objects which can be created from a string or any object that can be converted to JSON. *(See iothub.Message class for more details)*
-
-You may also provide an optional *callback* function. This function will be called when the trasmission of the event to IoT Hub has occurred. The callback function takes one parameter: *err*. If no errors were encountered *err* will be `null` otherwise it will contain a error message.
-
-```squirrel
-local messages = [];
-messages.push(iothub.Message("This is an event"));
-messages.push(iothub.Message({ "id": 1, "text": "Hello, world." }));
-client.sendEventBatch(messages);
-```
-
 #### receive(*callback*)
 
 Opens a listener for cloud-to-device events targetted at this device. Whenever an event is received, a delivery object will be passed to the provided callback. The event must be acknowledged or rejected by executing a feedback function on the delivery object. If no feedback function is called within the scope of the callback the message will be automatically accepted. [*(See iothub.Delivery Class for more details)*](#iothubdelivery)

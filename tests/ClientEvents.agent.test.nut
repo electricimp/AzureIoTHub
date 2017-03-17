@@ -97,7 +97,7 @@ class ClientEventsTestCase extends ImpTestCase {
     /**
      * Test client::sendEvent()
      */
-    function test1SendEvent() {
+    function test1_SendEvent() {
         return Promise(function (resolve, reject) {
             local message = { somevalue = "123" };
             this._client.sendEvent(iothub.Message(message), function(err) {
@@ -115,7 +115,7 @@ class ClientEventsTestCase extends ImpTestCase {
      * @see https://github.com/Azure/azure-iot-sdks/blob/master/tools/iothub-explorer/readme.md
      * @see https://github.com/electricimp/impTest/blob/develop/docs/writing-tests.md#external-commands
      */
-    function test2Receive() {
+    function test2_Receive() {
         return Promise(function (resolve, reject) {
             // gen unique test message
             local testMessage = "message" + math.rand();
@@ -146,14 +146,13 @@ class ClientEventsTestCase extends ImpTestCase {
      * @see https://github.com/Azure/azure-iot-sdks/blob/master/tools/iothub-explorer/readme.md
      * @see https://github.com/electricimp/impTest/blob/develop/docs/writing-tests.md#external-commands
      */
-    function test3SendFeedbackComplete() {
+    function test3_SendFeedbackComplete() {
         return Promise(function (resolve, reject) {
             // gen unique test message
             local testMessage = "message" + math.rand();
 
             // start receiving messages
             this._client.receive(function(err, delivery) {
-                this.info("in complete receive")
                 try {
                     if (err) throw err;
                     // check that we have a message in the queue
@@ -164,7 +163,7 @@ class ClientEventsTestCase extends ImpTestCase {
                             // accept message to clear it from the queue
                             delivery.complete();
                             // pause briefly before checking message queue again
-                            imp.sleep(0.01);
+                            imp.sleep(0.05);
                             // check that we have no messages in the queue
                             checkMessageCount(0, function(err) {
                                 if (err) reject(err);
@@ -188,14 +187,13 @@ class ClientEventsTestCase extends ImpTestCase {
      * @see https://github.com/Azure/azure-iot-sdks/blob/master/tools/iothub-explorer/readme.md
      * @see https://github.com/electricimp/impTest/blob/develop/docs/writing-tests.md#external-commands
      */
-    function test4SendFeedbackReject() {
+    function test4_SendFeedbackReject() {
         return Promise(function (resolve, reject) {
             // gen unique test message
             local testMessage = "message" + math.rand();
 
             // start receiving messages
             this._client.receive(function(err, delivery) {
-                this.info("in reject receive")
                 try {
                     if (err) throw err;
                     // check that we have a message in the queue
@@ -206,7 +204,7 @@ class ClientEventsTestCase extends ImpTestCase {
                             // reject message to clear it from the queue
                             delivery.reject();
                             // pause briefly before checking message queue again
-                            imp.sleep(0.01);
+                            imp.sleep(0.05);
                             // check that we have no messages in the queue
                             checkMessageCount(0, function(err) {
                                 if (err) reject(err);
@@ -230,7 +228,7 @@ class ClientEventsTestCase extends ImpTestCase {
      * @see https://github.com/Azure/azure-iot-sdks/blob/master/tools/iothub-explorer/readme.md
      * @see https://github.com/electricimp/impTest/blob/develop/docs/writing-tests.md#external-commands
      */
-    function test5SendFeedbackAbandon() {
+    function test5_SendFeedbackAbandon() {
         return Promise(function (resolve, reject) {
             // gen unique test message
             local testMessage = "message" + math.rand();
@@ -285,7 +283,7 @@ class ClientEventsTestCase extends ImpTestCase {
     // *
     // * Test client::sendEvent() with Message Id
     // */
-    function test6SendEventwithMessageId() {
+    function test6_SendEventwithMessageId() {
         return Promise(function (resolve, reject) {
             local message = { somevalue = "123" };
             local properties = {
@@ -305,7 +303,7 @@ class ClientEventsTestCase extends ImpTestCase {
     /**
      * Tests client::sendEvent() with message Id and correlation Id
      */
-    function test7SendEventwithMessageIdCorrelationId() {
+    function test7_SendEventwithMessageIdCorrelationId() {
         return Promise(function (resolve, reject) {
             // gen unique test message
             local message = { somevalue = "123" };
