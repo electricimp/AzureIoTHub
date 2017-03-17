@@ -24,8 +24,8 @@ function receiveHandler(err, delivery) {
 
     // send feedback
     if (typeof message.getBody() == "string") {
-        server.log( message.getBody() );
-        server.log( http.jsonencode(message.getProperties()) );
+        server.log(message.getBody());
+        server.log(http.jsonencode(message.getProperties()));
         delivery.complete();
     } else {
         delivery.reject();
