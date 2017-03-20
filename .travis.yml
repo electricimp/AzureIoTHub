@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-- '5.5'
+- '6.6'
 before_script:
 - npm i -g imptest@latest
 script:
