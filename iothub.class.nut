@@ -16,6 +16,9 @@
 
 /// Azure iothub library
 
+const AZURE_HTTP_API_VERSION = "2016-11-14";
+const AZURE_CLAIM_BASED_SECURITY_PATH = "$cbs";
+
 class iothub {
 
     static VERSION = "2.0.0";
@@ -74,10 +77,11 @@ class iothub {
         }
 
         static function anDayFromNow() {
-            return time() + 3600 * 24;
+            return time() + 86400;
         }
 
-        static function encodeUriComponentStrict(str) {
+        // encode URI component strict
+        static function encodeUri(str) {
             // NOTE: This may not encode enough characters. If it is a problem, check
             //       it is encoding: !, ", *, ( and ).
             return http.urlencode({s=str}).slice(2);
@@ -114,12 +118,12 @@ class iothub {
             local hash = iothub.Authorization.hmacHash(key, iothub.Authorization.stringToSign(resourceUri, expiry));
 
             // The sig property shall be the result of URL-encoding the value <signature>.
-            sas.sig = iothub.Authorization.encodeUriComponentStrict(hash);
+            sas.sig = iothub.Authorization.encodeUri(hash);
 
             // If the keyName argument to the create method was falsy, skn shall not be defined.
             // <urlEncodedKeyName> shall be the URL-encoded value of keyName.
             // The skn property shall be the value <urlEncodedKeyName>.
-            if (keyName) sas.skn = iothub.Authorization.encodeUriComponentStrict(keyName);
+            if (keyName) sas.skn = iothub.Authorization.encodeUri(keyName);
 
             // The se property shall have the value of expiry.
             sas.se = expiry;
@@ -158,12 +162,8 @@ class iothub {
             return devicePath(id) + "/messages/devicebound";
         }
 
-        static function claimBasedSecurityPath() {
-            return "$cbs";
-        }
-
         static function versionQueryString() {
-            return "?api-version=2016-11-14";
+            return "?api-version=" + AZURE_HTTP_API_VERSION;
         }
     }
 
@@ -175,7 +175,7 @@ class iothub {
 
         constructor(jsonData = null) {
 
-            if (jsonData) {
+            if (typeof jsonData == "table") {
                 _body = http.jsondecode(jsonData);
             } else {
                 _body = {
@@ -209,7 +209,7 @@ class iothub {
         }
 
         function _typeof() {
-            return "Device";
+            return "device";
         }
     }
 
@@ -599,13 +599,13 @@ class iothub {
                 done("Cannot send while disconnected.");
             } else {
                 if ( !_isOpen(_senders.event) ) {
-                    debugLog("creating event sender session");
+                    _log("creating event sender session");
                     // add message to queue
                     _msgQueue.push({"msg" : message, "cb" : done});
                     // create a new sender & send message
                     _openEventSender();
                 } else {
-                    debugLog("event sender session open")
+                    _log("event sender session open")
                     _sendEvent(message, done);
                 }
             }
@@ -644,11 +644,11 @@ class iothub {
         }
 
         function _openAuthReceiver() {
-            _receivers.auth <- _sessions.auth.openreceiver(iothub.Endpoint.claimBasedSecurityPath(), _amqpAuthReceiverStatusHandler.bindenv(this), _authReceiverCB.bindenv(this));
+            _receivers.auth <- _sessions.auth.openreceiver(AZURE_CLAIM_BASED_SECURITY_PATH, _amqpAuthReceiverStatusHandler.bindenv(this), _authReceiverCB.bindenv(this));
         }
 
         function _openAuthSender() {
-            _senders.auth <- _sessions.auth.opensender(iothub.Endpoint.claimBasedSecurityPath(), _amqpAuthSenderStatusHandler.bindenv(this));
+            _senders.auth <- _sessions.auth.opensender(AZURE_CLAIM_BASED_SECURITY_PATH, _amqpAuthSenderStatusHandler.bindenv(this));
         }
 
         function _openEventSession() {
@@ -668,7 +668,7 @@ class iothub {
         // Status Handlers
         // ------------------------------------------------------------------------------------
         function _amqpConnectionStatusHandler(event, data) {
-            debugLog("Connection event: " + event);
+            _log("Connection event: " + event);
             switch(event) {
                 case "CONNECTION_OPEN":
                     if (_connecting) _openAuthSession();
@@ -681,17 +681,17 @@ class iothub {
                         _connectionCallback(data);
                     } else {
                         // TODO: replace this with error handling
-                        debugLog(data);
+                        _log(data);
                     }
                 default:
                     // TODO: replace this with known events
-                    debugLog(data);
+                    _log(data);
                     break;
             }
         }
 
         function _amqpAuthSessionStatusHandler(event, data) {
-            debugLog("Auth Session event: " + event);
+            _log("Auth Session event: " + event);
             switch(event) {
                 case "SESSION_OPEN":
                     _openAuthReceiver();
@@ -704,23 +704,23 @@ class iothub {
                         _connectionCallback(data);
                     } else {
                         // TODO: replace this with error handling
-                        debugLog(data);
+                        _log(data);
                     }
                 default:
                     // TODO: replace this with known events
-                    debugLog(data);
+                    _log(data);
                     break;
             }
         }
 
         function _amqpAuthReceiverStatusHandler(event, data) {
-            debugLog("Auth Receiver event: " + event);
+            _log("Auth Receiver event: " + event);
             switch(event) {
                 case "RECEIVER_OPEN":
                     if ( !_isOpen(_senders.auth) )  {
                         _openAuthSender();
                     } else {
-                        _getPutToken( function() { debugLog("put token request sent") });
+                        _getPutToken( function() { _log("put token request sent") });
                     }
                     break;
                 case "RECEIVER_CLOSED":
@@ -731,21 +731,21 @@ class iothub {
                         _connectionCallback(data);
                     } else {
                         // TODO: replace this with error handling
-                        debugLog(data);
+                        _log(data);
                     }
                 default:
                     // Should not need this, it's just a catch-all while in development
-                    debugLog(data);
+                    _log(data);
                     break;
             }
         }
 
         // Note: auth receiver will open auth sender if needed, auth
         function _amqpAuthSenderStatusHandler(event, data) {
-            debugLog("Auth Sender event: " + event);
+            _log("Auth Sender event: " + event);
             switch(event) {
                 case "SENDER_OPEN":
-                    _getPutToken( function() { debugLog("put token request sent") });
+                    _getPutToken( function() { _log("put token request sent") });
                     break;
                 case "SENDER_CLOSED":
                     break;
@@ -755,17 +755,17 @@ class iothub {
                         _connectionCallback(data);
                     } else {
                         // TODO: replace this with error handling
-                        debugLog(data);
+                        _log(data);
                     }
                     break;
                 default:
-                    debugLog(data);
+                    _log(data);
                     break;
             }
         }
 
         function _amqpEventSessionStatusHandler(event, data) {
-            debugLog("Event Session event: " + event);
+            _log("Event Session event: " + event);
 
             switch(event) {
                 case "SESSION_OPEN":
@@ -779,17 +779,17 @@ class iothub {
                         _connectionCallback(data);
                     } else {
                         // TODO: replace this with error handling
-                        debugLog(data);
+                        _log(data);
                     }
                 default:
                     // TODO: replace this with known events
-                    debugLog(data);
+                    _log(data);
                     break;
             }
         }
 
         function _amqpEventSenderStatusHandler(event, data) {
-            debugLog("Msg Sender event: " + event);
+            _log("Msg Sender event: " + event);
 
             switch(event) {
                 case "SENDER_OPEN":
@@ -816,24 +816,24 @@ class iothub {
                         }
                     } else {
                         // TODO: replace this with error handling
-                        debugLog(data);
+                        _log(data);
                         // Renew Token
                         if (data.find("Token Expired") != null) {
                             _senderTokenError = true;
                             _updateConfigSASExpiry();
-                            _getPutToken(function() {debugLog("renewing token")});
+                            _getPutToken(function() {_log("renewing token")});
                         }
                     }
                     break;
                 default:
                     // Should not need this, it's just a catch-all while in development
-                    debugLog(data);
+                    _log(data);
                     break;
             }
         }
 
         function _amqpEventReceiverStatusHandler(event, data) {
-            debugLog("Msg Receiver event: " + event);
+            _log("Msg Receiver event: " + event);
 
             switch(event) {
                 case "RECEIVER_OPEN":
@@ -842,15 +842,15 @@ class iothub {
                     break;
                 case "RECEIVER_ERROR":
                     // TODO: replace this with error handling
-                    debugLog(data);
+                    _log(data);
                     if (data.find("Token Expired") != null) {
                         _receiverTokenError = true;
                         _updateConfigSASExpiry();
-                        _getPutToken(function() {debugLog("renewing token")});
+                        _getPutToken(function() {_log("renewing token")});
                     }
                 default:
                     // Should not need this, it's just a catch-all while in development
-                    debugLog(data);
+                    _log(data);
                     break;
             }
         }
@@ -859,7 +859,7 @@ class iothub {
         // ------------------------------------------------------------------------------------
 
         function _authReceiverCB(deliveries) {
-            debugLog("in auth receiver callback")
+            _log("in auth receiver callback")
             local authorized = false;
 
             foreach(deliveryItem in deliveries) {
@@ -897,7 +897,7 @@ class iothub {
         }
 
         function _getPutToken(done) {
-            debugLog("get put token");
+            _log("get put token");
 
             local properties = {};
             properties["operation"] <- "put-token";
@@ -915,7 +915,7 @@ class iothub {
         function _updateConfigSASExpiry() {
             if ("sharedAccessExpiry" in _config && "connectionString" in _config) {
                 local cn = iothub.ConnectionString.Parse(_config.connectionString);
-                local resourceUri = cn.HostName + "/devices/" + iothub.Authorization.encodeUriComponentStrict(cn.DeviceId);
+                local resourceUri = cn.HostName + "/devices/" + iothub.Authorization.encodeUri(cn.DeviceId);
                 local sas = iothub.SharedAccessSignature.create(resourceUri, null, cn.SharedAccessKey, iothub.Authorization.anHourFromNow());
                 _config.sharedAccessSignature = sas.toString();
                 _config.sharedAccessExpiry = sas.se;
@@ -954,9 +954,9 @@ class iothub {
         function _sendEvent(message, done) {
             // create transfer and send
             _transfers.event <- _senders.event.createtransfer(message.createAMQPMessage());
-            debugLog("send event transfer created")
+            _log("send event transfer created")
             _transfers.event.sendasync(function() {
-                debugLog("in send event transfer callback");
+                _log("in send event transfer callback");
                 if (done) done(null);
             }.bindenv(this));
         }
@@ -968,7 +968,7 @@ class iothub {
             }
         }
 
-        function debugLog(logMsg) {
+        function _log(logMsg) {
             if (_debug) server.log(logMsg);
         }
 
@@ -988,7 +988,7 @@ class iothub {
         function fromConnectionString(deviceConnectionString) {
 
             local cn = iothub.ConnectionString.Parse(deviceConnectionString);
-            local resourceUri = cn.HostName + "/devices/" + iothub.Authorization.encodeUriComponentStrict(cn.DeviceId);
+            local resourceUri = cn.HostName + "/devices/" + iothub.Authorization.encodeUri(cn.DeviceId);
             local sas = iothub.SharedAccessSignature.create(resourceUri, null, cn.SharedAccessKey, iothub.Authorization.anHourFromNow());
 
             local config = {
