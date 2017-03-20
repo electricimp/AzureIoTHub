@@ -163,7 +163,7 @@ class iothub {
         }
 
         static function versionQueryString() {
-            return "?api-version=" + AZURE_HTTP_API_VERSION;
+            return ("?api-version=" + AZURE_HTTP_API_VERSION);
         }
     }
 
@@ -175,7 +175,7 @@ class iothub {
 
         constructor(jsonData = null) {
 
-            if (typeof jsonData == "table") {
+            if (jsonData) {
                 _body = http.jsondecode(jsonData);
             } else {
                 _body = {
