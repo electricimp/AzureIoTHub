@@ -491,7 +491,7 @@ class AzureIoTHub {
                 done = deviceId;
                 deviceId = null;
             }
-            if (typeof deviceId != "string") {
+            if (deviceId == null) {
                 deviceId = split(http.agenturl(), "/").pop();
             }
 
@@ -536,7 +536,7 @@ class AzureIoTHub {
                 done = deviceId;
                 deviceId = null;
             }
-            if (typeof deviceId != "string") {
+            if (deviceId == null) {
                 deviceId = split(http.agenturl(), "/").pop();
             }
 
