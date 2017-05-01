@@ -157,7 +157,8 @@ client.connect(function(err) {
         server.error(err);
     } else {
         server.log("Connection open. Ready to send and receive messages.");
-    });
+    }
+});
 ```
 
 #### disconnect()
