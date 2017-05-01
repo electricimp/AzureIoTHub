@@ -616,7 +616,7 @@ class iothub {
         function sendEvent(message, done = null) {
 
             if ( !_isOpen(_sessions.event) ) {
-                done("Cannot send while disconnected.");
+                if (done) done("Cannot send while disconnected.");
             } else {
                 if ( !_isOpen(_senders.event) ) {
                     _log("creating event sender session");
