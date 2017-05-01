@@ -12,7 +12,7 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
   - [connect](#connectcallback) -&mdash; Opens an AMQP connection to Azure IoT Hub.
   - [disconnect](#disconnect) &mdash; Disconnects from Azure IoT Hub.
   - [sendEvent](#sendeventmessage-callback) - Sends a device-to-cloud event to Azure IoT Hub.
-  - [receive](#function-receivecallback) - Opens a listener for cloud-to-device events targetted at this device.
+  - [receive](#receivecallback) - Opens a listener for cloud-to-device events targetted at this device.
 - [iothub.Message](#iothubmessage) - A message object used to create events that are sent to Azure IoT Hub.
   - [getProperties](#getproperties) &mdash; Returns a message's application properties.
   - [getBody](#getbody) &mdash; Returns the message's content.
