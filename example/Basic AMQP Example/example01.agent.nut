@@ -1,12 +1,12 @@
-#require "azureiothub.class.nut:2.0.0"
+#require "AzureIoTHub.agent.lib.nut:2.0.0"
 
 ////////// Application Variables //////////
 
 const CONNECT_STRING = "HostName=<YOUR-HOST-NAME>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<YOUR-KEY-HASH>";
 
 client <- null;
-registry <- iothub.Registry(CONNECT_STRING);
-hostName <- iothub.ConnectionString.Parse(CONNECT_STRING).HostName;
+registry <- AzureIoTHub.Registry(CONNECT_STRING);
+hostName <- AzureIoTHub.ConnectionString.Parse(CONNECT_STRING).HostName;
 agentid <- split(http.agenturl(), "/").pop();
 connected <- false;
 
@@ -34,7 +34,7 @@ function receiveHandler(err, delivery) {
 
 // Create a client, open a connection and receive listener
 function createClient(devConnectionString) {
-    client = iothub.Client(devConnectionString);
+    client = AzureIoTHub.Client(devConnectionString);
     client.connect(function(err) {
         if (err) {
             server.error(err);
@@ -81,7 +81,7 @@ registry.get(function(err, deviceInfo) {
 device.on("event", function(event) {
     event.agentid <- agentid;
     event.time <- formatDate();
-    local message = iothub.Message(event);
+    local message = AzureIoTHub.Message(event);
 
     // make sure device is connected, then send event
     if (connected) {

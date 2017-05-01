@@ -1,5 +1,5 @@
 /**
- * Test case to test iothub.Registry
+ * Test case to test AzureIoTHub.Registry
  */
 
 const HUB_NAME = "#{env:AZURE_IOTHUB_HUB_NAME}";
@@ -32,7 +32,7 @@ class RegistryTestCase extends ImpTestCase {
             local connectionString = "HostName=" + HUB_NAME
                 + ".azure-devices.net;SharedAccessKeyName=" + ACCESS_KEY_NAME
                 + ";SharedAccessKey=" + ACCESS_KEY;
-            this._registry = iothub.Registry(connectionString);
+            this._registry = AzureIoTHub.Registry(connectionString);
             resolve("Registry created")
         }.bindenv(this));
     }

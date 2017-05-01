@@ -1,5 +1,5 @@
 /**
- * Test case to test iothub.Client connection
+ * Test case to test AzureIoTHub.Client connection
  */
 
 const HUB_NAME = "#{env:AZURE_IOTHUB_HUB_NAME}";
@@ -28,8 +28,8 @@ class ClientEventsTestCase extends ImpTestCase {
                 "SharedAccessKeyName=" + ACCESS_KEY_NAME + ";" +
                 "SharedAccessKey=" + ACCESS_KEY;
 
-            this._registry = iothub.Registry(connectionString);
-            local hostname = iothub.ConnectionString.Parse(connectionString).HostName;
+            this._registry = AzureIoTHub.Registry(connectionString);
+            local hostname = AzureIoTHub.ConnectionString.Parse(connectionString).HostName;
 
             this._registry.create({"deviceId" : this._deviceId}, function(err, deviceInfo) {
                 if (err && err.response.statuscode == 429) {
@@ -37,7 +37,7 @@ class ClientEventsTestCase extends ImpTestCase {
                 } else if (err) {
                     reject("createDevice error: " + err.message + " (" + err.response.statuscode + ")");
                 } else if (deviceInfo) {
-                    this._client = iothub.Client(deviceInfo.connectionString(hostname));
+                    this._client = AzureIoTHub.Client(deviceInfo.connectionString(hostname));
                     resolve("Created " + deviceInfo.getBody().deviceId + " on " + hostname);
                 } else {
                     reject("createDevice error unknown");

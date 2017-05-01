@@ -34,12 +34,12 @@
  *
  */
 
-/// Azure iothub library
+/// Azure AzureIoTHub library
 
 const AZURE_HTTP_API_VERSION = "2016-11-14";
 const AZURE_CLAIM_BASED_SECURITY_PATH = "$cbs";
 
-class iothub {
+class AzureIoTHub {
 
     static VERSION = "2.0.0";
 
@@ -128,22 +128,22 @@ class iothub {
         static function create(resourceUri, keyName, key, expiry) {
 
             // The create method shall create a new instance of SharedAccessSignature with properties: sr, sig, se, and optionally skn.
-            local sas = iothub.SharedAccessSignature();
+            local sas = AzureIoTHub.SharedAccessSignature();
 
             // The sr property shall have the value of resourceUri.
             sas.sr = resourceUri;
 
             // <signature> shall be an HMAC-SHA256 hash of the value <stringToSign>, which is then base64-encoded.
             // <stringToSign> shall be a concatenation of resourceUri + "\n" + expiry.
-            local hash = iothub.Authorization.hmacHash(key, iothub.Authorization.stringToSign(resourceUri, expiry));
+            local hash = AzureIoTHub.Authorization.hmacHash(key, AzureIoTHub.Authorization.stringToSign(resourceUri, expiry));
 
             // The sig property shall be the result of URL-encoding the value <signature>.
-            sas.sig = iothub.Authorization.encodeUri(hash);
+            sas.sig = AzureIoTHub.Authorization.encodeUri(hash);
 
             // If the keyName argument to the create method was falsy, skn shall not be defined.
             // <urlEncodedKeyName> shall be the URL-encoded value of keyName.
             // The skn property shall be the value <urlEncodedKeyName>.
-            if (keyName) sas.skn = iothub.Authorization.encodeUri(keyName);
+            if (keyName) sas.skn = AzureIoTHub.Authorization.encodeUri(keyName);
 
             // The se property shall have the value of expiry.
             sas.se = expiry;
@@ -296,7 +296,7 @@ class iothub {
 
         function getMessage() {
             local msg = _delivery.message();
-            return iothub.Message(msg.body(), msg.properties());
+            return AzureIoTHub.Message(msg.body(), msg.properties());
         }
 
         function _typeof() {
@@ -320,8 +320,8 @@ class iothub {
             // NOTE: This method did not appear in the original Node.js SDK
             if ("sharedAccessExpiry" in _config && "connectionString" in _config) {
                 if (time() >= _config.sharedAccessExpiry) {
-                    local cn = iothub.ConnectionString.Parse(_config.connectionString);
-                    local sas = iothub.SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, iothub.Authorization.anHourFromNow());
+                    local cn = AzureIoTHub.ConnectionString.Parse(_config.connectionString);
+                    local sas = AzureIoTHub.SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, AzureIoTHub.Authorization.anHourFromNow());
                     _config.sharedAccessSignature = sas.toString();
                     _config.sharedAccessExpiry = sas.se;
                 }
@@ -424,12 +424,12 @@ class iothub {
 
         constructor(connectionString) {
             local config = fromConnectionString(connectionString);
-            _transport = iothub.RegistryHTTP(config);
+            _transport = AzureIoTHub.RegistryHTTP(config);
         }
 
         function fromConnectionString(connectionString) {
-            local cn = iothub.ConnectionString.Parse(connectionString);
-            local sas = iothub.SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, iothub.Authorization.anHourFromNow());
+            local cn = AzureIoTHub.ConnectionString.Parse(connectionString);
+            local sas = AzureIoTHub.SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, AzureIoTHub.Authorization.anHourFromNow());
 
             local config = {
                 "host": cn.HostName,
@@ -454,12 +454,12 @@ class iothub {
                 deviceInfo.deviceId <- split(http.agenturl(), "/").pop();
             }
 
-            local path = iothub.Endpoint.devicePath(deviceInfo.deviceId) + iothub.Endpoint.versionQueryString();
+            local path = AzureIoTHub.Endpoint.devicePath(deviceInfo.deviceId) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.createDevice(path, deviceInfo, function (err, body) {
                 if (err) {
                     deviceInfo = null;
                 } else if (body) {
-                    deviceInfo = iothub.Device(body);
+                    deviceInfo = AzureIoTHub.Device(body);
                 }
                 if (done) done(err, deviceInfo);
             }.bindenv(this))
@@ -471,12 +471,12 @@ class iothub {
 
             if (typeof deviceInfo == "Device") deviceInfo = deviceInfo.getBody();
 
-            local path = iothub.Endpoint.devicePath(deviceInfo.deviceId) + iothub.Endpoint.versionQueryString();
+            local path = AzureIoTHub.Endpoint.devicePath(deviceInfo.deviceId) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.updateDevice(path, deviceInfo, function (err, body) {
                 if (err) {
                     deviceInfo = null;
                 } else if (body) {
-                    deviceInfo = iothub.Device(body);
+                    deviceInfo = AzureIoTHub.Device(body);
                 }
                 if (done) done(err, deviceInfo);
             }.bindenv(this))
@@ -495,11 +495,11 @@ class iothub {
                 deviceId = split(http.agenturl(), "/").pop();
             }
 
-            local path = iothub.Endpoint.devicePath(deviceId) + iothub.Endpoint.versionQueryString();
+            local path = AzureIoTHub.Endpoint.devicePath(deviceId) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.getDevice(path, function (err, body) {
                 local deviceInfo = null;
                 if (body) {
-                    deviceInfo = iothub.Device(body);
+                    deviceInfo = AzureIoTHub.Device(body);
                 }
                 done(err, deviceInfo);
             }.bindenv(this))
@@ -511,14 +511,14 @@ class iothub {
 
             if (done == null) return null;
 
-            local path = iothub.Endpoint.devicePath("") + iothub.Endpoint.versionQueryString();
+            local path = AzureIoTHub.Endpoint.devicePath("") + AzureIoTHub.Endpoint.versionQueryString();
             _transport.listDevices(path, function (err, body) {
 
                 local devices = [];
                 if (body) {
                     local jsonArray = http.jsondecode(body);
                     foreach (jsonElement in jsonArray) {
-                        local devItem = iothub.Device(http.jsonencode(jsonElement));
+                        local devItem = AzureIoTHub.Device(http.jsonencode(jsonElement));
                         devices.push(devItem);
                     }
                 }
@@ -540,7 +540,7 @@ class iothub {
                 deviceId = split(http.agenturl(), "/").pop();
             }
 
-            local path = iothub.Endpoint.devicePath(deviceId) + iothub.Endpoint.versionQueryString();
+            local path = AzureIoTHub.Endpoint.devicePath(deviceId) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.deleteDevice(path, done);
 
             return this;
@@ -676,11 +676,11 @@ class iothub {
         }
 
         function _openEventSender() {
-            _senders.event <- _sessions.event.opensender(iothub.Endpoint.eventPath(_config.deviceId), _amqpEventSenderStatusHandler.bindenv(this));
+            _senders.event <- _sessions.event.opensender(AzureIoTHub.Endpoint.eventPath(_config.deviceId), _amqpEventSenderStatusHandler.bindenv(this));
         }
 
         function _openEventReceiver() {
-            _receivers.event <- _sessions.event.openreceiver(iothub.Endpoint.messagePath(_config.deviceId), _amqpEventReceiverStatusHandler.bindenv(this), function(deliveries) {
+            _receivers.event <- _sessions.event.openreceiver(AzureIoTHub.Endpoint.messagePath(_config.deviceId), _amqpEventReceiverStatusHandler.bindenv(this), function(deliveries) {
                 _handleDeliveries(deliveries, _handlers.onEvent);
             }.bindenv(this));
         }
@@ -934,9 +934,9 @@ class iothub {
         // updates the config SAS expiry time
         function _updateConfigSASExpiry() {
             if ("sharedAccessExpiry" in _config && "connectionString" in _config) {
-                local cn = iothub.ConnectionString.Parse(_config.connectionString);
-                local resourceUri = cn.HostName + "/devices/" + iothub.Authorization.encodeUri(cn.DeviceId);
-                local sas = iothub.SharedAccessSignature.create(resourceUri, null, cn.SharedAccessKey, iothub.Authorization.anHourFromNow());
+                local cn = AzureIoTHub.ConnectionString.Parse(_config.connectionString);
+                local resourceUri = cn.HostName + "/devices/" + AzureIoTHub.Authorization.encodeUri(cn.DeviceId);
+                local sas = AzureIoTHub.SharedAccessSignature.create(resourceUri, null, cn.SharedAccessKey, AzureIoTHub.Authorization.anHourFromNow());
                 _config.sharedAccessSignature = sas.toString();
                 _config.sharedAccessExpiry = sas.se;
             }
@@ -983,7 +983,7 @@ class iothub {
 
         function _handleDeliveries(deliveries, cb) {
             while (deliveries.len()) {
-                local item = iothub.Delivery(deliveries.remove(0));
+                local item = AzureIoTHub.Delivery(deliveries.remove(0));
                 cb(null, item);
             }
         }
@@ -1002,14 +1002,14 @@ class iothub {
         constructor(deviceConnectionString) {
             local config = fromConnectionString(deviceConnectionString);
             _config = config;
-            _transport = iothub.ClientAMQP(config);
+            _transport = AzureIoTHub.ClientAMQP(config);
         }
 
         function fromConnectionString(deviceConnectionString) {
 
-            local cn = iothub.ConnectionString.Parse(deviceConnectionString);
-            local resourceUri = cn.HostName + "/devices/" + iothub.Authorization.encodeUri(cn.DeviceId);
-            local sas = iothub.SharedAccessSignature.create(resourceUri, null, cn.SharedAccessKey, iothub.Authorization.anHourFromNow());
+            local cn = AzureIoTHub.ConnectionString.Parse(deviceConnectionString);
+            local resourceUri = cn.HostName + "/devices/" + AzureIoTHub.Authorization.encodeUri(cn.DeviceId);
+            local sas = AzureIoTHub.SharedAccessSignature.create(resourceUri, null, cn.SharedAccessKey, AzureIoTHub.Authorization.anHourFromNow());
 
             local config = {
                 "host": cn.HostName,

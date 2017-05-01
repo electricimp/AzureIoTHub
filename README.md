@@ -2,27 +2,27 @@
 
 Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub version “2016-11-14”. The library consists of the following classes:
 
-- [iothub.Registry](#iothubregistry) &mdash; Device management class, all requests use HTTP to connect to Azure IoT Hub.
+- [AzureIoTHub.Registry](#iothubregistry) &mdash; Device management class, all requests use HTTP to connect to Azure IoT Hub.
   - [create](#createdeviceinfo-callback) &mdash; Creates a a new device identity in Azure IoT Hub.
   - [update](#updatedeviceinfo-callback) &mdash; Updates an existing device identity in Azure IoT Hub.
   - [remove](#removedeviceid-callback) &mdash; Deletes a single device identity from Azure IoT Hub.
   - [get](#getdeviceid-callback) &mdash; Returns the properties of an existing device identity in Azure IoT Hub.
   - [list](#listcallback) &mdash; Returns a list of up to 1000 device identities in Azure IoT Hub.
-- [iothub.Client](#iothubclient) &mdash; Used to open AMQP connection to Azure IoT Hub, and to send & receive events.
+- [AzureIoTHub.Client](#iothubclient) &mdash; Used to open AMQP connection to Azure IoT Hub, and to send & receive events.
   - [connect](#connectcallback) -&mdash; Opens an AMQP connection to Azure IoT Hub.
   - [disconnect](#disconnect) &mdash; Disconnects from Azure IoT Hub.
   - [sendEvent](#sendeventmessage-callback) - Sends a device-to-cloud event to Azure IoT Hub.
   - [receive](#receivecallback) - Opens a listener for cloud-to-device events targetted at this device.
-- [iothub.Message](#iothubmessage) - A message object used to create events that are sent to Azure IoT Hub.
+- [AzureIoTHub.Message](#iothubmessage) - A message object used to create events that are sent to Azure IoT Hub.
   - [getProperties](#getproperties) &mdash; Returns a message's application properties.
   - [getBody](#getbody) &mdash; Returns the message's content.
-- [iothub.Delivery](#iothubdelivery) - A delivery object, created from events received from Azure IoT Hub.
+- [AzureIoTHub.Delivery](#iothubdelivery) - A delivery object, created from events received from Azure IoT Hub.
   - [getMessage](#getmessage) &mdash; Returns an iothub.Message object.
   - [complete](#complete) &mdash; A feedback function used to accept an IoT Hub delivery.
   - [abandon](#abandon) &mdash; A feedback function used to re-queue an IoT Hub delivery.
   - [reject](#reject) &mdash; A feedback function used to reject an IoT Hub delivery.
 
-**To add this library to your project, add** `#require "azureiothub.class.nut:2.0.0"` **to the top of your agent code.**
+**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:2.0.0"` **to the top of your agent code.**
 
 ## Authentication
 
@@ -55,7 +55,7 @@ The *Registry* class is used to manage IoTHub devices. This class allows your to
 This contructs a Registry object which exposes the Device Registry functions. The *connectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication).
 
 ```squirrel
-#require "azureiothub.class.nut:2.0.0"
+#require "AzureIoTHub.agent.lib.nut:2.0.0"
 
 // Instantiate a client using your connection string
 const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
@@ -96,7 +96,7 @@ Returns the properties up to 1000 existing device identities in the IoT Hub.
 This example code will register the device (using the agent’s ID, which could be replaced with the device’s ID) or create a new one. It will then instantiate the Client class for later use.
 
 ```squirrel
-#require "azureiothub.class.nut:2.0.0"
+#require "AzureIoTHub.agent.lib.nut:2.0.0"
 
 const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 
@@ -297,7 +297,7 @@ This example code will register a device with Azure IoT Hub (if needed), then op
 ### Agent Code
 
 ```squirrel
-#require "azureiothub.class.nut:2.0.0"
+#require "AzureIoTHub.agent.lib.nut:2.0.0"
 
 ////////// Application Variables //////////
 
