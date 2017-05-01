@@ -69,7 +69,7 @@ All class methods make asynchronous HTTP requests to Azure IoT Hub. An optional 
 | Parameter | Value |
 | --- | --- |
 | *err* | This will be `null` if there was no error. Otherwise it will be a table containing two keys: *response*, the original **httpresponse** object, and *message*, an error report string |
-| *response* | For *create()*, *update()* and *get()*: an [iothub.Device](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry) object.<br> For *list()*: an array of [iothub.Device](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry) objects.<br>For *remote()*: nothing |
+| *response* | For *create()*, *update()* and *get()*: an [iothub.Device](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry) object.<br> For *list()*: an array of [iothub.Device](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry) objects.<br>For *remove()*: nothing |
 
 #### create(*[deviceInfo][, callback]*)
 
