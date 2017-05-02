@@ -3,7 +3,7 @@
     "devices": [
         "232c8fb030728cee" /* 232c8fb030728cee */
     ],
-    "agentFile": "Azure.IoTHub.agent.lib.nut",
+    "agentFile": "AzureIoTHub.agent.lib.nut",
     "deviceFile": false,
     "stopOnFailure": false,
     "timeout": 60,
