@@ -1,5 +1,5 @@
 /**
- * Test case to test AuzreIoTHub.Client send and receive events
+ * Test case to test AzureIoTHub.Client send and receive events
  */
 
 const HUB_NAME = "#{env:AZURE_IOTHUB_HUB_NAME}";
@@ -27,8 +27,8 @@ class ClientEventsTestCase extends ImpTestCase {
                 "SharedAccessKeyName=" + ACCESS_KEY_NAME + ";" +
                 "SharedAccessKey=" + ACCESS_KEY;
 
-            this._registry = AuzreIoTHub.Registry(connectionString);
-            local hostname = AuzreIoTHub.ConnectionString.Parse(connectionString).HostName;
+            this._registry = AzureIoTHub.Registry(connectionString);
+            local hostname = AzureIoTHub.ConnectionString.Parse(connectionString).HostName;
 
             this._registry.create({"deviceId" : this._deviceId}, function(err, deviceInfo) {
                 if (err && err.response.statuscode == 429) {
@@ -36,7 +36,7 @@ class ClientEventsTestCase extends ImpTestCase {
                 } else if (err) {
                     reject("createDevice error: " + err.message + " (" + err.response.statuscode + ")");
                 } else if (deviceInfo) {
-                    this._client = AuzreIoTHub.Client(deviceInfo.connectionString(hostname));
+                    this._client = AzureIoTHub.Client(deviceInfo.connectionString(hostname));
                     // connect
                     this._client.connect(function(err) {
                         if (err) {
@@ -100,7 +100,7 @@ class ClientEventsTestCase extends ImpTestCase {
     function test1_SendEvent() {
         return Promise(function (resolve, reject) {
             local message = { somevalue = "123" };
-            this._client.sendEvent(AuzreIoTHub.Message(message), function(err) {
+            this._client.sendEvent(AzureIoTHub.Message(message), function(err) {
                 if (err) {
                     reject("sendEvent error: " + err.message);
                 } else {
@@ -289,7 +289,7 @@ class ClientEventsTestCase extends ImpTestCase {
             local properties = {
               "IoTHub-MessageId": "id_" + math.rand()
             }
-            this._client.sendEvent(AuzreIoTHub.Message(message,properties), function(err) {
+            this._client.sendEvent(AzureIoTHub.Message(message,properties), function(err) {
                 if (err) {
                     reject("sendEvent error: " + err.message);
                 } else {
@@ -311,7 +311,7 @@ class ClientEventsTestCase extends ImpTestCase {
               "IoTHub-MessageId": "messageid_" + math.rand(),
               "IoTHub-CorrelationId": "correlationid_" + math.rand()
             };
-            this._client.sendEvent(AuzreIoTHub.Message(message,properties), function(err) {
+            this._client.sendEvent(AzureIoTHub.Message(message,properties), function(err) {
                 if (err) {
                     reject("sendEvent error: " + err.message);
                 } else {
