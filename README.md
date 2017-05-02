@@ -24,6 +24,8 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 
 **To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:2.0.0"` **to the top of your agent code.**
 
+**NOTE:** The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in beta testing on the Electric Imp platform and is only supported for Electric Imp Azure accounts.  To sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login).  Be sure to use this account to BlinkUp your device. If you would prefer to use your existing Electric Imp account please use [AzureIoTHub Library version 1.2.1](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1).
+
 ## Authentication
 
 The Azure Portal provides a *Connection String*. This is needed to create an iothub.Registry or iothub.Client object, follow the steps below to get either a *Registry Connection String* or *Device Connection String*.
