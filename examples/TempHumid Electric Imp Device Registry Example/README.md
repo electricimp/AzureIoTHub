@@ -44,7 +44,7 @@ First we will need to assemble the impExplorer Kit. The kit comes with the follo
  - The imp001 should now have power and be blinking amber/red
 
 Assembled it should look like this:
-![impExplorer Kit](./example_imgs/impExplorerKit.png)
+![impExplorer Kit](../example_imgs/impExplorerKit.png)
 
 ### Electric Imp BlinkUp
 
@@ -60,7 +60,7 @@ If you have any issues getting started with your Electric Imp account or device,
 
 The Electric Imp IoT Connectivity Platform has two main components — the impDevice and the impCloud. The impDevice runs the device code, which in this use case consolidates the data gathered by the temperature/humidity sensor. Each device is paired one-to-one with a "virtual twin" — or, as we call it, an agent — in the impCloud. The device sends this data to its agent, which runs agent code. In this example the agent code communicates with the Azure IoT Hub cloud. Here's a broad overview of this flow:
 
-![EI overview](./example_imgs/EIOverview.jpeg)
+![EI overview](../example_imgs/EIOverview.jpeg)
 
 The Electric Imp IDE provides all the tools you need to write and deploy the software (to the device and agent) that will control your imp-enabled connected product. The IDE runs in a desktop web browser and communicates between the device and cloud solutions.
 
@@ -71,19 +71,19 @@ If you'd like a quick overview of the IDE features please visit the Electric Imp
 1. Open your web browser and log in to the [Electric Imp IDE](https://azure-ide.electricimp.com/login)
 2. Click the + button to create a new model
 
-![Create Model](./example_imgs/IDECreateModel.png)
+![Create Model](../example_imgs/IDECreateModel.png)
 
 3. In the pop up name your code model, select your device and click **Create Model**
 4. Find the logs window (near the bottom of the IDE) and locate agent url. It will look something like this: https://agent.electricimp.com/szPc0sLfAqlu
 5. Make a note of the agent id - last part of the agent URL (ie "szPc0sLfAqlu"). We will use this in the next steps as a unique identifier when registering our device in Azure IoT Hub.
 
-![IDE Model agent URL](./example_imgs/IDEEmptyAgentURL.png)
+![IDE Model agent URL](../example_imgs/IDEEmptyAgentURL.png)
 
 ## Create an IoT Hub resource
 
 1. In the [Azure portal](https://portal.azure.com/), click **New > Internet of Things > IoT Hub**
 
-![Create IoT hub](./example_imgs/CreateIoTHub.png)
+![Create IoT hub](../example_imgs/CreateIoTHub.png)
 
 2. In the **IoT hub** pane, enter the following information for your IoT hub:
 
@@ -97,19 +97,19 @@ If you'd like a quick overview of the IDE features please visit the Electric Imp
 
  - **Pin the dashboard**: Check this option for easy access to your IoT hub from the dashboard.
 
-![IoT Create Resource](./example_imgs/IoTHubCreateResouce.png)
+![IoT Create Resource](../example_imgs/IoTHubCreateResouce.png)
 
 3. Click **Create**. It could take a few minutes for your IoT hub to be created. You can see progress in the **Notifications** pane.
 
-![Notifications](./example_imgs/IoTHubNotifications.png)
+![Notifications](../example_imgs/IoTHubNotifications.png)
 
 4. Once your IoT hub is created, click it from the dashboard. Make a note of the **Hostname**, and then click **Shared access policies**.
 
-![Policies](./example_imgs/IoTHubOverview.png)
+![Policies](../example_imgs/IoTHubOverview.png)
 
 5. In the Shared access policies pane, click the iothubowner policy, and then copy and make a note of the Connection string of your IoT hub. For more information, see Control access to IoT Hub.
 
-![Connection String](./example_imgs/IoTHubConnectionString.png)
+![Connection String](../example_imgs/IoTHubConnectionString.png)
 
 ## Register a device in IoT hub
 
@@ -126,7 +126,7 @@ In this example we will register the device via the Azure portal. Please note th
  - **Auto Generate Keys**: Check this field.
  - **Connect device to IoT Hub**: Click **Enable**.
 
- ![Device Explorer](./example_imgs/IoTHubDeviceExplorer.png)
+ ![Device Explorer](../example_imgs/IoTHubDeviceExplorer.png)
 
 4. Click Save.
 
@@ -134,7 +134,7 @@ In this example we will register the device via the Azure portal. Please note th
 
 6. Make a note of the primary key of the connection string. We will use this when running our sample application.
 
-![Device connection string](./example_imgs/IoTHubDeviceConnectionString.png)
+![Device connection string](../example_imgs/IoTHubDeviceConnectionString.png)
 
 ## Run a sample application on Electric Imp
 
@@ -142,7 +142,7 @@ In this example we will register the device via the Azure portal. Please note th
 2. Copy and Paste the [agent code](./example01.agent.nut) from github into the left side of the IDE in the agent window
 3. Copy and Paste the [device code](./example01.device.nut) from github into the right side of the IDE in the device window
 
-![IDE Model agent URL](./example_imgs/IDEEmptyAgentURL.png)
+![IDE Model agent URL](../example_imgs/IDEEmptyAgentURL.png)
 
 4. On line 5 of the agent code paste the **Device Connection String** from the previous step in the `const CONNECT_STRING = ""`
 5. Hit Build and Run to save and launch the code
