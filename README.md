@@ -24,13 +24,15 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 
 **To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:2.0.0"` **to the top of your agent code.**
 
-**NOTE:** The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in beta testing on the Electric Imp platform and is only supported for Electric Imp Azure accounts.  Sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login).  Be sure to use this account to BlinkUp your device. If you would prefer to use your existing Electric Imp account please use the HTTP [AzureIoTHub Library version 1.2.1](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1).
+**NOTE:** The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in alpha testing on the Electric Imp platform and is only supported for Electric Imp Azure accounts. Sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login). Be sure to use this account to BlinkUp your device. If you would prefer to use your existing Electric Imp account please use the HTTP [AzureIoTHub Library version 1.2.1](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1).
 
 ## Authentication
 
-The Azure Portal provides a *Connection String*. This is needed to create an AzureIoTHub.Registry or AzureIoTHub.Client object, follow the steps below to get either a *Registry Connection String* or *Device Connection String*.
+You will need a Microsoft Azure account. If you do not have one please sign up [here](https://azure.microsoft.com/en-us/resources/videos/sign-up-for-microsoft-azure/) before continuing.
 
-To get the *Registry Connection String* you will require owner-level permissions.
+The Azure Portal provides a *Connection String*. This is needed to create an iothub.Registry or iothub.Client object, follow the steps below to get either a *Registry Connection String* or *Device Connection String*.
+
+To get the *Registry Connection String* you will require owner-level permissions. Please use this option if you have not configured a device in the Azure Portal.
 
 1. Open the [Azure Portal](https://portal.azure.com/)
 2. Select or create your Azure IoT Hub resource
@@ -38,7 +40,7 @@ To get the *Registry Connection String* you will require owner-level permissions
 4. Select a policy which has all permissions (such as the *iothubowner*) or create a new policy then click on it
 5. Copy the *Connection string--primary key* to the clipboard and paste it into the AzureIoTHub.Registry constructor.
 
-To get the *Device Connection String* you need device-level permissions. You can use the AzureIoTHub.Registry class [*(see registry example below)*](#registry-example) or follow these steps to find in the Azure Portal.
+If your device is already registered in the Azure Portal you can use the *Device Connection String* to authorize your device. To get the *Device Connection String* you need device-level permissions. Follow the steps below to find the *Device Connection String* in the Azure Portal, otherwire please follow the above instructions to get the *Registry Connection String* and then use the iothub.Registry class [*(see registry example below)*](#registry-example) to authorize your device.
 
 1. Open the [Azure Portal](https://portal.azure.com/)
 2. Select or create your Azure IoT Hub resource
@@ -93,7 +95,7 @@ This method returns the properties of an existing device identity in the IoT Hub
 
 Returns the properties up to 1000 existing device identities in the IoT Hub.
 
-##### Registry Example
+#### Registry Example
 
 This example code will register the device (using the agent’s ID, which could be replaced with the device’s ID) or create a new one. It will then instantiate the Client class for later use.
 
