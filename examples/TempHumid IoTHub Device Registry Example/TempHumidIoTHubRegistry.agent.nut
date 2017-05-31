@@ -10,14 +10,14 @@ class Application {
     connected = false;
 
     constructor(connectionString, deviceConnectionString = null) {
-        connectionString = connectionString;
-        hostName = AzureIoTHub.ConnectionString.Parse(connectionString).HostName;
         agentID = split(http.agenturl(), "/").pop();
 
         if (deviceConnectionString) {
             // We have registered device using IoTHub Dashboard
             createClient(deviceConnectionString);
         } else {
+            connectionString = connectionString;
+            hostName = AzureIoTHub.ConnectionString.Parse(connectionString).HostName;
             registry = AzureIoTHub.Registry(connectionString);
             registerDevice();
         }
