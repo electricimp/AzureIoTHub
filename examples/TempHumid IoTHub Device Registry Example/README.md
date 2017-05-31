@@ -148,7 +148,7 @@ In this example we will register the device via the Azure portal. Please note th
 4. In the agent code look for the **IOTHUB_CONNECTION_STRING** variable. Copy and paste your connection string from **Create an IoT Hub resource** step 5.
 5. Hit Build and Run to save and launch the code
 
-![IDE Build and Run](../example_imgs/IDE_IoTHubeRegistry.png)
+![IDE Build and Run](../example_imgs/IDE_IoTHubRegistry.png)
 
 ## Next Steps
 
