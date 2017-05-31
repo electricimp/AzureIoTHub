@@ -108,7 +108,7 @@ If you'd like a quick overview of the IDE features please visit the Electric Imp
 
 ![Policies](../example_imgs/IoTHubOverview.png)
 
-5. In the Shared access policies pane, click the iothubowner policy, and then copy and make a note of the Connection string of your IoT hub. For more information, see Control access to IoT Hub.
+5. In the Shared access policies pane, click the iothubowner policy, and then copy and make a note of the Connection string of your IoT hub. You will need to enter this value in the code later.  For more information, see Control access to IoT Hub.
 
 ![Connection String](../example_imgs/IoTHubConnectionString.png)
 
@@ -140,12 +140,12 @@ In this example we will register the device via the Azure portal. Please note th
 ## Run a sample application on Electric Imp
 
 1. Reopen the [Electric Imp IDE](https://azure-ide.electricimp.com/login) and navigate to the model you created.
-2. Copy and Paste the [agent code](./example01.agent.nut) from github into the left side of the IDE in the agent window
-3. Copy and Paste the [device code](./example01.device.nut) from github into the right side of the IDE in the device window
+2. Copy and Paste the [agent code](./TempHumidIoTHubRegistry.agent.nut) from github into the left side of the IDE in the agent window
+3. Copy and Paste the [device code](./TempHumidIoTHubRegistry.device.nut) from github into the right side of the IDE in the device window
 
 ![IDE Model agent URL](../example_imgs/IDEEmptyAgentURL.png)
 
-4. On line 5 of the agent code paste the **Device Connection String** from the previous step in the `const CONNECT_STRING = ""`
+4. In the agent code look for the **IOTHUB_CONNECTION_STRING** variable. Copy and paste your connection string from **Create an IoT Hub resource** step 5.
 5. Hit Build and Run to save and launch the code
 
 ![IDE Build and Run](../example_imgs/IDE_IoTHubeRegistry.png)
