@@ -148,7 +148,7 @@ In this example we will register the device via the Azure portal. Please note th
 4. On line 5 of the agent code paste the **Device Connection String** from the previous step in the `const CONNECT_STRING = ""`
 5. Hit Build and Run to save and launch the code
 
-![IDE Build and Run](../example_imgs/IDEIoTHubeRegistry.png)
+![IDE Build and Run](../example_imgs/IDE_IoTHubeRegistry.png)
 
 ## Next Steps
 
