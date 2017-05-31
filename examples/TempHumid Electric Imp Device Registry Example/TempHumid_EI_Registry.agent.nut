@@ -10,7 +10,7 @@ class Application {
     connected = false;
 
     constructor(connectionString, deviceConnectionString = null) {
-        this.connectionString = connectionString;
+        connectionString = connectionString;
         hostName = AzureIoTHub.ConnectionString.Parse(connectionString).HostName;
         agentID = split(http.agenturl(), "/").pop();
 
