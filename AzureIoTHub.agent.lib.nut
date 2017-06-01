@@ -835,10 +835,9 @@ class AzureIoTHub {
                             if (item.cb) item.cb(event, item.msg);
                         }
                     } else {
-                        // TODO: replace this with error handling
                         _log(data);
                         // Renew Token
-                        if (data.find("Token Expired") != null) {
+                        if (data.find("unauthorized-access") != null) {
                             _senderTokenError = true;
                             _updateConfigSASExpiry();
                             _getPutToken(function() {_log("renewing token")});
@@ -861,13 +860,13 @@ class AzureIoTHub {
                 case "RECEIVER_CLOSED":
                     break;
                 case "RECEIVER_ERROR":
-                    // TODO: replace this with error handling
                     _log(data);
-                    if (data.find("Token Expired") != null) {
+                    if (data.find("Token Invalid") != null) {
                         _receiverTokenError = true;
                         _updateConfigSASExpiry();
                         _getPutToken(function() {_log("renewing token")});
                     }
+                    break;
                 default:
                     // Should not need this, it's just a catch-all while in development
                     _log(data);
