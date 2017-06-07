@@ -61,7 +61,7 @@ If you have any issues getting started with your Electric Imp account or device,
 
 The Electric Imp IoT Connectivity Platform has two main components — the impDevice and the impCloud. The impDevice runs the device code, which in this use case consolidates the data gathered by the temperature/humidity sensor. Each device is paired one-to-one with a "virtual twin" — or, as we call it, an agent — in the impCloud. The device sends this data to its agent, which runs agent code. In this example the agent code communicates with the Azure IoT Hub cloud. Here's a broad overview of this flow:
 
-![EI overview](../example_imgs/EIOverview.pdf)
+![EI overview](../example_imgs/EIOverview.png)
 
 The Electric Imp IDE provides all the tools you need to write and deploy the software (to the device and agent) that will control your imp-enabled connected product. The IDE runs in a desktop web browser and communicates between the device and cloud solutions.
 
