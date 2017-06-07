@@ -126,7 +126,11 @@ In this example we will register the device programatically by using the Electri
 4. In the agent code look for the **IOTHUB_CONNECTION_STRING** variable. Copy and paste your connection string from **Create an IoT Hub resource** step 5.
 5. Hit Build and Run to save and launch the code
 
-![IDE Build and Run](../example_imgs/IDE_EIRegistry.png)
+![IDE Build and Run](../example_imgs/IDE_BuildandRun.png)
+
+6. As the application runs you will begin to see logs from your device.
+
+![IDE Logs](../example_imgs/IDE_LoggingWindow.png)
 
 ## Next Steps
 
