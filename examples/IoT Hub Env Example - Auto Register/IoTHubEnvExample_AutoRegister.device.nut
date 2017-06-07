@@ -33,7 +33,7 @@ class Application {
         led = WS2812(spi, 1);
 
         // Open listener
-        agent.on("blink", blinkLED);
+        agent.on("blink", blinkLED.bindenv(this));
 
         // Give the agent time to connect to Azure
         // then start the loop

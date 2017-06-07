@@ -35,12 +35,12 @@ class Application {
 
         event.agentid <- agentID;
         event.time <- formatDate();
-
+        
         local message = AzureIoTHub.Message(event, properties);
 
         // make sure device is connected, then send event
         if (connected) {
-            server.log("Sending message: " + message.getBody());
+            server.log("Sending message: " + http.jsonencode(message.getBody()));
             client.sendEvent(message, function(err) {
                 if (err) {
                      server.error("Failed to send message to Azure IoT Hub: " + err);
@@ -48,7 +48,7 @@ class Application {
                     device.send("blink", YELLOW);
                     server.log("Message sent to Azure IoT Hub");
                 }
-            });
+            }.bindenv(this));
         }
     }
 
@@ -109,7 +109,6 @@ class Application {
         } else {
             delivery.reject();
         }
-
     }
 
     // Formats the date object as a UTC string
