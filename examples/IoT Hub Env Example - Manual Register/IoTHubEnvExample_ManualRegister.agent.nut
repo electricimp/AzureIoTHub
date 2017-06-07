@@ -3,8 +3,8 @@
 class Application {
 
     static TEMP_ALERT = 30;
-    static YELLOW = [0, 50, 50];
-    static GREEN = [50, 0, 0];
+    static YELLOW = [50, 45, 0];
+    static GREEN = [0, 50, 0];
 
     connectionString = null;
     client = null;

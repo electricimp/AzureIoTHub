@@ -31,6 +31,7 @@ class Application {
         // Configure LED
         local spi = ExplorerKit_001.LED_SPI;
         led = WS2812(spi, 1);
+        hardware.pin1.configure(DIGITAL_OUT, 1);
 
         // Open listener
         agent.on("blink", blinkLED.bindenv(this));
