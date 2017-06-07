@@ -1,4 +1,5 @@
 #require "HTS221.device.lib.nut:2.0.0"
+#require "WS2812.class.nut:3.0.0"
 
 // ExplorerKit Hardware Abstraction Layer
 ExplorerKit_001 <- {
@@ -14,8 +15,11 @@ ExplorerKit_001 <- {
 
 class Application {
 
-    static READING_INTERVAL = 300;
+    static READING_INTERVAL = 10;
+    static BLINK_SEC = 0.5;
+
     tempHumid = null;
+    led = null;
 
     constructor() {
         // Configure Temperature Humidity Sensor
@@ -23,6 +27,13 @@ class Application {
         i2c.configure(CLOCK_SPEED_400_KHZ);
         tempHumid = HTS221(i2c, ExplorerKit_001.TEMP_HUMID_I2C_ADDR);
         tempHumid.setMode(HTS221_MODE.ONE_SHOT);
+
+        // Configure LED
+        local spi = ExplorerKit_001.LED_SPI;
+        led = WS2812(spi, 1);
+
+        // Open listener
+        agent.on("blink", blinkLED);
 
         // Give the agent time to connect to Azure
         // then start the loop
@@ -38,6 +49,14 @@ class Application {
             }
             imp.wakeup(READING_INTERVAL, loop.bindenv(this));
         }.bindenv(this));
+    }
+
+    function blinkLED(color) {
+        local off = [0, 0, 0];
+        led.fill(color).draw();
+        imp.wakeup(BLINK_SEC, function() {
+            led.fill(off).draw();
+        }.bindenv(this))
     }
 
 }

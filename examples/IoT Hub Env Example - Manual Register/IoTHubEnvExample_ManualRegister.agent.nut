@@ -2,6 +2,10 @@
 
 class Application {
 
+    static TEMP_ALERT = 30;
+    static YELLOW = [0, 50, 50];
+    static GREEN = [50, 0, 0];
+
     connectionString = null;
     client = null;
     registry = null;
@@ -26,17 +30,23 @@ class Application {
     }
 
     function eventHandler(event) {
+        local properties = {"temperatureAlert" : false};
+        if ("temperature" in event && event.temperature > 30) properties.temperatureAlert = true;
+
         event.agentid <- agentID;
         event.time <- formatDate();
-        local message = AzureIoTHub.Message(event);
+        
+        local message = AzureIoTHub.Message(event, properties);
 
         // make sure device is connected, then send event
         if (connected) {
+            server.log("Sending message: " + message.getBody());
             client.sendEvent(message, function(err) {
                 if (err) {
-                     server.error("sendEvent error: " + err);
+                     server.error("Failed to send message to Azure IoT Hub: " + err);
                 } else {
-                    server.log("sendEvent successful");
+                    device.send("blink", YELLOW);
+                    server.log("Message sent to Azure IoT Hub");
                 }
             });
         }
@@ -92,8 +102,9 @@ class Application {
 
         // send feedback
         if (typeof message.getBody() == "string") {
-            server.log(message.getBody());
-            server.log(http.jsonencode(message.getProperties()));
+            server.log("Received message: " + message.getBody());
+            device.send("blink", GREEN);
+            // server.log(http.jsonencode(message.getProperties()));
             delivery.complete();
         } else {
             delivery.reject();
