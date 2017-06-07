@@ -2,7 +2,6 @@
 
 In this tutorial, you begin by learning the basics of working with Electric Imp. We will use Electric Imp Libraries to seamlessly connect your impExplorer Kit data to the cloud by using [Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-what-is-iot-hub). This tutorial implements manual device registration through the IoTHub UI. For automatic device registration, please see this [tutorial](../IoT%20Hub%20Env%20Example%20-%20Auto%20Register). 
 
-
 ## What you do
 
 * BlinkUp your impExplorer Kit
