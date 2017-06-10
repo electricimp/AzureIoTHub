@@ -30,7 +30,7 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 
 You will need a Microsoft Azure account. If you do not have one please sign up [here](https://azure.microsoft.com/en-us/resources/videos/sign-up-for-microsoft-azure/) before continuing.
 
-The Azure Portal provides a *Connection String*. This is needed to create an iothub.Registry or iothub.Client object, follow the steps below to get either a *Registry Connection String* or *Device Connection String*.
+The Azure Portal provides a *Connection String*. This is needed to create an AzureIoTHub.Registry or AzureIoTHub.Client object, follow the steps below to get either a *Registry Connection String* or *Device Connection String*.
 
 To get the *Registry Connection String* you will require owner-level permissions. Please use this option if you have not configured a device in the Azure Portal.
 
@@ -40,7 +40,7 @@ To get the *Registry Connection String* you will require owner-level permissions
 4. Select a policy which has all permissions (such as the *iothubowner*) or create a new policy then click on it
 5. Copy the *Connection string--primary key* to the clipboard and paste it into the AzureIoTHub.Registry constructor.
 
-If your device is already registered in the Azure Portal you can use the *Device Connection String* to authorize your device. To get the *Device Connection String* you need device-level permissions. Follow the steps below to find the *Device Connection String* in the Azure Portal, otherwire please follow the above instructions to get the *Registry Connection String* and then use the iothub.Registry class [*(see registry example below)*](#registry-example) to authorize your device.
+If your device is already registered in the Azure Portal you can use the *Device Connection String* to authorize your device. To get the *Device Connection String* you need device-level permissions. Follow the steps below to find the *Device Connection String* in the Azure Portal, otherwire please follow the above instructions to get the *Registry Connection String* and then use the AzureIoTHub.Registry class [*(see registry example below)*](#registry-example) to authorize your device.
 
 1. Open the [Azure Portal](https://portal.azure.com/)
 2. Select or create your Azure IoT Hub resource
@@ -250,7 +250,7 @@ local body = message1.getBody();
 
 ## AzureIoTHub.Delivery
 
-Delivery objects are automatically created when an event is received from Azure IoT Hub. You should never call the iothub.Delivery constructor directly.
+Delivery objects are automatically created when an event is received from Azure IoT Hub. You should never call the AzureIoTHub.Delivery constructor directly.
 
 When an event is received it must be acknowledged or rejected by executing a **feedback** function (*complete*, *abandon*, or *reject*) on the delivery object. If no **feedback** function is called within the scope of the callback the message will be automatically accepted.
 
