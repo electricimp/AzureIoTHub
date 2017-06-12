@@ -73,29 +73,67 @@ All class methods make asynchronous HTTP requests to Azure IoT Hub. An optional 
 | Parameter | Value |
 | --- | --- |
 | *err* | This will be `null` if there was no error. Otherwise it will be a table containing two keys: *response*, the original **httpresponse** object, and *message*, an error report string |
-| *response* | For *create()*, *update()* and *get()*: an [AzureIoTHub.Device](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry) object.<br> For *list()*: an array of [AzureIoTHub.Device](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry) objects.<br>For *remove()*: nothing |
+| *response* | For *create()*, *update()* and *get()*: an [AzureIoTHub.Device](#azureiothubdevice) object.<br> For *list()*: an array of [AzureIoTHub.Device](#azureiothubdevice) objects.<br>For *remove()*: nothing |
 
 #### create(*[deviceInfo][, callback]*)
 
-This method creates a new device identity in the IoT Hub. The optional *deviceInfo* parameter is an AzureIoTHub.Device object or table containing the keys specified [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry#device-identity-properties). If the *deviceInfo* table’s *deviceId* key is not provided, the agent’s ID will be used. You may also provide an optional *callback* function that will be called when the IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
+This method creates a new device identity in IoT Hub. The optional *deviceInfo* parameter is a table that must contain the required keys specified in the [DeviceInfo Table](#deviceinfo-table) or an AzureIoTHub.Device object. If the *deviceInfo* table’s *deviceId* key is not provided, the agent’s ID will be used. You may also provide an optional *callback* function that will be called when the IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
 
 #### update(*deviceInfo[, callback]*)
 
-This method updates an existing device identity in the IoT Hub. The *deviceInfo* field is an AzureIoTHub.Device object or table containing the keys specified [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry#device-identity-properties). The table’s *deviceId* and *statusReason* values cannot be updated via this method. You may also provide an optional *callback* function that will be called when the IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
+This method updates an existing device identity in IoT Hub. The *deviceInfo* field is a table containing the keys specified in the [DeviceInfo Table](#deviceinfo-table) or an AzureIoTHub.Device object. The table’s *deviceId* and *statusReason* values cannot be updated via this method. You may also provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
 
-#### remove(*[deviceId][, callback]*)
+#### remove(*deviceId[, callback]*)
 
-This method deletes a single device identity from the IoT Hub. The *deviceId* string parameter is optional and will be set to the agent’s ID if not provided. You may also provide an optional *callback* function that will be called when the IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
+This method deletes a single device identity from IoT Hub. The *deviceId* string parameter must be provided. You may also provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
 
-#### get(*[deviceId][, callback]*)
+#### get(*deviceId[, callback]*)
 
-This method returns the properties of an existing device identity in the IoT Hub. The *deviceId* string parameter is optional and will be set to the agent’s ID if not provided. You may also provide an optional *callback* function that will be called when the IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
+This method returns the properties of an existing device identity in IoT Hub. The *deviceId* string parameter must be provided. You may also provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
 
-#### list(*callback*)
+#### list(*[callback]*)
 
-Returns the properties up to 1000 existing device identities in the IoT Hub.
+Returns an array of up to 1000 existing device identities from IoT Hub.
 
-#### Registry Example
+## AzureIoTHub.Device
+
+The Device class is used to create Devices used by the Registry class. Registry methods will create Device objects for you if you choose to pass in a deviceInfo table. 
+
+### AzureIoTHub.Device Class Usage
+
+#### Constructor: AzureIoTHub.Device(*[deviceInfo]*)
+
+The constructor creates a Device object with the *deviceInfo* table passed in. If no *deviceInfo* is provided the defaults below will be set:
+
+##### DeviceInfo Table
+| Key                        | Default Value     | Options                        | Description |
+| -------------------------- | ----------------- | ------------------------------ | ----------- |
+| deviceId                   | agent ID          | required, read-only on updates | A case-sensitive string (up to 128 characters long) of ASCII 7-bit alphanumeric characters plus {'-', ':', '.', '+', '%', '_', '#', '*', '?', '!', '(', ')', ',', '=', '@', ';', '$', '''} |
+| generationId               | `null`            | read-only                      | An IoT hub-generated, case-sensitive string up to 128 characters long. This value is used to distinguish devices with the same deviceId, when they have been deleted and re-created. |
+| etag                       | `null`            | read-only                      | A string representing a weak ETag for the device identity, as per RFC7232. |
+| connectionState            | "Disconnected"    | read-only                      | A field indicating connection status: either "Connected" or "Disconnected". This field represents the IoT Hub view of the device connection status. Important: This field should be used only for development/debugging purposes. The connection state is updated only for devices using MQTT or AMQP. Also, it is based on protocol-level pings (MQTT pings, or AMQP pings), and it can have a maximum delay of only 5 minutes. For these reasons, there can be false positives, such as devices reported as connected but that are disconnected. |
+| status                     | "Enabled"         | required                       | An access indicator. Can be "Enabled" or "Disabled". If "Enabled", the device is allowed to connect. If Disabled, this device cannot access any device-facing endpoint. |
+| statusReason               | `null`            | optional                       | A 128 character-long string that stores the reason for the device identity status. All UTF-8 characters are allowed. |
+| connectionStateUpdatedTime | `null`            | read-only                      | A temporal indicator, showing the date and last time the connection state was updated. |
+| statusUpdatedTime          | `null`            | read-only                      | A temporal indicator, showing the date and time of the last status update. |
+| lastActivityTime           | `null`            | read-only                      | A temporal indicator, showing the date and last time the device connected, received, or sent a message. |
+| cloudToDeviceMessageCount  | 0                 | read-only                      | Number of cloud to device messages awaiting delivery |                               
+| authentication             | {"symmetricKey" : {"primaryKey" : `null`, "secondaryKey" : `null`}} | An authentication table containing information and security materials. The primary and a secondary key are stored in base64 format. |
+
+**Note:** The defualt authenication parameters do not contain the authenication needed to create an AzureIoTHub.Client.    
+
+### AzureIoTHub.Device Class Methods
+
+#### connectionString(*hostname*)
+
+The *connectionString* method takes one required parameter *hostname* and returns the *deviceConnectionString* needed to create an AzureIoTHub.Client. 
+
+#### getBody()
+
+The *getBody* method returns the deviceInfo table.
+
+
+### Registry Example
 
 This example code will register the device (using the agent’s ID, which could be replaced with the device’s ID) or create a new one. It will then instantiate the Client class for later use.
 
@@ -105,28 +143,33 @@ This example code will register the device (using the agent’s ID, which could 
 const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 
 client <- null;
+local agentId = split(http.agenturl(), "/").pop();
+
 local registry = AzureIoTHub.Registry(CONNECT_STRING);
 local hostname = AzureIoTHub.ConnectionString.Parse(CONNECT_STRING).HostName;
 
 // Find this device in the registry
-registry.get(function(err, deviceInfo) {
+registry.get(agentId, function(err, iothubDevice) {
     if (err) {
         if (err.response.statuscode == 404) {
-            // No such device, let's create it
-            registry.create(function(err, deviceInfo) {
-                if (err) {
-                    server.error(err.message);
+            // No such device, let's create one with default parameters
+            registry.create(function(error, hubDevice) {
+                if (error) {
+                    server.error(error.message);
                 } else {
-                    server.log("Created " + deviceInfo.getBody().deviceId);
-                    ::client <- AzureIoTHub.Client(deviceInfo.connectionString(hostName));
+                    server.log("Created " + hubDevice.getBody().deviceId);
+                    // Create a client with the device authentication provided from the registry response
+                    ::client <- AzureIoTHub.Client(hubDevice.connectionString(hostName));
                 }
             }.bindenv(this));
         } else {
             server.error(err.message);
         }
     } else {
-        server.log("Device registered as " + deviceInfo.getBody().deviceId);
-        ::client <- AzureIoTHub.Client(deviceInfo.connectionString(hostname));
+        // Found the device 
+        server.log("Device registered as " + iothubDevice.getBody().deviceId);
+        // Create a client with the device authentication provided from the registry response
+        ::client <- AzureIoTHub.Client(iothubDevice.connectionString(hostname));
     }
 }.bindenv(this));
 
@@ -296,7 +339,7 @@ A **feedback** function, use to reject a delivery sent from IoT Hub. When this m
 
 ## Full Example
 
-This example code will register a device with Azure IoT Hub (if needed), then open a connection.  When a connection is established a receiver for Azure IoT Hub messages will be opened. A listener will also be opened for messages coming from the device.  If a connection to Azure has been established the message from the device will be transmitted as an event to the Azure IoT Hub.
+This example code will register a device with Azure IoT Hub (if needed), then open a connection.  When a connection is established a receiver for Azure IoT Hub cloud to device messages will be opened. You can send cloud to device messages with [iothub-explorer](https://github.com/Azure/iothub-explorer). This example also shows how to send device to cloud messages. A listener will be opened on the agent for messages coming from the imp device. If a connection to Azure has been established the message from the imp device will be transmitted as an event to the Azure IoT Hub. 
 
 ### Agent Code
 
@@ -310,6 +353,7 @@ const CONNECT_STRING = "HostName=<YOUR-HOST-NAME>.azure-devices.net;SharedAccess
 client <- null;
 registry <- AzureIoTHub.Registry(CONNECT_STRING);
 hostName <- AzureIoTHub.ConnectionString.Parse(CONNECT_STRING).HostName;
+
 agentid <- split(http.agenturl(), "/").pop();
 connected <- false;
 
@@ -331,6 +375,7 @@ function receiveHandler(err, delivery) {
         server.log( http.jsonencode(message.getProperties()) );
         delivery.complete();
     } else {
+        server.log(typeof message.getBody());
         delivery.reject();
     }
 }
@@ -358,16 +403,16 @@ function formatDate(){
 ////////// Runtime //////////
 
 // Find this device in the registry
-registry.get(function(err, deviceInfo) {
+registry.get(agentid, function(err, iothubDevice) {
     if (err) {
         if (err.response.statuscode == 404) {
             // No such device, let's create it, connect & open receiver
-            registry.create(function(err, deviceInfo) {
-                if (err) {
-                    server.error(err.message);
+            registry.create(function(error, hubDevice) {
+                if (error) {
+                    server.error(error.message);
                 } else {
-                    server.log("Dev created " + deviceInfo.getBody().deviceId);
-                    createClient(deviceInfo.connectionString(hostName));
+                    server.log("Dev created " + hubDevice.getBody().deviceId);
+                    createClient(hubDevice.connectionString(hostName));
                 }
             }.bindenv(this));
         } else {
@@ -375,8 +420,8 @@ registry.get(function(err, deviceInfo) {
         }
     } else {
         // Found device, let's connect & open receiver
-        server.log("Device registered as " + deviceInfo.getBody().deviceId);
-        createClient(deviceInfo.connectionString(hostName));
+        server.log("Device registered as " + iothubDevice.getBody().deviceId);
+        createClient(iothubDevice.connectionString(hostName));
     }
 });
 
