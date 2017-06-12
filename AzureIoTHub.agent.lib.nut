@@ -193,10 +193,12 @@ class AzureIoTHub {
 
         _body = null;
 
-        constructor(jsonData = null) {
+        constructor(devInfo = null) {
 
-            if (jsonData) {
-                _body = http.jsondecode(jsonData);
+            if (typeof devInfo == "table") {
+                // Make sure we have a device Id
+                if (!("deviceId" in devInfo)) devInfo.deviceId <- split(http.agenturl(), "/").pop();
+                _body = devInfo;
             } else {
                 _body = {
                     "deviceId": split(http.agenturl(), "/").pop(),
@@ -420,6 +422,7 @@ class AzureIoTHub {
 
     Registry = class {
 
+        static ERROR_MISSING_DEVICE_ID = "DeviceId required to complete request";
         _transport = null;
 
         constructor(connectionString) {
@@ -448,8 +451,13 @@ class AzureIoTHub {
                 done = deviceInfo;
                 deviceInfo = {};
             }
-            if (typeof deviceInfo == "Device") deviceInfo = deviceInfo.getBody();
-            else if (typeof deviceInfo != "table") deviceInfo = {};
+
+            if (typeof deviceInfo == "Device") {
+                deviceInfo = deviceInfo.getBody();
+            } else if (typeof deviceInfo != "table") {
+                deviceInfo = {};
+            }
+
             if (!("deviceId" in deviceInfo) || deviceInfo.deviceId == null) {
                 deviceInfo.deviceId <- split(http.agenturl(), "/").pop();
             }
@@ -459,7 +467,7 @@ class AzureIoTHub {
                 if (err) {
                     deviceInfo = null;
                 } else if (body) {
-                    deviceInfo = AzureIoTHub.Device(body);
+                    deviceInfo = AzureIoTHub.Device(http.jsondecode(body));
                 }
                 if (done) done(err, deviceInfo);
             }.bindenv(this))
@@ -471,12 +479,21 @@ class AzureIoTHub {
 
             if (typeof deviceInfo == "Device") deviceInfo = deviceInfo.getBody();
 
+            if (!("deviceId" in deviceInfo)) {
+                if (done) {
+                    done(ERROR_MISSING_DEVICE_ID, null);
+                } else {
+                    throw (ERROR_MISSING_DEVICE_ID);
+                }
+                return this;
+            }
+
             local path = AzureIoTHub.Endpoint.devicePath(deviceInfo.deviceId) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.updateDevice(path, deviceInfo, function (err, body) {
                 if (err) {
                     deviceInfo = null;
                 } else if (body) {
-                    deviceInfo = AzureIoTHub.Device(body);
+                    ddeviceInfo = AzureIoTHub.Device(http.jsondecode(body));
                 }
                 if (done) done(err, deviceInfo);
             }.bindenv(this))
@@ -484,24 +501,25 @@ class AzureIoTHub {
             return this;
         }
 
-        function get(deviceId = null, done = null) {
+        function get(deviceId, done = null) {
 
             // NOTE: These default values are not from the original Node.js SDK
-            if (typeof deviceId == "function") {
-                done = deviceId;
-                deviceId = null;
-            }
-            if (deviceId == null) {
-                deviceId = split(http.agenturl(), "/").pop();
+            if (typeof deviceId != "string") {
+                if (done) {
+                    done(ERROR_MISSING_DEVICE_ID, null);
+                } else {
+                    throw (ERROR_MISSING_DEVICE_ID);
+                }
+                return this;
             }
 
             local path = AzureIoTHub.Endpoint.devicePath(deviceId) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.getDevice(path, function (err, body) {
                 local deviceInfo = null;
                 if (body) {
-                    deviceInfo = AzureIoTHub.Device(body);
+                    deviceInfo = AzureIoTHub.Device(http.jsondecode(body));
                 }
-                done(err, deviceInfo);
+                if (done) done(err, deviceInfo);
             }.bindenv(this))
 
             return this;
@@ -509,7 +527,7 @@ class AzureIoTHub {
 
         function list(done = null) {
 
-            if (done == null) return null;
+            if (done == null) return this;
 
             local path = AzureIoTHub.Endpoint.devicePath("") + AzureIoTHub.Endpoint.versionQueryString();
             _transport.listDevices(path, function (err, body) {
@@ -518,7 +536,7 @@ class AzureIoTHub {
                 if (body) {
                     local jsonArray = http.jsondecode(body);
                     foreach (jsonElement in jsonArray) {
-                        local devItem = AzureIoTHub.Device(http.jsonencode(jsonElement));
+                        local devItem = AzureIoTHub.Device(jsonElement);
                         devices.push(devItem);
                     }
                 }
@@ -529,15 +547,16 @@ class AzureIoTHub {
             return this;
         }
 
-        function remove(deviceId = null, done = null) {
+        function remove(deviceId, done = null) {
 
             // NOTE: These default values are not from the original Node.js SDK
-            if (typeof deviceId == "function") {
-                done = deviceId;
-                deviceId = null;
-            }
-            if (deviceId == null) {
-                deviceId = split(http.agenturl(), "/").pop();
+            if (typeof deviceId != "string") {
+                if (done) {
+                    done(ERROR_MISSING_DEVICE_ID, null);
+                } else {
+                    throw (ERROR_MISSING_DEVICE_ID);
+                }
+                return this;
             }
 
             local path = AzureIoTHub.Endpoint.devicePath(deviceId) + AzureIoTHub.Endpoint.versionQueryString();

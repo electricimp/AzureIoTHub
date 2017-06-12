@@ -84,7 +84,7 @@ This method creates a new device identity in IoT Hub. The optional *deviceInfo* 
 
 #### update(*deviceInfo[, callback]*)
 
-This method updates an existing device identity in IoT Hub. The *deviceInfo* field is a table containing the keys specified in the [Device Info Table](#device-info-table) or an AzureIoTHub.Device object. The table’s *deviceId* and *statusReason* values cannot be updated via this method. You may also provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
+This method updates an existing device identity in IoT Hub. The *deviceInfo* field is a table containing the keys specified in the [Device Info Table](#device-info-table) or an AzureIoTHub.Device object. The table’s read-only and *statusReason* values cannot be updated via this method. You may also provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
 
 #### remove(*deviceId[, callback]*)
 
@@ -106,7 +106,7 @@ The Device class is used to create Devices used by the Registry class. Registry 
 
 #### Constructor: AzureIoTHub.Device(*[deviceInfo]*)
 
-The constructor creates a Device object from the *deviceInfo* table passed in. If no *deviceInfo* is provided the defaults below will be set:
+The constructor creates a Device object from the *deviceInfo* table passed in. The *deviceInfo* table must include a *deviceId*, if no *deviceId* is included the agent ID will be used. If no *deviceInfo* is provided the defaults below will be set:
 
 ##### Device Info Table
 | Key                        | Default Value     | Options                        | Description |
