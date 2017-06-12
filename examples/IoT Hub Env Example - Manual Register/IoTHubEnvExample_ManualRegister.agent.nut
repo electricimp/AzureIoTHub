@@ -54,16 +54,16 @@ class Application {
 
     function registerDevice() {
         // Find this device in the registry
-        registry.get(function(err, deviceInfo) {
+        registry.get(agentID, function(err, iotHubDev) {
             if (err) {
                 if (err.response.statuscode == 404) {
                     // No such device, let's create it, connect & open receiver
-                    registry.create(function(err, deviceInfo) {
-                        if (err) {
-                            server.error(err.message);
+                    registry.create(function(error, iotHubDevice) {
+                        if (error) {
+                            server.error(error.message);
                         } else {
-                            server.log("Dev created " + deviceInfo.getBody().deviceId);
-                            createClient(deviceInfo.connectionString(hostName));
+                            server.log("Dev created " + iotHubDevice.getBody().deviceId);
+                            createClient(iotHubDevice.connectionString(hostName));
                         }
                     }.bindenv(this));
                 } else {
@@ -71,8 +71,8 @@ class Application {
                 }
             } else {
                 // Found device, let's connect & open receiver
-                server.log("Device registered as " + deviceInfo.getBody().deviceId);
-                createClient(deviceInfo.connectionString(hostName));
+                server.log("Device registered as " + iotHubDev.getBody().deviceId);
+                createClient(iotHubDev.connectionString(hostName));
             }
         }.bindenv(this));
     }
