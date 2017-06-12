@@ -8,6 +8,9 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
   - [remove](#removedeviceid-callback) &mdash; Deletes a single device identity from Azure IoT Hub.
   - [get](#getdeviceid-callback) &mdash; Returns the properties of an existing device identity in Azure IoT Hub.
   - [list](#listcallback) &mdash; Returns a list of up to 1000 device identities in Azure IoT Hub.
+- [AzureIoTHub.Device](#azureiothubdevice) &mdash; A device object used to manage registry device identities.
+  - [conectionstring](#connectionstringhostname) &mdash; Returns the device connection string.
+  - [getbody](#getbody) &mdash; Retuns the device identity properties.
 - [AzureIoTHub.Client](#azureiothubclient) &mdash; Used to open AMQP connection to Azure IoT Hub, and to send & receive events.
   - [connect](#connectcallback) -&mdash; Opens an AMQP connection to Azure IoT Hub.
   - [disconnect](#disconnect) &mdash; Disconnects from Azure IoT Hub.
@@ -24,7 +27,7 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 
 **To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:2.0.0"` **to the top of your agent code.**
 
-**NOTE:** The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in alpha testing on the Electric Imp platform and is only supported for Electric Imp Azure accounts. Sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login). Be sure to use this account to BlinkUp your device. If you would prefer to use your existing Electric Imp account please use the HTTP [AzureIoTHub Library version 1.2.1](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1).
+**NOTE:** The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in alpha testing on the Electric Imp platform and while in this testing phase it will only be supported for Electric Imp Azure accounts. Sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login). Be sure to use this account to BlinkUp your device. The HTTP version of the library is still available if you would prefer to use your existing Electric Imp account, [AzureIoTHub Library version 1.2.1](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1).
 
 ## Authentication
 
@@ -77,11 +80,11 @@ All class methods make asynchronous HTTP requests to Azure IoT Hub. An optional 
 
 #### create(*[deviceInfo][, callback]*)
 
-This method creates a new device identity in IoT Hub. The optional *deviceInfo* parameter is a table that must contain the required keys specified in the [DeviceInfo Table](#deviceinfo-table) or an AzureIoTHub.Device object. If the *deviceInfo* table’s *deviceId* key is not provided, the agent’s ID will be used. You may also provide an optional *callback* function that will be called when the IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
+This method creates a new device identity in IoT Hub. The optional *deviceInfo* parameter is a table that must contain the required keys specified in the [Device Info Table](#device-info-table) or an AzureIoTHub.Device object. If the *deviceInfo* table’s *deviceId* key is not provided, the agent’s ID will be used. You may also provide an optional *callback* function that will be called when the IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
 
 #### update(*deviceInfo[, callback]*)
 
-This method updates an existing device identity in IoT Hub. The *deviceInfo* field is a table containing the keys specified in the [DeviceInfo Table](#deviceinfo-table) or an AzureIoTHub.Device object. The table’s *deviceId* and *statusReason* values cannot be updated via this method. You may also provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
+This method updates an existing device identity in IoT Hub. The *deviceInfo* field is a table containing the keys specified in the [Device Info Table](#device-info-table) or an AzureIoTHub.Device object. The table’s *deviceId* and *statusReason* values cannot be updated via this method. You may also provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
 
 #### remove(*deviceId[, callback]*)
 
@@ -103,9 +106,9 @@ The Device class is used to create Devices used by the Registry class. Registry 
 
 #### Constructor: AzureIoTHub.Device(*[deviceInfo]*)
 
-The constructor creates a Device object with the *deviceInfo* table passed in. If no *deviceInfo* is provided the defaults below will be set:
+The constructor creates a Device object from the *deviceInfo* table passed in. If no *deviceInfo* is provided the defaults below will be set:
 
-##### DeviceInfo Table
+##### Device Info Table
 | Key                        | Default Value     | Options                        | Description |
 | -------------------------- | ----------------- | ------------------------------ | ----------- |
 | deviceId                   | agent ID          | required, read-only on updates | A case-sensitive string (up to 128 characters long) of ASCII 7-bit alphanumeric characters plus {'-', ':', '.', '+', '%', '_', '#', '*', '?', '!', '(', ')', ',', '=', '@', ';', '$', '''} |
@@ -118,7 +121,7 @@ The constructor creates a Device object with the *deviceInfo* table passed in. I
 | statusUpdatedTime          | `null`            | read-only                      | A temporal indicator, showing the date and time of the last status update. |
 | lastActivityTime           | `null`            | read-only                      | A temporal indicator, showing the date and last time the device connected, received, or sent a message. |
 | cloudToDeviceMessageCount  | 0                 | read-only                      | Number of cloud to device messages awaiting delivery |                               
-| authentication             | {"symmetricKey" : {"primaryKey" : `null`, "secondaryKey" : `null`}} | An authentication table containing information and security materials. The primary and a secondary key are stored in base64 format. |
+| authentication             | {"symmetricKey" : {"primaryKey" : `null`, "secondaryKey" : `null`}} | optional | An authentication table containing information and security materials. The primary and a secondary key are stored in base64 format. |
 
 **Note:** The defualt authenication parameters do not contain the authenication needed to create an AzureIoTHub.Client.    
 
@@ -130,7 +133,7 @@ The *connectionString* method takes one required parameter *hostname* and return
 
 #### getBody()
 
-The *getBody* method returns the deviceInfo table.
+The *getBody* method returns the device identity properties (aka the Device Info table).
 
 
 ### Registry Example
