@@ -3,8 +3,8 @@
  */
 
 const HUB_NAME = "#{env:AZURE_IOTHUB_HUB_NAME}";
-const ACCESS_KEY = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY}"
-const ACCESS_KEY_NAME = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME}"
+const ACCESS_KEY = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY}";
+const ACCESS_KEY_NAME = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME}";
 
 class ClientEventsTestCase extends ImpTestCase {
 
@@ -32,6 +32,7 @@ class ClientEventsTestCase extends ImpTestCase {
             local hostname = AzureIoTHub.ConnectionString.Parse(connectionString).HostName;
 
             this._registry.create({"deviceId" : this._deviceId}, function(err, deviceInfo) {
+
                 if (err && err.response.statuscode == 429) {
                     imp.wakeup(10, function() { resolve(this.initClient()) }.bindenv(this));
                 } else if (err) {

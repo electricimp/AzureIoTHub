@@ -493,7 +493,7 @@ class AzureIoTHub {
                 if (err) {
                     deviceInfo = null;
                 } else if (body) {
-                    ddeviceInfo = AzureIoTHub.Device(http.jsondecode(body));
+                    deviceInfo = AzureIoTHub.Device(http.jsondecode(body));
                 }
                 if (done) done(err, deviceInfo);
             }.bindenv(this))

@@ -33,7 +33,7 @@ class RegistryTestCase extends ImpTestCase {
                 + ".azure-devices.net;SharedAccessKeyName=" + ACCESS_KEY_NAME
                 + ";SharedAccessKey=" + ACCESS_KEY;
             this._registry = AzureIoTHub.Registry(connectionString);
-            resolve("Registry created")
+            (typeof _registry == "instance") ? resolve("Registry created") : reject("Error creating registry");
         }.bindenv(this));
     }
 

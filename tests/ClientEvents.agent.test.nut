@@ -3,8 +3,8 @@
  */
 
 const HUB_NAME = "#{env:AZURE_IOTHUB_HUB_NAME}";
-const ACCESS_KEY = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY}"
-const ACCESS_KEY_NAME = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME}"
+const ACCESS_KEY = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY}";
+const ACCESS_KEY_NAME = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME}";
 
 class ClientEventsTestCase extends ImpTestCase {
 
@@ -58,7 +58,7 @@ class ClientEventsTestCase extends ImpTestCase {
      */
     function sendMessageWithIotHubExplorer(testMessage) {
         // login
-        this.runCommand("iothub-explorer login \"HostName=${AZURE_IOTHUB_HUB_NAME}.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=${AZURE_IOTHUB_SHARED_ACCESS_KEY}\"");
+        this.runCommand("iothub-explorer login \"HostName=" + HUB_NAME +".azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=" + ACCESS_KEY + "\"");
 
         // send msg
         this.runCommand("iothub-explorer send " + this._deviceId + " \"" + testMessage + "\"");
