@@ -253,7 +253,7 @@ client.receive(function(err, delivery) {
     }
 
     local message = delivery.getMessage();
-    if (message.getBody() == "OK") {
+    if (message.getBody().tostring() == "OK") {
         delivery.complete();
     } else {
         delivery.reject();
@@ -307,6 +307,8 @@ When an event is received it must be acknowledged or rejected by executing a **f
 Use this method to retrieve the event from an IoT Hub delivery. This method returns a AzureIoTHub.Message object.
 
 ```squirrel
+local expectedMsg = "EXPECTED MESSAGE CONTENT";
+
 client.receive(function(err, delivery) {
     if (err) {
         server.error(err);
@@ -314,13 +316,19 @@ client.receive(function(err, delivery) {
     }
 
     local message = delivery.getMessage();
+
+    // message properties are tables, so encode it to log
     server.log( http.jsonencode(message.getProperties()) );
+    
+    // message body from deliveries are blobs
     server.log( message.getBody() );
 
     // send feedback
-    if (message.getBody() == "EXPECTED MESSAGE CONTENT") {
+    if (message.getBody().tostring() == expectedMsg) {
+        server.log("message accepted, mark as complete");
         delivery.complete();
     } else {
+        server.log("unexpected message, rejected");
         delivery.reject();
     }
 })
@@ -373,12 +381,17 @@ function receiveHandler(err, delivery) {
     local message = delivery.getMessage();
 
     // send feedback
-    if (typeof message.getBody() == "string") {
+    if (typeof message.getBody() == "blob") {
+        
         server.log( message.getBody() );
         server.log( http.jsonencode(message.getProperties()) );
+        
         delivery.complete();
     } else {
-        server.log(typeof message.getBody());
+        
+        server.log( message.getBody() );
+        server.log( http.jsonencode(message.getProperties()) );
+        
         delivery.reject();
     }
 }
@@ -451,7 +464,7 @@ device.on("event", function(event) {
 
 ```squirrel
 // Time to wait between readings
-loopTimer <- 300;
+loopTimer <- 30;
 
 // Gets an integer value from the imp's light sensor,
 // and sends it to the agent
