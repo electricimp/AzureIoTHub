@@ -422,7 +422,9 @@ class AzureIoTHub {
 
     Registry = class {
 
-        static ERROR_MISSING_DEVICE_ID = "DeviceId required to complete request";
+        static ERROR_MISSING_DEVICE_ID = "A deviceId string required to complete request";
+        static ERROR_MISSING_DEVICE_INFO = "A table with a deviceId key required to complete request";
+        static ERROR_MISSING_CALLBACK = "A callback function is required";
         _transport = null;
 
         constructor(connectionString) {
@@ -452,7 +454,7 @@ class AzureIoTHub {
                 deviceInfo = {};
             }
 
-            if (typeof deviceInfo == "Device") {
+            if (typeof deviceInfo == "device") {
                 deviceInfo = deviceInfo.getBody();
             } else if (typeof deviceInfo != "table") {
                 deviceInfo = {};
@@ -465,11 +467,11 @@ class AzureIoTHub {
             local path = AzureIoTHub.Endpoint.devicePath(deviceInfo.deviceId) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.createDevice(path, deviceInfo, function (err, body) {
                 if (err) {
-                    deviceInfo = null;
+                    dev = body;
                 } else if (body) {
-                    deviceInfo = AzureIoTHub.Device(http.jsondecode(body));
+                    dev = AzureIoTHub.Device(http.jsondecode(body));
                 }
-                if (done) done(err, deviceInfo);
+                if (done) done(err, dev);
             }.bindenv(this))
 
             return this;
@@ -477,57 +479,91 @@ class AzureIoTHub {
 
         function update(deviceInfo, done = null) {
 
-            if (typeof deviceInfo == "Device") deviceInfo = deviceInfo.getBody();
+            local error = null;
 
-            if (!("deviceId" in deviceInfo)) {
-                if (done) {
-                    done(ERROR_MISSING_DEVICE_ID, null);
-                } else {
-                    throw (ERROR_MISSING_DEVICE_ID);
-                }
-                return this;
+            // make sure we have a valid deviceInfo table 
+            switch (typeof deviceInfo) {
+                case "function" :
+                    done = deviceInfo;
+                    error = {"response" : null, "message" : ERROR_MISSING_DEVICE_INFO};
+                    break;
+                case "table":
+                    if (!("deviceId" in deviceInfo)) {
+                        error = {"response" : null, "message" : ERROR_MISSING_DEVICE_INFO};
+                    }
+                    break;
+                case "device":
+                    deviceInfo = deviceInfo.getBody();
+                    break;
+                default : 
+                    error = {"response" : null, "message" : ERROR_MISSING_DEVICE_INFO};
             }
+            
+            if (error) {
+                done(error, null);
+                return this;
+            } 
 
             local path = AzureIoTHub.Endpoint.devicePath(deviceInfo.deviceId) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.updateDevice(path, deviceInfo, function (err, body) {
                 if (err) {
-                    deviceInfo = null;
+                    dev = body;
                 } else if (body) {
-                    deviceInfo = AzureIoTHub.Device(http.jsondecode(body));
+                    dev = AzureIoTHub.Device(http.jsondecode(body));
                 }
-                if (done) done(err, deviceInfo);
+                if (done) done(err, dev);
             }.bindenv(this))
 
             return this;
         }
 
-        function get(deviceId, done = null) {
+        function get(deviceId, done) {
 
-            // NOTE: These default values are not from the original Node.js SDK
-            if (typeof deviceId != "string") {
-                if (done) {
-                    done(ERROR_MISSING_DEVICE_ID, null);
-                } else {
-                    throw (ERROR_MISSING_DEVICE_ID);
-                }
-                return this;
+            if (typeof done != "function") throw ERROR_MISSING_CALLBACK;
+            
+            local devID = null;
+            local error = null;
+
+            // make sure we have a valid deviceId even if user 
+            // passed in deviceInfo table or Device object
+            switch (typeof deviceId) {
+                case "string":
+                    devID = deviceId;
+                    break;
+                case "table":
+                    if ("deviceId" in deviceId) {
+                        devID = deviceId.deviceId;
+                    } else {
+                        error = {"response" : null, "message" : ERROR_MISSING_DEVICE_ID};
+                    }
+                    break;     
+                case "device":
+                    devID = deviceId.getBody().deviceId;
+                    break;
+                default :
+                    error = {"response" : null, "message" : ERROR_MISSING_DEVICE_ID};
             }
 
-            local path = AzureIoTHub.Endpoint.devicePath(deviceId) + AzureIoTHub.Endpoint.versionQueryString();
+            if (error) {
+                done(error, null);
+                return this;
+            } 
+
+            local path = AzureIoTHub.Endpoint.devicePath(devID) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.getDevice(path, function (err, body) {
-                local deviceInfo = null;
+                local dev = null;
                 if (body) {
-                    deviceInfo = AzureIoTHub.Device(http.jsondecode(body));
+                    dev = AzureIoTHub.Device(http.jsondecode(body));
                 }
-                if (done) done(err, deviceInfo);
+                done(err, deviceInfo);
             }.bindenv(this))
 
             return this;
         }
 
-        function list(done = null) {
+        function list(done) {
 
-            if (done == null) return this;
+            if (typeof done != "function") throw "A callback function must be passed in";
 
             local path = AzureIoTHub.Endpoint.devicePath("") + AzureIoTHub.Endpoint.versionQueryString();
             _transport.listDevices(path, function (err, body) {
@@ -549,17 +585,39 @@ class AzureIoTHub {
 
         function remove(deviceId, done = null) {
 
-            // NOTE: These default values are not from the original Node.js SDK
-            if (typeof deviceId != "string") {
-                if (done) {
-                    done(ERROR_MISSING_DEVICE_ID, null);
-                } else {
-                    throw (ERROR_MISSING_DEVICE_ID);
-                }
-                return this;
-            }
+            local devID = null;
+            local error = null;
 
-            local path = AzureIoTHub.Endpoint.devicePath(deviceId) + AzureIoTHub.Endpoint.versionQueryString();
+            // make sure we have a valid deviceId even if user 
+            // passed in deviceInfo table or Device object
+            switch (typeof deviceId) {
+                case "function" :
+                    done = deviceId;
+                    error = {"response" : null, "message" : ERROR_MISSING_DEVICE_ID};
+                    break;
+                case "string":
+                    devID = deviceId;
+                    break;
+                case "table":
+                    if ("deviceId" in deviceId) {
+                        devID = deviceId.deviceId;
+                        break;
+                    } else {
+                        error = {"response" : null, "message" : ERROR_MISSING_DEVICE_ID};
+                    }
+                case "device":
+                    devID = deviceId.getBody().deviceId;
+                    break;
+                default : 
+                    error = {"response" : null, "message" : ERROR_MISSING_DEVICE_ID};
+            }
+            
+            if (error) {
+                done(error, null);
+                return this;
+            } 
+
+            local path = AzureIoTHub.Endpoint.devicePath(devID) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.deleteDevice(path, done);
 
             return this;

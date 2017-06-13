@@ -71,7 +71,7 @@ registry <- AzureIoTHub.Registry(CONNECT_STRING);
 
 ### AzureIoTHub.Registry Class Methods
 
-All class methods make asynchronous HTTP requests to Azure IoT Hub. An optional callback parameter can be passed into each method. The callback function will be executed when a response is received from IoT Hub and it takes the following two parameters:
+All class methods make asynchronous HTTP requests to Azure IoT Hub. The callback function will be executed when a response is received from IoT Hub and it takes the following two parameters:
 
 | Parameter | Value |
 | --- | --- |
@@ -80,23 +80,23 @@ All class methods make asynchronous HTTP requests to Azure IoT Hub. An optional 
 
 #### create(*[deviceInfo][, callback]*)
 
-This method creates a new device identity in IoT Hub. The optional *deviceInfo* parameter is a table that must contain the required keys specified in the [Device Info Table](#device-info-table) or an AzureIoTHub.Device object. If the *deviceInfo* table’s *deviceId* key is not provided, the agent’s ID will be used. You may also provide an optional *callback* function that will be called when the IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
+This method creates a new device identity in IoT Hub. The optional *deviceInfo* parameter is a table that must contain the required keys specified in the [Device Info Table](#device-info-table) or an AzureIoTHub.Device object. If the *deviceInfo* table’s *deviceId* key is not provided, the agent’s ID will be used. You may also provide an optional *callback* function that will be called when the IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods) for details.
 
 #### update(*deviceInfo[, callback]*)
 
-This method updates an existing device identity in IoT Hub. The *deviceInfo* field is a table containing the keys specified in the [Device Info Table](#device-info-table) or an AzureIoTHub.Device object. The table’s read-only and *statusReason* values cannot be updated via this method. You may also provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
+This method updates an existing device identity in IoT Hub. The *deviceInfo* field is a table containing the keys specified in the [Device Info Table](#device-info-table) or an AzureIoTHub.Device object. If passing in a table please not it must include a *deviceId* key. The update function cannot change the values of any read-only properties, and the *statusReason* value cannot be updated via this method. You may provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods) for details.
 
 #### remove(*deviceId[, callback]*)
 
-This method deletes a single device identity from IoT Hub. The *deviceId* string parameter must be provided. You may also provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
+This method deletes a single device identity from IoT Hub. The *deviceId* string parameter must be provided. You may also provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods) for details.
 
-#### get(*deviceId[, callback]*)
+#### get(*deviceId, callback*)
 
-This method returns the properties of an existing device identity in IoT Hub. The *deviceId* string parameter must be provided. You may also provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods).
+This method requests the properties of an existing device identity in IoT Hub. This method has two required parameters: a string *deviceId*, and a *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods) for details.
 
-#### list(*[callback]*)
+#### list(*callback*)
 
-Returns an array of up to 1000 existing device identities from IoT Hub.
+This method requests a list of device identities. When IoT Hub responds an array of up to 1000 existing device identities will be passed to the *callback* function, [*(see above)*](#azureiothubregistry-class-methods) for details.
 
 ## AzureIoTHub.Device
 
