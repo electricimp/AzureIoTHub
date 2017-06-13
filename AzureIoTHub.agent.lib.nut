@@ -466,6 +466,7 @@ class AzureIoTHub {
 
             local path = AzureIoTHub.Endpoint.devicePath(deviceInfo.deviceId) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.createDevice(path, deviceInfo, function (err, body) {
+                local dev = null;
                 if (err) {
                     dev = body;
                 } else if (body) {
@@ -506,6 +507,7 @@ class AzureIoTHub {
 
             local path = AzureIoTHub.Endpoint.devicePath(deviceInfo.deviceId) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.updateDevice(path, deviceInfo, function (err, body) {
+                local dev = null;
                 if (err) {
                     dev = body;
                 } else if (body) {
@@ -555,7 +557,7 @@ class AzureIoTHub {
                 if (body) {
                     dev = AzureIoTHub.Device(http.jsondecode(body));
                 }
-                done(err, deviceInfo);
+                done(err, dev);
             }.bindenv(this))
 
             return this;

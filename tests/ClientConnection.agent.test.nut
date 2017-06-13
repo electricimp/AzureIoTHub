@@ -28,6 +28,7 @@ class ClientEventsTestCase extends ImpTestCase {
                 "SharedAccessKeyName=" + ACCESS_KEY_NAME + ";" +
                 "SharedAccessKey=" + ACCESS_KEY;
 
+
             this._registry = AzureIoTHub.Registry(connectionString);
             local hostname = AzureIoTHub.ConnectionString.Parse(connectionString).HostName;
 
