@@ -1,3 +1,27 @@
+// MIT License
+//
+// Copyright 2015-2017 Electric Imp
+//
+// SPDX-License-Identifier: MIT
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+// EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+// OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+
 #require "AzureIoTHub.agent.lib.nut:2.0.0"
 
 class Application {
@@ -11,10 +35,12 @@ class Application {
     registry = null;
     hostName = null;
     agentID = null;
+    deviceID = null;
     connected = false;
 
     constructor(connectionString, deviceConnectionString = null) {
         agentID = split(http.agenturl(), "/").pop();
+        deviceID = imp.configparams.deviceid;
 
         if (deviceConnectionString) {
             // We have registered device using IoTHub Dashboard
@@ -31,7 +57,7 @@ class Application {
 
     function eventHandler(event) {
         local properties = {"temperatureAlert" : false};
-        if ("temperature" in event && event.temperature > 30) properties.temperatureAlert = true;
+        if ("temperature" in event && event.temperature > TEMP_ALERT) properties.temperatureAlert = true;
 
         event.agentid <- agentID;
         event.time <- formatDate();
@@ -54,11 +80,11 @@ class Application {
 
     function registerDevice() {
         // Find this device in the registry
-        registry.get(agentID, function(err, iotHubDev) {
+        registry.get(deviceID, function(err, iotHubDev) {
             if (err) {
                 if (err.response.statuscode == 404) {
                     // No such device, let's create it, connect & open receiver
-                    registry.create(function(error, iotHubDevice) {
+                    registry.create({"deviceId" : deviceID}, function(error, iotHubDevice) {
                         if (error) {
                             server.error(error.message);
                         } else {
@@ -101,10 +127,10 @@ class Application {
         local message = delivery.getMessage();
 
         // send feedback
-        if (typeof message.getBody() == "string") {
-            server.log("Received message: " + message.getBody());
+        if (typeof message.getBody() == "blob") {
+            server.log("Received message: " + message.getBody().tostring());
             device.send("blink", GREEN);
-            // server.log(http.jsonencode(message.getProperties()));
+            server.log(http.jsonencode(message.getProperties()));
             delivery.complete();
         } else {
             delivery.reject();
@@ -112,7 +138,7 @@ class Application {
     }
 
     // Formats the date object as a UTC string
-    function formatDate(){
+    function formatDate() {
         local d = date();
         return format("%04d-%02d-%02d %02d:%02d:%02d", d.year, (d.month+1), d.day, d.hour, d.min, d.sec);
     }
