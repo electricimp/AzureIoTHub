@@ -404,7 +404,7 @@ class AzureIoTHub {
         function handleResponse(done) {
 
             return function(response) {
-                if (response.statuscode >= 200 && response.statuscode < 300) {
+                if (response.statuscode/100 == 2) {
                     if (done) done(null, response.body);
                 } else {
                     local message = null;
@@ -422,9 +422,10 @@ class AzureIoTHub {
 
     Registry = class {
 
-        static ERROR_MISSING_DEVICE_ID = "A deviceId string required to complete request";
+        static ERROR_MISSING_CALLBACK    = "A callback function is required";
+        static ERROR_MISSING_DEVICE_ID   = "A deviceId string required to complete request";
         static ERROR_MISSING_DEVICE_INFO = "A table with a deviceId key required to complete request";
-        static ERROR_MISSING_CALLBACK = "A callback function is required";
+
         _transport = null;
 
         constructor(connectionString) {
@@ -658,6 +659,7 @@ class AzureIoTHub {
             // set connection callback
             _handlers.onConnected <- done;
 
+            // TODO: create a state machine to clean up tracking connection status
             // Don't open a connection if one is already open
             if( _isOpen(_connection) ) {
                 if ( _isOpen(_sessions.auth) ) {
