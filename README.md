@@ -65,7 +65,7 @@ This contructs a Registry object which exposes the Device Registry functions. Th
 #require "AzureIoTHub.agent.lib.nut:2.0.0"
 
 // Instantiate a client using your connection string
-const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
+const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=<KEY_NAME>;SharedAccessKey=<KEY_HASH>";
 registry <- AzureIoTHub.Registry(CONNECT_STRING);
 ```
 
@@ -80,11 +80,11 @@ All class methods make asynchronous HTTP requests to Azure IoT Hub. The callback
 
 #### create(*[deviceInfo][, callback]*)
 
-This method creates a new device identity in IoT Hub. The optional *deviceInfo* parameter is a table that must contain the required keys specified in the [Device Info Table](#device-info-table) or an AzureIoTHub.Device object. If the *deviceInfo* table’s *deviceId* key is not provided, the agent’s ID will be used. You may also provide an optional *callback* function that will be called when the IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods) for details.
+This method creates a new device identity in IoT Hub. The optional *deviceInfo* parameter is a table that must contain the required keys specified in the [Device Info Table](#device-info-table) or an [AzureIoTHub.Device](#azureiothubdevice) object. If the *deviceInfo* table’s *deviceId* key is not provided, the agent’s ID will be used. You may also provide an optional *callback* function that will be called when the IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods) for details.
 
 #### update(*deviceInfo[, callback]*)
 
-This method updates an existing device identity in IoT Hub. The *deviceInfo* field is a table containing the keys specified in the [Device Info Table](#device-info-table) or an AzureIoTHub.Device object. If passing in a table please not it must include a *deviceId* key. The update function cannot change the values of any read-only properties, and the *statusReason* value cannot be updated via this method. You may provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods) for details.
+This method updates an existing device identity in IoT Hub. The *deviceInfo* field is a table containing the keys specified in the [Device Info Table](#device-info-table) or an [AzureIoTHub.Device](#azureiothubdevice) object. If passing in a table please note it must include a *deviceId* key. The update function cannot change the values of any read-only properties including the *deviceId*, and the *statusReason* value cannot be updated via this method. You may provide an optional *callback* function that will be called when IoT Hub responds [*(see above)*](#azureiothubregistry-class-methods) for details.
 
 #### remove(*deviceId[, callback]*)
 
@@ -96,17 +96,17 @@ This method requests the properties of an existing device identity in IoT Hub. T
 
 #### list(*callback*)
 
-This method requests a list of device identities. When IoT Hub responds an array of up to 1000 existing device identities will be passed to the *callback* function, [*(see above)*](#azureiothubregistry-class-methods) for details.
+This method requests a list of device identities. When IoT Hub responds, an array of up to 1000 existing [AzureIoTHub.Device](#azureiothubdevice) objects will be passed to the *callback* function, [*(see above)*](#azureiothubregistry-class-methods) for details.
 
 ## AzureIoTHub.Device
 
-The Device class is used to create Devices used by the Registry class. Registry methods will create Device objects for you if you choose to pass in a deviceInfo table. 
+The Device class is used to create Devices identity objects used by the Registry class. Registry methods will create Device objects for you if you choose to pass in tables. 
 
 ### AzureIoTHub.Device Class Usage
 
 #### Constructor: AzureIoTHub.Device(*[deviceInfo]*)
 
-The constructor creates a Device object from the *deviceInfo* table passed in. The *deviceInfo* table must include a *deviceId*, if no *deviceId* is included the agent ID will be used. If no *deviceInfo* is provided the defaults below will be set:
+The constructor creates a device object from the *deviceInfo* parameter. See the *Device Info Table* below for details on what to inculed in the *deviceInfo* table. If no *deviceInfo* is provided the defaults below will be set. To create a device there must be a *deviceId*, if no *deviceId* is included in the *deviceInfo* table the agent ID will be used. 
 
 ##### Device Info Table
 | Key                        | Default Value     | Options                        | Description |
@@ -129,16 +129,16 @@ The constructor creates a Device object from the *deviceInfo* table passed in. T
 
 #### connectionString(*hostname*)
 
-The *connectionString* method takes one required parameter *hostname* and returns the *deviceConnectionString* needed to create an AzureIoTHub.Client. 
+The *connectionString* method takes one required parameter *hostname* and returns the *deviceConnectionString* from the stored *authentication* and *deviceId* properties. A *connectionString* is needed to create an AzureIoTHub.Client. 
 
 #### getBody()
 
-The *getBody* method returns the device identity properties (aka the Device Info table).
+The *getBody* method returns the stored device identity properties, see the [Device Info Table](#device-info-table) for details on the possible keys.
 
 
 ### Registry Example
 
-This example code will register the device (using the agent’s ID, which could be replaced with the device’s ID) or create a new one. It will then instantiate the Client class for later use.
+This example code will create an IoT Hub device using the imp's agent id if one isn't found in the IoT Hub device registry. It will then instantiate the Client class for later use.
 
 ```squirrel
 #require "AzureIoTHub.agent.lib.nut:2.0.0"
@@ -186,7 +186,8 @@ The *Client* class is used to send and receive events.  To use this class the de
 
 #### Constructor: AzureIoTHub.Client(*deviceConnectionString*)
 
-This contructs a (AMQP) Client object which exposes the event functions. The *deviceConnectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication), or if your device was registered using the *AzureIoTHub.Registry* class the *deviceConnectionString* parameter can be retrived from the *deviceInfo* parameter passed to the *.get()* or *.create()* method callbacks. See the [registry example above](#registry-example).
+This contructs a (AMQP) Client object which exposes the event functions. The *deviceConnectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication), or if your device was registered using the *AzureIoTHub.Registry* class the *deviceConnectionString* parameter can be retrived from the [AzureIoTHub.Device](#azureiothubdevice)
+object passed to the *AzureIoTHub.Registry get()* or *AzureIoTHub.Registry create()* method callbacks. See the [registry example above](#registry-example).
 
 ```squirrel
 const DEVICE_CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;DeviceId=<DEVICE_ID>;SharedAccessKey=<DEVICE_KEY_HASH>";
@@ -221,9 +222,9 @@ client.disconnect();
 
 #### sendEvent(*message[, callback]*)
 
-This method sends a single event (*message*) to IoT Hub. The event should be an AzureIoTHub.Message object which can be created from a string or any object that can be converted to JSON.  *(See AzureIoTHub.Message class for more details)*
+This method sends a single event (*message*) to IoT Hub. The event should be an AzureIoTHub.Message object which can be created from a string or any object that can be converted to JSON.  [*(See AzureIoTHub.Message Class for more details)*](#azureiothubmessage)
 
-You may also provide an optional *callback* function. This function will be called when the trasmission of the event to IoT Hub has occurred. The callback function takes one parameter: *err*. If no errors were encountered *err* will be `null` otherwise it will contain a error message.
+You may also provide an optional *callback* function. This function will be called when the trasmission of the event to IoT Hub has occurred. The callback function takes one parameter: *err*. If no errors were encountered *err* will be `null` otherwise it will contain an error message.
 
 ```squirrel
 // Send a string with no callback
@@ -288,7 +289,7 @@ local props = message2.getProperties();
 
 #### getBody()
 
-Use this method to retrieve an event's message content.
+Use this method to retrieve an event's message content. Messages that have been created locally will be the same type as when created, messages from Delivery objects are blobs.
 
 ```squirrel
 local body = message1.getBody();
@@ -359,7 +360,7 @@ This example code will register a device with Azure IoT Hub (if needed), then op
 
 ////////// Application Variables //////////
 
-const CONNECT_STRING = "HostName=<YOUR-HOST-NAME>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<YOUR-KEY-HASH>";
+const CONNECT_STRING = "HostName=<YOUR-HOST-NAME>.azure-devices.net;SharedAccessKeyName=<YOUR-KEY-NAME>;SharedAccessKey=<YOUR-KEY-HASH>";
 
 client <- null;
 registry <- AzureIoTHub.Registry(CONNECT_STRING);
