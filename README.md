@@ -15,7 +15,7 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
   - [connect()](#connectcallback) &mdash; Opens an AMQP connection to Azure IoT Hub.
   - [disconnect()](#disconnect) &mdash; Disconnects from Azure IoT Hub.
   - [sendEvent()](#sendeventmessage-callback) &mdash; Sends a device-to-cloud event to Azure IoT Hub.
-  - [receive()*(#receivecallback) &mdash; Opens a listener for cloud-to-device events targetted at this device.
+  - [receive()*](#receivecallback) &mdash; Opens a listener for cloud-to-device events targetted at this device.
 - [AzureIoTHub.Message](#azureiothubmessage) &mdash; A message object used to create events that are sent to Azure IoT Hub.
   - [getProperties()](#getproperties) &mdash; Returns a message’s application properties.
   - [getBody()](#getbody) &mdash; Returns the message's content.
@@ -47,7 +47,7 @@ To get a Registry Connection String you will require owner-level permissions. Pl
 
 ### Device Connection String
 
-If your device is already registered in the Azure Portal you can use a Device Connection String to authorize your device. To get a Device Connection String, you need device-level permissions. Follow the steps below to find the Device Connection String in the Azure Portal, otherwise follow the above instructions to get the Registry Connection String and then use the *AzureIoTHub.Registry* class to authorize your device [*(see registry example below)*](#azureiothub-registry-example).
+If your device is already registered in the Azure Portal you can use a Device Connection String to authorize your device. To get a Device Connection String, you need device-level permissions. Follow the steps below to find the Device Connection String in the Azure Portal, otherwise follow the above instructions to get the Registry Connection String and then use the *AzureIoTHub.Registry* class to authorize your device [*(see registry example below)*](#azureiothubregistry-example).
 
 1. Open the [Azure Portal](https://portal.azure.com/).
 2. Select or create your Azure IoT Hub resource.
@@ -116,7 +116,7 @@ The constructor creates a device object from the *deviceInfo* parameter. See the
 
 | Key                        | Default Value     | Options                        | Description |
 | -------------------------- | ----------------- | ------------------------------ | ----------- |
-| *deviceId*                  | agent ID          | Required, read-only on updates | A case-sensitive string (up to 128 characters long) of ASCII 7-bit alphanumeric characters plus {'-', ':', '.', '+', '%', '_', '#', '*', '?', '!', '(', ')', ',', '=', '@', ';', '$', '''} |
+| *deviceId*                  | agent ID          | Required, read-only on updates | A case-sensitive string (up to 128 characters long) of ASCII 7-bit alphanumeric characters plus {'-', ':', '.', '+', '%', '_', '#', '\*', '?', '!', '(', ')', ',', '=', '@', ';', '$', '''} |
 | *generationId*              | `null`            | Read only                      | An IoT Hub-generated, case-sensitive string up to 128 characters long. This value is used to distinguish devices with the same deviceId, when they have been deleted and re-created |
 | *etag*                      | `null`            | Read only                      | A string representing a weak ETag for the device identity, as per RFC7232 |
 | *connectionState*           | "Disconnected"    | Read only                      | A field indicating connection status: either "Connected" or "Disconnected". This field represents the IoT Hub view of the device connection status. Important: This field should be used only for development/debugging purposes. The connection state is updated only for devices using MQTT or AMQP. It is based on protocol-level pings (MQTT pings, or AMQP pings), and it can have a maximum delay of only five minutes. For these reasons, there can be false positives, such as devices reported as connected but that are disconnected |
