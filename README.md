@@ -291,7 +291,7 @@ local props = message2.getProperties();
 
 #### getBody()
 
-Use this method to retrieve an event’s message content. Messages that have been created locally will be of the same type as they were when created, but messages from *AzureIoTHubDelivery* objects are blobs.
+Use this method to retrieve an event’s message content. Messages that have been created locally will be of the same type as they were when created, but messages from *AzureIoTHub.Delivery* objects are blobs.
 
 ```squirrel
 local body = message1.getBody();
