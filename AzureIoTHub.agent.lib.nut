@@ -263,7 +263,7 @@ class AzureIoTHub {
             if (typeof _body == "table" || typeof _body == "array") _body = http.jsonencode(_body);
             // set properties to empty table, if no application properties set
             if (_properties == null ) _properties = {};
-            if (encoding = DATA) {
+            if (encoding == DATA) {
                 return amqp.createbinarymessage(_body, _properties);
             } else {
                 return amqp.createmessage(_body, _properties);
