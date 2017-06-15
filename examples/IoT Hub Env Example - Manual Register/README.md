@@ -4,14 +4,14 @@ In this tutorial, you begin by learning the basics of working with Electric Imp.
 
 The impExplorer Kit provides a set of sensors and peripherals which are ready to use. This project will take readings from the onboard temperature/humidity sensor and send the readings to IoT Hub.
 
-## What you do
+## What You Do
 
 * Configure your impExplorer Kit with BlinkUp&trade;.
 * Create an IoT Hub.
 * Register your impExplorer in IoT Hub.
 * Run a sample application using the Electric Imp IDE to send sensor data to IoT Hub.
 
-## What you learn
+## What You Learn
 
 * How to configure your device with BlinkUp.
 * How to use the Electric Imp IDE.
@@ -20,7 +20,7 @@ The impExplorer Kit provides a set of sensors and peripherals which are ready to
 * How to collect sensor data from the onboard temperature/humidity sensor.
 * How to send sensor data to your IoT Hub.
 
-## What you need
+## What You Need
 
 1. Your 2.4GHz 802.11bgn WiFi network *name* (SSID) and *password*.
 2. A computer with a web browser.
@@ -71,7 +71,7 @@ If you’d like a quick overview of the IDE features please visit the Electric I
 
 ### Working With The Electric Imp IDE
 
-1. Open your web browser and log in to the [Electric Imp IDE](https://azure-ide.electricimp.com/login)
+1. Open your web browser and log in to the [Electric Imp IDE](https://azure-ide.electricimp.com/login).
 2. Click the large + button to create a new ‘model’ &mdash; an Electric Imp application:
 
 ![Create Model](../example_imgs/IDECreateModel.png)
@@ -110,7 +110,7 @@ If you’d like a quick overview of the IDE features please visit the Electric I
 
 ![Policies](../example_imgs/IoTHubOverview.png)
 
-5. In the Shared access policies pane, click the **iothubowner** policy, and then copy and make a note of the **Connection string--primary key** of your IoT hub. You will need to enter this value in the code later:
+5. In the **Shared access policies** pane, click the **iothubowner** policy, and then copy and make a note of the **Connection string--primary key** of your IoT hub. You will need to enter this value in the code later:
 
 ![Connection String](../example_imgs/IoTHubConnectionString.png)
 
