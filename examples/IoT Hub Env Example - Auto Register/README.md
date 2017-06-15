@@ -12,7 +12,7 @@ The impExplorer Kit provides a set of sensors and peripherals which are ready to
 
 ## What You Learn
 
-* How to configure your device with BlinkUp.
+* How to configure your imp-enabled device with BlinkUp.
 * How to use the Electric Imp IDE.
 * How to create an Azure IoT Hub and get your connection string.
 * How to register your device with your IoT Hub.
