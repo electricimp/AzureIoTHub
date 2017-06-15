@@ -1,12 +1,12 @@
 # Connect Electric Imp to Azure IoT Hub
 
-In this tutorial, you begin by learning the basics of working with Electric Imp. We will use Electric Imp Libraries to seamlessly connect an [impExplorer&trade Kit](https://store.electricimp.com/collections/featured-products/products/impexplorer-developer-kit?variant=31118866130) to the cloud by using [Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-what-is-iot-hub). This tutorial implements manual device registration through the IoT Hub UI. For automatic device registration, please see this [tutorial](../IoT%20Hub%20Env%20Example%20-%20Auto%20Register). 
+In this tutorial, you begin by learning the basics of working with Electric Imp. We will use Electric Imp Libraries to seamlessly connect an [impExplorer&trade; Kit](https://store.electricimp.com/collections/featured-products/products/impexplorer-developer-kit?variant=31118866130) to the cloud by using [Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-what-is-iot-hub). This tutorial implements manual device registration through the IoT Hub UI. For automatic device registration, please see this [tutorial](../IoT%20Hub%20Env%20Example%20-%20Auto%20Register). 
 
 The impExplorer Kit provides a set of sensors and peripherals which are ready to use. This project will take readings from the onboard temperature/humidity sensor and send the readings to IoT Hub.
 
 ## What you do
 
-* Copnfigure your impExplorer Kit with BlinkUp&trade;.
+* Configure your impExplorer Kit with BlinkUp&trade;.
 * Create an IoT Hub.
 * Register your impExplorer in IoT Hub.
 * Run a sample application using the Electric Imp IDE to send sensor data to IoT Hub.
@@ -78,7 +78,7 @@ If you’d like a quick overview of the IDE features please visit the Electric I
 
 3. In the pop-up panbel name your model, select your device and click **Create Model**.
 4. Find the logging window (near the bottom of the IDE) and locate agent URL. It will look something like this: https://agent.electricimp.com/szPc0sLfAqlu
-5. Make a note of the agent ID &mdash; the last part of the agent URL (ie. "szPc0sLfAqlu" in the above example). We will use this in the next steps as a unique identifier when registering our device in IoT Hub.
+5. Make a note of the agent ID &mdash; the last part of the agent URL (ie. "szPc0sLfAqlu" in the above example). We will use this in the next steps as a unique identifier when registering our device in IoT Hub:
 
 ![IDE Model agent URL](../example_imgs/IDEEmptyAgentURL.png)
 
@@ -116,7 +116,7 @@ If you’d like a quick overview of the IDE features please visit the Electric I
 
 ## Register A Device In IoT Hub
 
-In this example we will register the device via the Azure portal. Please note that devices can also be registered programatically by using the Electric Imp AzureIoTHub library’s *AzureIoTHub.Registry* class methods.
+In this example we will register the device via the Azure portal. Please note that devices can also be registered programmatically by using the Electric Imp AzureIoTHub library’s *AzureIoTHub.Registry* class methods.
 
 1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
 
@@ -139,7 +139,7 @@ In this example we will register the device via the Azure portal. Please note th
 
 ![Device connection string](../example_imgs/IoTHubDeviceConnectionString.png)
 
-## Run A Aample Electric Imp Application
+## Run A Sample Electric Imp Application
 
 1. Reopen the [Electric Imp IDE](https://azure-ide.electricimp.com/login) and navigate to the model you created.
 2. Copy and Paste the [agent code](./IoTHubEnvExample_ManualRegister.agent.nut) from GitHub into the IDE’s agent pane (the left-hand side).
@@ -168,4 +168,4 @@ To continue getting started with IoT Hub and to explore other IoT scenarios, see
 - [Use Azure Web Apps to visualize real-time sensor data from Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-live-data-visualization-in-web-apps)
 - [Weather forecast using the sensor data from your IoT hub in Azure Machine Learning](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-weather-forecast-machine-learning)
 - [Device management with iothub-explorer](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-device-management-iothub-explorer)
-- [Remote monitoring and notifications with ​​Logic ​​Apps](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-monitoring-notifications-with-azure-logic-apps)
+- [Remote monitoring and notifications with Logic Apps](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-monitoring-notifications-with-azure-logic-apps)
