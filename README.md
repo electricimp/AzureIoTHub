@@ -10,9 +10,9 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
   - [list](#listcallback) &mdash; Returns a list of up to 1000 device identities in Azure IoT Hub.
 - [AzureIoTHub.Device](#azureiothubdevice) &mdash; A device object used to manage registry device identities.
   - [conectionstring](#connectionstringhostname) &mdash; Returns the device connection string.
-  - [getbody](#getbody) &mdash; Retuns the device identity properties.
+  - [getbody](#getbody) &mdash; Returns the device identity properties.
 - [AzureIoTHub.Client](#azureiothubclient) &mdash; Used to open AMQP connection to Azure IoT Hub, and to send & receive events.
-  - [connect](#connectcallback) -&mdash; Opens an AMQP connection to Azure IoT Hub.
+  - [connect](#connectcallback) &mdash; Opens an AMQP connection to Azure IoT Hub.
   - [disconnect](#disconnect) &mdash; Disconnects from Azure IoT Hub.
   - [sendEvent](#sendeventmessage-callback) - Sends a device-to-cloud event to Azure IoT Hub.
   - [receive](#receivecallback) - Opens a listener for cloud-to-device events targetted at this device.
@@ -27,7 +27,7 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 
 **To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:2.0.0"` **to the top of your agent code.**
 
-**NOTE:** The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in alpha testing on the Electric Imp platform and while in this testing phase it will only be supported for Electric Imp Azure accounts. Sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login). Be sure to use this account to BlinkUp your device. The HTTP version of the library is still available if you would prefer to use your existing Electric Imp account, [AzureIoTHub Library version 1.2.1](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1).
+**Note** The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in alpha testing on the Electric Imp platform and during this testing phase it will only be supported for Electric Imp Azure accounts. Sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login). Be sure to use this account when you sign into the Electric Imp mobile app to configure your device with BlinkUp&trade;. The [HTTP version of the library](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1) is still available if you would prefer to use your existing Electric Imp account.
 
 ## Authentication
 
@@ -43,7 +43,7 @@ To get the *Registry Connection String* you will require owner-level permissions
 4. Select a policy which has all permissions (such as the *iothubowner*) or create a new policy then click on it
 5. Copy the *Connection string--primary key* to the clipboard and paste it into the AzureIoTHub.Registry constructor.
 
-If your device is already registered in the Azure Portal you can use the *Device Connection String* to authorize your device. To get the *Device Connection String* you need device-level permissions. Follow the steps below to find the *Device Connection String* in the Azure Portal, otherwire please follow the above instructions to get the *Registry Connection String* and then use the AzureIoTHub.Registry class [*(see registry example below)*](#registry-example) to authorize your device.
+If your device is already registered in the Azure Portal you can use the *Device Connection String* to authorize your device. To get the *Device Connection String* you need device-level permissions. Follow the steps below to find the *Device Connection String* in the Azure Portal, otherwise please follow the above instructions to get the *Registry Connection String* and then use the AzureIoTHub.Registry class [*(see registry example below)*](#registry-example) to authorize your device.
 
 1. Open the [Azure Portal](https://portal.azure.com/)
 2. Select or create your Azure IoT Hub resource
@@ -59,7 +59,7 @@ The *Registry* class is used to manage IoTHub devices. This class allows your to
 
 #### Constructor: AzureIoTHub.Registry(*connectionString*)
 
-This contructs a Registry object which exposes the Device Registry functions. The *connectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication).
+This constructs a Registry object which exposes the Device Registry functions. The *connectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication).
 
 ```squirrel
 #require "AzureIoTHub.agent.lib.nut:2.0.0"
@@ -106,24 +106,24 @@ The Device class is used to create Devices identity objects used by the Registry
 
 #### Constructor: AzureIoTHub.Device(*[deviceInfo]*)
 
-The constructor creates a device object from the *deviceInfo* parameter. See the *Device Info Table* below for details on what to inculed in the *deviceInfo* table. If no *deviceInfo* is provided the defaults below will be set. To create a device there must be a *deviceId*, if no *deviceId* is included in the *deviceInfo* table the agent ID will be used. 
+The constructor creates a device object from the *deviceInfo* parameter. See the *Device Info Table* below for details on what to included in the *deviceInfo* table. If no *deviceInfo* is provided the defaults below will be set. To create a device there must be a *deviceId*, if no *deviceId* is included in the *deviceInfo* table the agent ID will be used. 
 
 ##### Device Info Table
 | Key                        | Default Value     | Options                        | Description |
 | -------------------------- | ----------------- | ------------------------------ | ----------- |
-| deviceId                   | agent ID          | required, read-only on updates | A case-sensitive string (up to 128 characters long) of ASCII 7-bit alphanumeric characters plus {'-', ':', '.', '+', '%', '_', '#', '*', '?', '!', '(', ')', ',', '=', '@', ';', '$', '''} |
-| generationId               | `null`            | read-only                      | An IoT hub-generated, case-sensitive string up to 128 characters long. This value is used to distinguish devices with the same deviceId, when they have been deleted and re-created. |
-| etag                       | `null`            | read-only                      | A string representing a weak ETag for the device identity, as per RFC7232. |
-| connectionState            | "Disconnected"    | read-only                      | A field indicating connection status: either "Connected" or "Disconnected". This field represents the IoT Hub view of the device connection status. Important: This field should be used only for development/debugging purposes. The connection state is updated only for devices using MQTT or AMQP. Also, it is based on protocol-level pings (MQTT pings, or AMQP pings), and it can have a maximum delay of only 5 minutes. For these reasons, there can be false positives, such as devices reported as connected but that are disconnected. |
-| status                     | "Enabled"         | required                       | An access indicator. Can be "Enabled" or "Disabled". If "Enabled", the device is allowed to connect. If Disabled, this device cannot access any device-facing endpoint. |
-| statusReason               | `null`            | optional                       | A 128 character-long string that stores the reason for the device identity status. All UTF-8 characters are allowed. |
-| connectionStateUpdatedTime | `null`            | read-only                      | A temporal indicator, showing the date and last time the connection state was updated. |
-| statusUpdatedTime          | `null`            | read-only                      | A temporal indicator, showing the date and time of the last status update. |
-| lastActivityTime           | `null`            | read-only                      | A temporal indicator, showing the date and last time the device connected, received, or sent a message. |
-| cloudToDeviceMessageCount  | 0                 | read-only                      | Number of cloud to device messages awaiting delivery |                               
-| authentication             | {"symmetricKey" : {"primaryKey" : `null`, "secondaryKey" : `null`}} | optional | An authentication table containing information and security materials. The primary and a secondary key are stored in base64 format. |
+| *deviceId*                   | agent ID          | required, read-only on updates | A case-sensitive string (up to 128 characters long) of ASCII 7-bit alphanumeric characters plus {'-', ':', '.', '+', '%', '_', '#', '*', '?', '!', '(', ')', ',', '=', '@', ';', '$', '''} |
+| *generationId*               | `null`            | read-only                      | An IoT hub-generated, case-sensitive string up to 128 characters long. This value is used to distinguish devices with the same deviceId, when they have been deleted and re-created |
+| *etag*                       | `null`            | read-only                      | A string representing a weak ETag for the device identity, as per RFC7232 |
+| *connectionState*            | "Disconnected"    | read-only                      | A field indicating connection status: either "Connected" or "Disconnected". This field represents the IoT Hub view of the device connection status. Important: This field should be used only for development/debugging purposes. The connection state is updated only for devices using MQTT or AMQP. Also, it is based on protocol-level pings (MQTT pings, or AMQP pings), and it can have a maximum delay of only 5 minutes. For these reasons, there can be false positives, such as devices reported as connected but that are disconnected |
+| *status*                     | "Enabled"         | required                       | An access indicator. Can be "Enabled" or "Disabled". If "Enabled", the device is allowed to connect. If Disabled, this device cannot access any device-facing endpoint |
+| *statusReason*               | `null`            | optional                       | A 128 character-long string that stores the reason for the device identity status. All UTF-8 characters are allowed |
+| connectionStateUpdatedTime | `null`            | read-only                      | A temporal indicator, showing the date and last time the connection state was updated |
+| *statusUpdatedTime*          | `null`            | read-only                      | A temporal indicator, showing the date and time of the last status update |
+| *lastActivityTime*           | `null`            | read-only                      | A temporal indicator, showing the date and last time the device connected, received, or sent a message |
+| *cloudToDeviceMessageCount*  | 0                 | read-only                      | Number of cloud to device messages awaiting delivery |                               
+| *authentication*             | {"symmetricKey" : {"primaryKey" : `null`, "secondaryKey" : `null`}} | optional | An authentication table containing information and security materials. The primary and a secondary key are stored in base64 format |
 
-**Note:** The defualt authenication parameters do not contain the authenication needed to create an AzureIoTHub.Client.    
+**Note** The default authentication parameters do not contain the authentication needed to create an AzureIoTHub.Client.    
 
 ### AzureIoTHub.Device Class Methods
 
@@ -186,7 +186,7 @@ The *Client* class is used to send and receive events.  To use this class the de
 
 #### Constructor: AzureIoTHub.Client(*deviceConnectionString*)
 
-This contructs a (AMQP) Client object which exposes the event functions. The *deviceConnectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication), or if your device was registered using the *AzureIoTHub.Registry* class the *deviceConnectionString* parameter can be retrived from the [AzureIoTHub.Device](#azureiothubdevice)
+This constructs a (AMQP) Client object which exposes the event functions. The *deviceConnectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication), or if your device was registered using the *AzureIoTHub.Registry* class the *deviceConnectionString* parameter can be retrieved from the [AzureIoTHub.Device](#azureiothubdevice)
 object passed to the *AzureIoTHub.Registry get()* or *AzureIoTHub.Registry create()* method callbacks. See the [registry example above](#registry-example).
 
 ```squirrel
@@ -244,7 +244,7 @@ client.sendEvent(message2, function(err) {
 
 #### receive(*callback*)
 
-Opens a listener for cloud-to-device events targetted at this device. Whenever an event is received, a delivery object will be passed to the provided callback. The event must be acknowledged or rejected by executing a feedback function on the delivery object. If no feedback function is called within the scope of the callback the message will be automatically accepted. [*(See AzureIoTHub.Delivery Class for more details)*](#azureiothubdelivery)
+Opens a listener for cloud-to-device events targeted at this device. Whenever an event is received, a delivery object will be passed to the provided callback. The event must be acknowledged or rejected by executing a feedback function on the delivery object. If no feedback function is called within the scope of the callback the message will be automatically accepted. [*(See AzureIoTHub.Delivery Class for more details)*](#azureiothubdelivery)
 
 ```squirrel
 client.receive(function(err, delivery) {
@@ -343,7 +343,7 @@ A **feedback** function, use to accept a delivery sent from IoT Hub. When this m
 
 #### abandon()
 
-A **feedback** function, use to abandon a delivery sent from IoT Hub. When called this method sends the delivery item back to IoT Hub to be re-queued. The message will be retried until the max delivery count has been reached (the defualt is 10), then it will be rejected.
+A **feedback** function, use to abandon a delivery sent from IoT Hub. When called this method sends the delivery item back to IoT Hub to be re-queued. The message will be retried until the max delivery count has been reached (the default is 10), then it will be rejected.
 
 #### reject()
 
