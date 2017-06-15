@@ -114,19 +114,19 @@ The constructor creates a device object from the *deviceInfo* parameter. See the
 
 ##### Device Info Table
 
-| Key                        | Default Value     | Options                        | Description |
-| -------------------------- | ----------------- | ------------------------------ | ----------- |
-| *deviceId*                  | Agent ID          | Required, read-only on updates | A case-sensitive string (up to 128 characters long) of Ascii 7-bit alphanumeric characters plus -, :, ., +, %, \_, #, \*, ?, !, (, ), =, @, ;, $, ' and , |
-| *generationId*              | `null`            | Read only                      | An IoT Hub-generated, case-sensitive string up to 128 characters long. This value is used to distinguish devices with the same *deviceId*, when they have been deleted and re-created |
-| *etag*                      | `null`            | Read only                      | A string representing a weak ETag for the device identity, as per RFC7232 |
-| *connectionState*           | "Disconnected"    | Read only                      | A field indicating connection status: either "Connected" or "Disconnected". This field represents the IoT Hub view of the device connection status. **Important** This field should be used only for development/debugging purposes. The connection state is updated only for devices using MQTT or AMQP. It is based on protocol-level pings (MQTT pings, or AMQP pings), and it can have a maximum delay of only five minutes. For these reasons, there can be false positives, such as devices reported as connected but that are disconnected |
-| *status*                    | "Enabled"         | Required                       | An access indicator. Can be "Enabled" or "Disabled". If "Enabled", the device is allowed to connect. If "Disabled", this device cannot access any device-facing endpoint |
-| *statusReason*              | `null`            | Optional                       | A 128 character-long string that stores the reason for the device status. All UTF-8 characters are allowed |
-| *connectionStateUpdatedTime* | `null`            | Read only                      | A temporal indicator, showing the date and time the connection state was last updated |
-| *statusUpdatedTime*          | `null`            | Read only                      | A temporal indicator, showing the date and time of the last status update |
-| *lastActivityTime*           | `null`            | Read only                      | A temporal indicator, showing the date and time the device last connected, received or sent a message |
-| *cloudToDeviceMessageCount*  | 0                 | Read only                      | The number of cloud to device messages awaiting delivery |                               
-| *authentication*             | {"symmetricKey" : {"primaryKey" : `null`, "secondaryKey" : `null`}} | Optional | An authentication table containing information and security materials. The primary and a secondary key are stored in base64 format |
+| Key | Default Value | Options | Description |
+| --- | --- | --- | --- |
+| *deviceId* | Agent ID | Required, read-only on updates | A case-sensitive string (up to 128 characters long) of Ascii 7-bit alphanumeric characters plus -, :, ., +, %, \_, #, \*, ?, !, (, ), =, @, ;, $, ' and , |
+| *generationId* | `null` | Read only | An IoT Hub-generated, case-sensitive string up to 128 characters long. This value is used to distinguish devices with the same *deviceId*, when they have been deleted and re-created |
+| *etag* | `null` | Read only | A string representing a weak ETag for the device identity, as per RFC7232 |
+| *connectionState* | "Disconnected" | Read only | A field indicating connection status: either "Connected" or "Disconnected". This field represents the IoT Hub view of the device connection status. **Important** This field should be used only for development/debugging purposes. The connection state is updated only for devices using MQTT or AMQP. It is based on protocol-level pings (MQTT pings, or AMQP pings), and it can have a maximum delay of only five minutes. For these reasons, there can be false positives, such as devices reported as connected but that are disconnected |
+| *status* | "Enabled" | Required | An access indicator. Can be "Enabled" or "Disabled". If "Enabled", the device is allowed to connect. If "Disabled", this device cannot access any device-facing endpoint |
+| *statusReason* | `null` | Optional | A 128-character string that stores the reason for the device status. All UTF-8 characters are allowed |
+| *connectionStateUpdatedTime* | `null` | Read only | A temporal indicator, showing the date and time the connection state was last updated |
+| *statusUpdatedTime* | `null` | Read only | A temporal indicator, showing the date and time of the last status update |
+| *lastActivityTime* | `null` | Read only | A temporal indicator, showing the date and time the device last connected, received or sent a message |
+| *cloudToDeviceMessageCount* | 0 | Read only | The number of cloud to device messages awaiting delivery |                               
+| *authentication* | {"symmetricKey" : {"primaryKey" : `null`, "secondaryKey" : `null`}} | Optional | An authentication table containing information and security materials. The primary and a secondary key are stored in base64 format |
 
 **Note** The default authentication parameters do not contain the authentication needed to create an *AzureIoTHub.Client* object.    
 
