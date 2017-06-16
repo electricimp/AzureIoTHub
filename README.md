@@ -1,4 +1,4 @@
-# Azure IoT Hub
+# Azure IoT Hub 2.0.0
 
 Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub version “2016-11-14”. The library consists of the following classes:
 
