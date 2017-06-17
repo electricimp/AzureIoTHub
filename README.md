@@ -27,9 +27,11 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 
 **To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:2.0.0"` **to the top of your agent code.**
 
-**Note** 
+**Notes** 
 
-The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in early access testing on the Electric Imp platform and during this testing phase it will only be supported for Electric Imp Azure accounts. Sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login). Be sure to use this account when you sign into the Electric Imp mobile app to configure your device with BlinkUp&trade;. The [HTTP version of the library](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1) is still available if you would prefer to use your existing Electric Imp account.
+**1** The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in early access testing on the Electric Imp platform and during this testing phase it will only be supported for Electric Imp Azure accounts. Sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login). Be sure to use this account when you sign into the Electric Imp mobile app to configure your device with BlinkUp&trade;. The [HTTP version of the library](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1) is still available if you would prefer to use your existing Electric Imp account.
+
+** 2 ** Device twins: Azure IoT Hub device twins are currently available only to devices that access IoT Hub via the MQTT protocol. Since the AzureIoTHub Library uses AMQP, device twins are not accessible at this time. However, the programmable Electric Imp device and cloud agent architecture allows developers to easily implement not just static device twin concepts but advanced functionality including custom data models, device state caching/mirroring, properties and triggers, message queuing and batch processing, or remote callbacks. The AzureIoTHub Library is planned to be updated with IoT Hub device twin support once available with the AMQP protocol.
 
 **Step-by-Step Azure IoT Hub Recipes**
 
