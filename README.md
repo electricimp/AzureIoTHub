@@ -29,7 +29,7 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 
 **Note** 
 
-The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in alpha testing on the Electric Imp platform and during this testing phase it will only be supported for Electric Imp Azure accounts. Sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login). Be sure to use this account when you sign into the Electric Imp mobile app to configure your device with BlinkUp&trade;. The [HTTP version of the library](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1) is still available if you would prefer to use your existing Electric Imp account.
+The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in early access testing on the Electric Imp platform and during this testing phase it will only be supported for Electric Imp Azure accounts. Sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login). Be sure to use this account when you sign into the Electric Imp mobile app to configure your device with BlinkUp&trade;. The [HTTP version of the library](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1) is still available if you would prefer to use your existing Electric Imp account.
 
 **Step-by-Step Azure IoT Hub Recipes**
 
