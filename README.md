@@ -27,11 +27,13 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 
 **To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:2.0.0"` **to the top of your agent code.**
 
-**Note** The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in alpha testing on the Electric Imp platform and during this testing phase it will only be supported for Electric Imp Azure accounts. Sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login). Be sure to use this account when you sign into the Electric Imp mobile app to configure your device with BlinkUp&trade;. The [HTTP version of the library](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1) is still available if you would prefer to use your existing Electric Imp account.
+**Note** 
+
+The latest release of AzureIoTHub Library version 2.0.0 uses an AMQP connection with Azure to send and receive events. AMQP is currently in alpha testing on the Electric Imp platform and during this testing phase it will only be supported for Electric Imp Azure accounts. Sign up for a free Electric Imp Azure account [here](https://azure-ide.electricimp.com/login). Be sure to use this account when you sign into the Electric Imp mobile app to configure your device with BlinkUp&trade;. The [HTTP version of the library](https://github.com/electricimp/AzureIoTHub/tree/v1.2.1) is still available if you would prefer to use your existing Electric Imp account.
 
 **Step-by-Step Azure IoT Hub Recipes**
 
-In addition to the example code at the bottom of this page there are also two detailed step-by-step 'recipes' for connecting an Electric Imp-powered sensor node to Azure IoT Hub, complete with screenshots and diagrams. One recipe is for manual device registration, the other is for automatic device registration. See the [examples folder](./examples).
+In addition to the example code at the bottom of this page there are also two detailed step-by-step 'recipes' for connecting an Electric Imp-powered environmental sensor to Azure IoT Hub, complete with screenshots and diagrams. One recipe is for manual device registration, the other is for automatic device registration. See the [examples folder](./examples).
 
 ## Authentication
 
