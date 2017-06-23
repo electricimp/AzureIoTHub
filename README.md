@@ -27,7 +27,7 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 
 **To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:2.0.0"` **to the top of your agent code.**
 
-**Notes** 
+**Note:** 
 
 Device twins: Azure IoT Hub device twins are currently available only to devices that access IoT Hub via the MQTT protocol. Since the AzureIoTHub Library uses AMQP, device twins are not accessible at this time. However, the programmable Electric Imp device and cloud agent architecture allows developers to easily implement not just static device twin concepts but advanced functionality including custom data models, device state caching/mirroring, properties and triggers, message queuing and batch processing, or remote callbacks. The AzureIoTHub Library is planned to be updated with IoT Hub device twin support once available with the AMQP protocol.
 
