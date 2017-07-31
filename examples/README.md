@@ -4,23 +4,27 @@ In these examples, you begin by learning the basics of working with Electric Imp
 
 ## Hardware Options
 
-### [impExplorer&trade; Kit](https://store.electricimp.com/collections/featured-products/products/impexplorer-developer-kit?variant=31118866130)
+### impExplorer&trade; Kit
 
-The impExplorer Kit provides a set of sensors and peripherals which are ready to use. This project will take readings from the onboard temperature/humidity sensor and send the readings to IoT Hub.
+The [impExplorer&trade; Kit](https://store.electricimp.com/collections/featured-products/products/impexplorer-developer-kit?variant=31118866130) provides a set of sensors and peripherals which are ready to use. These examples will take readings from the onboard temperature/humidity sensor and send the readings to IoT Hub. No other hardware is needed.
 
-### [impAccelerator™ Fieldbus Gateway](https://store.electricimp.com/products/impaccelerator-fieldbus-gateway?variant=31118564754)
+#### impExplorer Required Hardware 
 
-The Fieldbus Gateway is designed for a variety of industrial use-cases. In this example we will use the MikroBUS socket and a thermocouple to expand the basic functionality of the board to take temperature readings to send to IoT Hub. 
+The impExplorer Kit provides a set of sensors and peripherals which are ready to use, so no other hardware or setup is needed.
 
-#### Required Hardware
+### impAccelerator™ Fieldbus Gateway
+
+The [impAccelerator™ Fieldbus Gateway](https://store.electricimp.com/products/impaccelerator-fieldbus-gateway?variant=31118564754) is designed for a variety of industrial use-cases. In this example we will use the MikroBUS socket and a thermocouple to expand the basic functionality of the board to take temperature readings to send to IoT Hub. 
+
+#### impAccelerator Required Hardware
 
 - [impAccelerator™ Fieldbus Gateway](https://store.electricimp.com/products/impaccelerator-fieldbus-gateway?variant=31118564754)
-- [MikroBUS board](https://www.digikey.com/product-detail/en/mikroelektronika/MIKROE-1197/1471-1036-ND/4495401)
-- [Thermocouple](https://www.digikey.com/product-detail/en/mikroelektronika/MIKROE-1197/1471-1036-ND/4495401)
+- [MikroBUS board](https://shop.mikroe.com/thermo-click)
+- [Thermocouple](https://shop.mikroe.com/thermocouple-type-k-glass-braid-insulated)
 
-#### Hardware Setup
+#### impAccelerator Hardware Setup
 
-You will need to remove the impAccelerator™ Fieldbus Gateway from the enclosure to expose the MikroBUS headers. The THERMO click board plugs into the MikroBUS headers. 
+You will need to remove the impAccelerator™ Fieldbus Gateway from the enclosure to expose the MikroBUS headers. The THERMO click board plugs directly into the MikroBUS headers. 
 
 ## IoT Hub Env Auto Register
 

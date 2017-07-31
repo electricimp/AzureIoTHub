@@ -29,8 +29,8 @@ In this tutorial, you begin by learning the basics of working with Electric Imp.
     - An [Electric Imp impExplorer Kit](https://store.electricimp.com/collections/featured-products/products/impexplorer-developer-kit?variant=31118866130)
         - The impExplorer Kit has an onbard Temperature sensor, so no extra hardware is required.
     - [impAccelerator™ Fieldbus Gateway](https://store.electricimp.com/products/impaccelerator-fieldbus-gateway?variant=31118564754)
-        - [MikroBUS board](https://www.digikey.com/product-detail/en/mikroelektronika/MIKROE-1197/1471-1036-ND/4495401) 
-        - [Thermocouple](https://www.digikey.com/product-detail/en/mikroelektronika/MIKROE-1197/1471-1036-ND/4495401)
+        - [MikroBUS board](https://shop.mikroe.com/thermo-click) 
+        - [Thermocouple](https://shop.mikroe.com/thermocouple-type-k-glass-braid-insulated)
 7. USB power source or if you are using the impExplorer Kit you may use three AA batteries.
 
 ## Set Up Your Electric Imp Device With BlinkUp
