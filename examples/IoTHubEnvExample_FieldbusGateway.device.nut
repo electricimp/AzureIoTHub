@@ -41,9 +41,9 @@ class Thermocouple {
     }
 
     function read() {
-        cs.write(0);
-        local b = spi.readblob(2);
-        cs.write(1);
+        _cs.write(0);
+        local b = _spi.readblob(2);
+        _cs.write(1);
     
         // Extract reading, sign extend, divide by 4 to map to celsius
         return (( (b[0] << 6) + (b[1] >> 2) ) << 18) >> 20; 
