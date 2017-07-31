@@ -27,8 +27,10 @@
 class Application {
 
     static TEMP_ALERT = 30;
-    static YELLOW = [50, 45, 0];
-    static GREEN = [0, 50, 0];
+
+    static RED = 0x00;
+    static YELLOW = 0x01;
+    static GREEN = 0x02;
 
     connectionString = null;
     client = null;
