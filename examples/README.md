@@ -26,14 +26,14 @@ The [impAccelerator™ Fieldbus Gateway](https://store.electricimp.com/products/
 
 You will need to remove the impAccelerator™ Fieldbus Gateway from the enclosure to expose the MikroBUS headers. The THERMO click board plugs directly into the MikroBUS headers. 
 
-## IoT Hub Env Auto Register
+## Step-by-Step Example: IoT Hub Env Auto Register
 
 This example implements automatic device registration through the IoT Hub device registration APIs. 
 
 Find Auto Registration step by step instructions [here](./AutoRegister_StepByStep_Instructions.md)
 
 
-## IoT Hub Env Manual Register
+## Step-by-Step Example: IoT Hub Env Manual Register
 
 This example implements manual device registration through the IoT Hub UI. 
 
