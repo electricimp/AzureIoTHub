@@ -22,7 +22,7 @@ In this tutorial, you begin by learning the basics of working with Electric Imp.
 1. Your 2.4GHz 802.11bgn WiFi network *name* (SSID) and *password*.
 2. A computer with a web browser.
 3. A smartphone with the Electric Imp app ([iOS](https://itunes.apple.com/us/app/electric-imp/id547133856) or [Android](https://play.google.com/store/apps/details?id=com.electricimp.electricimp)).
-4. A free [Electric Imp Azure Account](https://ide.electricimp.com/login).
+4. A free [Electric Imp Account](https://ide.electricimp.com/login).
 5. A [Microsoft Azure Account](https://azure.microsoft.com/en-us/resources/videos/sign-up-for-microsoft-azure/).
 6. Electric Imp supported hardware with a temperature sensor. We have complete step by step instructions for the harware listed below.
     - An [Electric Imp impExplorer Kit](https://store.electricimp.com/collections/featured-products/products/impexplorer-developer-kit?variant=31118866130)
