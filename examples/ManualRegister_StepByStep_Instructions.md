@@ -98,7 +98,7 @@ If you’d like a quick overview of the IDE features please visit the Electric I
 
 ![Create Model](./example_imgs/IDECreateModel.png)
 
-3. In the pop-up panbel name your model, select your device and click **Create Model**.
+3. In the pop-up panel, name your model, select your device and click **Create Model**.
 4. Find the logging window (near the bottom of the IDE) and locate agent URL. It will look something like this: https://agent.electricimp.com/szPc0sLfAqlu
 5. Make a note of the agent ID &mdash; the last part of the agent URL (ie. "szPc0sLfAqlu" in the above example). We will use this in the next steps as a unique identifier when registering our device in IoT Hub:
 
