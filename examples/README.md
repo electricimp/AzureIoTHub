@@ -2,9 +2,11 @@
 
 In these examples, you begin by learning the basics of working with Electric Imp. We will use Electric Imp Libraries to seamlessly connect imp-enabled hardware to the cloud by using Azure IoT Hub. 
 
-Your imp-enabled hardware device will report temperature and humidity sensor values through the Electric Imp impCloud into Azure IoT Hub. Here is an overview diagram:
+Your imp-enabled hardware device will report temperature sensor values through the Electric Imp impCloud into Azure IoT Hub. Here is an overview diagram:
 
 ![EI overview](./example_imgs/EIOverview.png)
+
+There are two step-by-step examples, depending on whether you want to register your imp-enabled device manually with Azure IoT Hub or whether you want the Electric Imp platform to perform that registration automatically.  
 
 ## Hardware Options
 
