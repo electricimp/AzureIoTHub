@@ -22,7 +22,11 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
+// All library require stametments must be at the beginning of the device code 
+
+// Temperature Humidity Sensor driver
 #require "HTS221.device.lib.nut:2.0.0"
+// RGB LED driver
 #require "WS2812.class.nut:3.0.0"
 
 // ExplorerKit Hardware Abstraction Layer
@@ -37,7 +41,12 @@ ExplorerKit_001 <- {
     "AD_GROVE2_DATA1" : hardware.pin5
 }
 
+// Our Application Code 
 class Application {
+
+    static RED = 0x00;
+    static YELLOW = 0x01;
+    static GREEN = 0x02;
 
     static READING_INTERVAL = 10;
     static BLINK_SEC = 0.5;
@@ -52,10 +61,10 @@ class Application {
         tempHumid = HTS221(i2c, ExplorerKit_001.TEMP_HUMID_I2C_ADDR);
         tempHumid.setMode(HTS221_MODE.ONE_SHOT);
 
-        // Configure LED
+        // Configure RGB LED
         local spi = ExplorerKit_001.LED_SPI;
         led = WS2812(spi, 1);
-        hardware.pin1.configure(DIGITAL_OUT, 1);
+        ExplorerKit_001.POWER_GATE_AND_WAKE_PIN.configure(DIGITAL_OUT, 1);
 
         // Open listener
         agent.on("blink", blinkLED.bindenv(this));
@@ -66,19 +75,38 @@ class Application {
     }
 
     function loop() {
+        // Take a temperaure reading
         tempHumid.read(function(result) {
             if ("error" in result) {
                 server.error(result.error);
             } else {
+                // Send reading to the agent
                 agent.send("event", result);
             }
+            // Schedule next reading
             imp.wakeup(READING_INTERVAL, loop.bindenv(this));
         }.bindenv(this));
     }
 
     function blinkLED(color) {
         local off = [0, 0, 0];
-        led.fill(color).draw();
+        local colorArr = null;
+
+        switch (color) {
+            case RED :
+                colorArr = [50, 0, 0];
+                break;
+            case YELLOW :
+                colorArr = [50, 45, 0];
+                break;
+            case GREEN : 
+                colorArr = [0, 50, 0];
+                break; 
+        }
+
+        // Turn the LED on
+        led.fill(colorArr).draw();
+        // Wait BLINK_SEC then turn LED off
         imp.wakeup(BLINK_SEC, function() {
             led.fill(off).draw();
         }.bindenv(this))
@@ -86,4 +114,5 @@ class Application {
 
 }
 
+// Start the application running
 Application();

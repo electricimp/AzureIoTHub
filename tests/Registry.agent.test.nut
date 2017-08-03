@@ -26,9 +26,9 @@
  * Test case to test AzureIoTHub.Registry
  */
 
-const HUB_NAME = "#{env:AZURE_IOTHUB_HUB_NAME}";
-const ACCESS_KEY = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY}";
-const ACCESS_KEY_NAME = "#{env:AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME}";
+const HUB_NAME = "@{AZURE_IOTHUB_HUB_NAME}";
+const ACCESS_KEY = "@{AZURE_IOTHUB_SHARED_ACCESS_KEY}";
+const ACCESS_KEY_NAME = "@{AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME}";
 
 class RegistryTestCase extends ImpTestCase {
 
