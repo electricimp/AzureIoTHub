@@ -1,7 +1,7 @@
 {
-    "modelId": "qryDFGlK1tUd" /* Test Group D */,
+    "modelId": "E1YfIqqbKJS1" /* Test Model I */,
     "devices": [
-        "233f4aafaf952dee" /* 233f4aafaf952dee */
+        "2309826938a609ee" /* I */
     ],
     "agentFile": "AzureIoTHub.agent.lib.nut",
     "deviceFile": false,
