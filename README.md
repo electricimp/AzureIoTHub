@@ -208,18 +208,28 @@ client <- AzureIoTHub.Client(DEVICE_CONNECT_STRING);
 
 ### AzureIoTHub.Client Class Methods
 
-#### connect(*[callback]*)
+#### connect(*[onConnect, onDisconnect]*)
 
-This method opens an AMQP connection to your device’s IoT Hub `"/messages/events"` path. A connection must be opened before messages can be sent or received. This method takes one optional parameter: a callback function that will be executed when the connection has been established. The callback function takes one parameter: *err*. If no errors were encountered, *err* will be `null`, otherwise it will contain an error message.
+This method opens an AMQP connection to your device’s IoT Hub `"/messages/events"` path. A connection must be opened before messages can be sent or received. This method takes two optional parameters: a *onConnect* function that will be executed when the connection has been established, and an *onDisconnect* function that will be called when a disconnetion is detected. The *onConnect* function takes one parameter: *err*. If no errors were encountered, *err* will be `null`, otherwise it will contain an error message. The *onDisconnect* function takes one parameter: *msg*, a string containing a message about the disconnection.  
 
 ```squirrel
-client.connect(function(err) {
+function onConnect(err) {
     if (err) {
         server.error(err);
     } else {
         server.log("Connection open. Ready to send and receive messages.");
     }
-});
+}
+
+function onDisconnect(msg) {
+    // Log reason for disconnection
+    server.log(msg);
+    // Reset the connection
+    client.disconnect();
+    client.connect(onConnect, onDisconnect);
+}
+
+client.connect(onConnect, onDisconnect);
 ```
 
 #### disconnect()
@@ -254,12 +264,20 @@ client.sendEvent(message2, function(err) {
 
 #### receive(*callback*)
 
-This method opens a listener for cloud-to-device events targeted at this device. Whenever an event is received, a delivery object will be passed to the provided callback. The event must be acknowledged or rejected by executing a feedback function on the delivery object. If no feedback function is called within the scope of the callback, the message will be automatically accepted. See [*AzureIoTHub.Delivery*](#azureiothubdelivery) for more details.
+This method opens a listener for cloud-to-device events targeted at this device. To open a receiver pass a function to the required *callback* parameter. To close a receiver set the *callback* parameter to *null*. 
+
+The *callback* function takes two required parameters: *err* and *delivery*. If an error is encountered or if the receiver session is unexpectedly closed the callback will be triggered and the *err* parameter will contain a message string. Otherwise the *err* parameter will be `null` and whenever an event is received, a *delivery* object will be passed to the provided callback's *delivery* parameter. 
+
+When a *delivery* is received it must be acknowledged or rejected by executing a feedback function on the delivery object. If no feedback function is called within the scope of the callback, the message will be automatically accepted. See [*AzureIoTHub.Delivery*](#azureiothubdelivery) for more details.
 
 ```squirrel
-client.receive(function(err, delivery) {
+function receiveHandler(err, delivery) {
     if (err) {
+        // Log the error
         server.error(err);
+        // Reset the receiver
+        client.receive(null);
+        client.receive(receiveHandler);
         return;
     }
 
@@ -269,7 +287,9 @@ client.receive(function(err, delivery) {
     } else {
         delivery.reject();
     }
-});
+}
+
+client.receive(receiveHandler);
 ```
 
 ## AzureIoTHub.Message
