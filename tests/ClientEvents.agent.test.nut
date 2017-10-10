@@ -114,7 +114,10 @@ class ClientEventsTestCase extends ImpTestCase {
      */
     function clearMessageQueue() {
         this._client.receive(function(err, delivery) {
-            delivery.complete();
+            if (err) info(err);
+            if (delivery != null) {
+                delivery.complete();
+            }
         }.bindenv(this));
     }
 
