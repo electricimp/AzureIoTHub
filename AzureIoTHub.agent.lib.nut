@@ -653,11 +653,14 @@ class AzureIoTHub {
         }
 
         // done has one param (error)
-        function connect(done = null) {
+        // onDisconnect has one param (error)
+        function connect(done = null, onDisconnect = null) {
             // set connecting flag
             _connecting = true;
-            // set connection callback
+
+            // set callbacks
             _handlers.onConnected <- done;
+            _handlers.onDisconect <- onDisconnect;
 
             // TODO: create a state machine to clean up tracking connection status
             // Don't open a connection if one is already open
@@ -695,18 +698,17 @@ class AzureIoTHub {
 
         // done cb params - err
         function sendEvent(message, done = null) {
-
             if ( !_isOpen(_sessions.event) ) {
                 if (done) done("Cannot send while disconnected.");
             } else {
                 if ( !_isOpen(_senders.event) ) {
-                    _log("creating event sender session");
+                    _log("creating event sender");
                     // add message to queue
                     _msgQueue.push({"msg" : message, "cb" : done});
                     // create a new sender & send message
                     _openEventSender();
                 } else {
-                    _log("event sender session open")
+                    _log("event sender open")
                     _sendEvent(message, done);
                 }
             }
@@ -714,7 +716,6 @@ class AzureIoTHub {
 
         // done is called everytime a message is available, params - error, data
         function receive(done) {
-
             _handlers.onEvent <- done;
 
             if (done == null) {
@@ -873,6 +874,12 @@ class AzureIoTHub {
                     _openEventSender();
                     break;
                 case "SESSION_CLOSED" :
+                    // Session closed notify user (different error messages for debug purposes)
+                    if (_isOpen(_connection)) {
+                        _handlers.onDisconect("Event session closed. Please reconnect to send or receive events.");
+                    } else {
+                        _handlers.onDisconect("Connection to IoT Hub closed. Please reconnect to send or receive events.");
+                    }
                     break;
                 case "SESSION_ERROR" :
                     if (_connecting) {
@@ -939,9 +946,15 @@ class AzureIoTHub {
                 case "RECEIVER_OPEN":
                     break;
                 case "RECEIVER_CLOSED":
+                    // Event session is open and we have a handlers registered, so this is an unexpected disconnect
+                    if (_isOpen(_sessions.event) && "onEvent" in _handlers && _handlers.onEvent != null) {
+                        // Call receiver callback with an error.
+                        _handlers.onEvent("Unexpected disconnect", null);  
+                    }
                     break;
                 case "RECEIVER_ERROR":
                     _log(data);
+                    // TODO: is this the correct error message (it is different than event sender - should these messages be the same??)
                     if (data.find("Token Invalid") != null) {
                         _receiverTokenError = true;
                         _updateConfigSASExpiry();
@@ -1103,8 +1116,8 @@ class AzureIoTHub {
             return config;
         }
 
-        function connect(done = null) {
-            _transport.connect(done);
+        function connect(done = null, onDisconnect = null) {
+            _transport.connect(done, onDisconnect);
             return this;
         }
 
