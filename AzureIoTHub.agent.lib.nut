@@ -41,7 +41,7 @@ const AZURE_CLAIM_BASED_SECURITY_PATH = "$cbs";
 
 class AzureIoTHub {
 
-    static VERSION = "2.0.0";
+    static VERSION = "2.1.0";
 
     // Helper Classes modeled after JS/Node SDK
     //------------------------------------------------------------------------------
