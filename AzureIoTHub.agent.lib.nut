@@ -660,7 +660,7 @@ class AzureIoTHub {
 
             // set callbacks
             _handlers.onConnected <- done;
-            _handlers.onDisconect <- onDisconnect;
+            _handlers.onDisconnect <- onDisconnect;
 
             // TODO: create a state machine to clean up tracking connection status
             // Don't open a connection if one is already open
@@ -876,9 +876,9 @@ class AzureIoTHub {
                 case "SESSION_CLOSED" :
                     // Session closed notify user (different error messages for debug purposes)
                     if (_isOpen(_connection)) {
-                        _handlers.onDisconect("Event session closed. Please reconnect to send or receive events.");
+                        _handlers.onDisconnect("Event session closed. Please reconnect to send or receive events.");
                     } else {
-                        _handlers.onDisconect("Connection to IoT Hub closed. Please reconnect to send or receive events.");
+                        _handlers.onDisconnect("Connection to IoT Hub closed. Please reconnect to send or receive events.");
                     }
                     break;
                 case "SESSION_ERROR" :
