@@ -1,4 +1,4 @@
-# Azure IoT Hub 2.1.0 #
+# Azure IoT Hub 3.0.0 (Draft) #
 
 Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub version “2016-11-14”. The library consists of the following classes:
 
@@ -11,21 +11,12 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 - [AzureIoTHub.Device](#azureiothubdevice) &mdash; A device object used to manage registry device identities.
   - [conectionstring()](#connectionstringhostname) &mdash; Returns the device connection string.
   - [getbody()](#getbody) &mdash; Returns the device identity properties.
-- [AzureIoTHub.Client](#azureiothubclient) &mdash; Used to open AMQP connection to Azure IoT Hub, and to send & receive events.
-  - [connect()](#connectcallback) &mdash; Opens an AMQP connection to Azure IoT Hub.
-  - [disconnect()](#disconnect) &mdash; Disconnects from Azure IoT Hub.
-  - [sendEvent()](#sendeventmessage-callback) &mdash; Sends a device-to-cloud event to Azure IoT Hub.
-  - [receive()](#receivecallback) &mdash; Opens a listener for cloud-to-device events targetted at this device.
 - [AzureIoTHub.Message](#azureiothubmessage) &mdash; A message object used to create events that are sent to Azure IoT Hub.
   - [getProperties()](#getproperties) &mdash; Returns a message’s application properties.
   - [getBody()](#getbody) &mdash; Returns the message's content.
-- [AzureIoTHub.Delivery](#azureiothubdelivery) &mdash; A delivery object, created from events received from Azure IoT Hub.
-  - [getMessage()](#getmessage) &mdash; Returns an *iothub.Message* object.
-  - [complete()](#complete) &mdash; A feedback function used to accept an IoT Hub delivery.
-  - [abandon()](#abandon) &mdash; A feedback function used to re-queue an IoT Hub delivery.
-  - [reject()](#reject) &mdash; A feedback function used to reject an IoT Hub delivery.
+- [AzureIoTHub.Client](#azureiothubclient) &mdash; 
 
-**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:2.1.0"` **to the top of your agent code.**
+**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:3.0.0"` **to the top of your agent code.**
 
 [![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=master)](https://travis-ci.org/electricimp/AzureIoTHub)
 
@@ -187,11 +178,55 @@ registry.get(agentId, function(err, iothubDevice) {
 }.bindenv(this));
 ```
 
+## AzureIoTHub.Message ##
+
+The *AzureIoTHub.Message* class is used to create an event object to send to IoT Hub.
+
+### AzureIoTHub.Message Class Usage ###
+
+#### Constructor: AzureIoTHub.Message(*message[, properties]*) ####
+
+The constructor takes one required parameter, *message*, which can be created from a string or any object that can be converted to JSON. It may also take an optional parameter: a table of message properties.
+
+```squirrel
+local message1 = AzureIoTHub.Message("This is an event");
+local message2 = AzureIoTHub.Message({ "id": 1, "text": "Hello, world." });
+```
+
+### AzureIoTHub.Message Class Methods ###
+
+#### getProperties() ####
+
+Use this method to retrieve an event’s application properties. This method returns a table.
+
+```squirrel
+local props = message2.getProperties();
+```
+
+#### getBody() ####
+
+Use this method to retrieve an event’s message content. Messages that have been created locally will be of the same type as they were when created, but messages from *AzureIoTHub.Delivery* objects are blobs.
+
+```squirrel
+local body = message1.getBody();
+```
+
+
+
 ## AzureIoTHub.Client ##
 
-The *AzureIoTHub.Client* class is used to send and receive events. To use this class, the device must be registered as an IoT Hub device in your Azure account.
+The *AzureIoTHub.Client* class is used to transfer data to and from Azure IoT Hub. To use this class, the device must be registered as an IoT Hub device in your Azure account.
+
+*AzureIoTHub.Client* works over MQTT v3.1.1 protocol. It supports the following functionality:
+- connecting and disconnecting to/from Azure IoT Hub. Azure IoT Hub supports only one connection per device.
+- sending messages to Azure IoT Hub
+- receiving messages from Azure IoT Hub (optionally enabled)
+- device twin operations (optionally enabled)
+- direct methods processing (optionally enabled)
 
 ### AzureIoTHub.Client Class Usage ###
+
+### AzureIoTHub.Client Class Methods ###
 
 #### Constructor: AzureIoTHub.Client(*deviceConnectionString*) ####
 
@@ -203,8 +238,6 @@ const DEVICE_CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;DeviceId=<DEV
 // Instantiate a client
 client <- AzureIoTHub.Client(DEVICE_CONNECT_STRING);
 ```
-
-### AzureIoTHub.Client Class Methods ###
 
 #### connect(*[onConnect, onDisconnect]*) ####
 
@@ -292,39 +325,6 @@ function receiveHandler(error, delivery) {
 }
 
 client.receive(receiveHandler);
-```
-
-## AzureIoTHub.Message ##
-
-The *AzureIoTHub.Message* class is used to create an event object to send to IoT Hub.
-
-### AzureIoTHub.Message Class Usage ###
-
-#### Constructor: AzureIoTHub.Message(*message[, properties]*) ####
-
-The constructor takes one required parameter, *message*, which can be created from a string or any object that can be converted to JSON. It may also take an optional parameter: a table of message properties.
-
-```squirrel
-local message1 = AzureIoTHub.Message("This is an event");
-local message2 = AzureIoTHub.Message({ "id": 1, "text": "Hello, world." });
-```
-
-### AzureIoTHub.Message Class Methods ###
-
-#### getProperties() ####
-
-Use this method to retrieve an event’s application properties. This method returns a table.
-
-```squirrel
-local props = message2.getProperties();
-```
-
-#### getBody() ####
-
-Use this method to retrieve an event’s message content. Messages that have been created locally will be of the same type as they were when created, but messages from *AzureIoTHub.Delivery* objects are blobs.
-
-```squirrel
-local body = message1.getBody();
 ```
 
 ## AzureIoTHub.Delivery ##
