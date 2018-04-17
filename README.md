@@ -292,7 +292,9 @@ These settings affect the client's behavior and the operations. Every setting is
 | "will-message" | String | not specified | TODO |
 | TODO |  |  |  |
 
-#### Example - TODO - update ####
+#### Example ####
+
+TODO - update - full example for constructor, connect, disconnect - a recommended practice
 
 ```squirrel
 const DEVICE_CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;DeviceId=<DEVICE_ID>;SharedAccessKey=<DEVICE_KEY_HASH>";
@@ -301,47 +303,36 @@ const DEVICE_CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;DeviceId=<DEV
 client <- AzureIoTHub.Client(DEVICE_CONNECT_STRING);
 ```
 
-#### connect(*[onConnect, onDisconnect]*) ####
+### connect() ###
 
-This method opens an AMQP connection to your device’s IoT Hub `"/messages/events"` path. A connection must be opened before messages can be sent or received. This method takes two optional parameters: *onConnect*, a function that will be executed when the connection has been established; and *onDisconnect*, a function that will be called when the connection is broken. 
+This method opens a connection to Azure IoT Hub.
 
-The *onConnect* function takes one paramete of its own: *error*. If no errors were encountered, *error* will be `null`, otherwise it will contain an error message. 
+The method returns nothing. A result of the connection opening may be obtained via the [*onConnect* callback](#onconnecterror), if specified in the client's constructor.
 
-The *onDisconnect* function takes one parameter of its own: *message*, which is a string containing information about the disconnection.  
+Azure IoT Hub supports only one connection per device.
 
-```squirrel
-function onConnect(error) {
-    if (error) {
-        server.error(error);
-    } else {
-        server.log("Connection open. Ready to send and receive messages.");
-    }
-}
+All other methods of the client should be called when the client is connected.
 
-function onDisconnect(message) {
-    // Log reason for disconnection
-    server.log(message);
-    // Reset the connection
-    client.disconnect();
-    client.connect(onConnect, onDisconnect);
-}
+### disconnect() ###
 
-client.connect(onConnect, onDisconnect);
-```
+This method closes the connection to Azure IoT Hub. Does nothing if the connection is already closed.
 
-#### disconnect() ####
+The method returns nothing. When the disconnection is completed the [*onDisconnect* callback](#ondisconnecterror) is called, if specified in the client's constructor.
 
-This method closes the AMQP connection to IoT Hub.
+### sendMessage(*message[, onComplete]*) ###
 
-```squirrel
-client.disconnect();
-```
+This method sends a message to Azure IoT Hub.
 
-#### sendEvent(*message[, callback]*) ####
+The method returns nothing. A result of the sending may be obtained via the [*onComplete* callback](#oncompleteerror), if specified in this method.
 
-This method sends a single event, as *message*, to IoT Hub. The event should be an *AzureIoTHub.Message* object which can be created from a string or any object that can be converted to JSON. See [*AzureIoTHub.Message*](#azureiothubmessage) for more details.
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *message* | [AzureIoTHub.Message](#azureiothubmessage) | Yes | Message to sent. |
+| *[onComplete](#oncompleteerror)* | Function  | Optional | [Callback](#oncompleteerror) called when the message is considered as sent or an error happens. |
 
-You may also provide an optional *callback* function. This will be called when the transmission of the event to IoT Hub has occurred. The callback function takes one parameter: *err*. If no errors were encountered, *err* will be `null`, otherwise it will contain an error message.
+#### Example ####
+
+TODO - update
 
 ```squirrel
 // Send a string with no callback
