@@ -219,7 +219,7 @@ This method returns a new AzureIoTHub.DirectMethodResponse instance.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *status* | String | Yes | Status of the Direct Method execution. Fully application specific. |
+| *status* | String | Yes | [HTTP status code](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-direct-methods#response) of the Direct Method execution. Fully application specific. |
 | *body* | Table | Optional | Key-value table with the returned data. Every key is always a *String* with the name of the data field. The value is the corresponding value of the data field. Keys and values are fully application specific. |
 
 ## AzureIoTHub.Client ##
@@ -248,7 +248,7 @@ This callback is called when an operation is completed.
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
+| *[error](#error-code)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
 
 #### Error Code ####
 
@@ -266,14 +266,14 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | 5** | Azure IoT Hub server errors |
 | TODO | codes returned by EI MQTT lib... |
 
-### Constructor: AzureIoTHub.Client(*deviceConnectionString, [onConnect[, onDisconnect[, options]]]*) ###
+### Constructor: AzureIoTHub.Client(*deviceConnectionString, onConnect[, onDisconnect[, options]]*) ###
 
 This method returns a new AzureIoTHub.Client instance.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *deviceConnectionString* | String | Yes | Device connection string: includes the host name to connect, the device Id and the shared access string. It can be obtained from the Azure Portal [*(see above)*](#authentication). However, if the device was registered using the *AzureIoTHub.Registry* class, the *deviceConnectionString* parameter can be retrieved from the [*AzureIoTHub.Device*](#azureiothubdevice) instance passed to the *AzureIoTHub.Registry.get()* or *AzureIoTHub.Registry.create()* method callbacks. For more guidance, please see the [AzureIoTHub.registry example](#azureiothubregistry-example). |
-| *[onConnect](#onconnecterror)* | Function  | Optional | [Callback](#onconnecterror) called every time the device is connected. |
+| *[onConnect](#onconnecterror)* | Function  | Yes | [Callback](#onconnecterror) called every time the device is connected. |
 | *[onDisconnect](#ondisconnecterror)* | Function  | Optional | [Callback](#ondisconnecterror) called every time the device is disconnected. |
 | *[options](#optional-settings)* | Table  | Optional | [Key-value table](#optional-settings) with optional settings. |
 
@@ -323,7 +323,7 @@ client <- AzureIoTHub.Client(DEVICE_CONNECT_STRING);
 
 This method opens a connection to Azure IoT Hub.
 
-The method returns nothing. A result of the connection opening may be obtained via the [*onConnect*](#onconnecterror) callback, if specified in the client's constructor.
+The method returns nothing. A result of the connection opening may be obtained via the [*onConnect*](#onconnecterror) callback.
 
 Azure IoT Hub supports only one connection per device.
 
@@ -393,7 +393,7 @@ This callback is called every time a new message is received.
 
 TODO
 
-### enableTwin(*onChange[, onComplete]*) ###
+### enableTwin(*onRequest[, onComplete]*) ###
 
 This method enables or disables [Azure IoT Hub Device Twins functionality](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins).
 
@@ -438,9 +438,9 @@ This callback is called when [Device Twin properties are retrieved](https://docs
 | Parameter | Data Type | Description |
 | --- | --- | --- |
 | *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
-| *version* | Integer | Version of the Device Twin document with the properties. The version is always incremented by Azure IoT Hub when the document is updated. This parameter should be ignored if *error* is `0`. |
-| *reportedProps* | Table | Key-value table with the reported properties. This parameter should be ignored if *error* is `0`. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
-| *desiredProps* | Table | Key-value table with the desired properties. This parameter should be ignored if *error* is `0`. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
+| *version* | Integer | Version of the Device Twin document with the properties. The version is always incremented by Azure IoT Hub when the document is updated. This parameter should be ignored if *error* is not `0`. |
+| *reportedProps* | Table | Key-value table with the reported properties. This parameter should be ignored if *error* is not `0`. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
+| *desiredProps* | Table | Key-value table with the desired properties. This parameter should be ignored if *error* is not `0`. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
 
 #### Example ####
 
