@@ -211,7 +211,7 @@ local body = message1.getBody();
 
 ## AzureIoTHub.DirectMethodResponse ##
 
-This class is used to create a response to the received [Direct Method call] (https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-direct-methods) to send it back to Azure IoT Hub.
+This class is used to create a response to the received [Direct Method call](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-direct-methods) to send it back to Azure IoT Hub.
 
 ### Constructor: AzureIoTHub.DirectMethodResponse(*status[, body]*) ###
 
