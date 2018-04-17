@@ -323,7 +323,7 @@ client <- AzureIoTHub.Client(DEVICE_CONNECT_STRING);
 
 This method opens a connection to Azure IoT Hub.
 
-The method returns nothing. A result of the connection opening may be obtained via the [*onConnect*](#onconnecterror) callback.
+The method returns nothing. A result of the connection opening may be obtained via the [*onConnect*](#onconnecterror) callback specified in the client's constructor.
 
 Azure IoT Hub supports only one connection per device.
 
