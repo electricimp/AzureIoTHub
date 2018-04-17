@@ -180,11 +180,11 @@ registry.get(agentId, function(err, iothubDevice) {
 
 ## AzureIoTHub.Message ##
 
-The *AzureIoTHub.Message* class is used to create an event object to send to IoT Hub.
+TODO - update description.
 
-### AzureIoTHub.Message Class Usage ###
+This class is used to create a message to send to Azure IoT Hub.
 
-#### Constructor: AzureIoTHub.Message(*message[, properties]*) ####
+### Constructor: AzureIoTHub.Message(*message[, props]*) ###
 
 The constructor takes one required parameter, *message*, which can be created from a string or any object that can be converted to JSON. It may also take an optional parameter: a table of message properties.
 
@@ -193,9 +193,7 @@ local message1 = AzureIoTHub.Message("This is an event");
 local message2 = AzureIoTHub.Message({ "id": 1, "text": "Hello, world." });
 ```
 
-### AzureIoTHub.Message Class Methods ###
-
-#### getProperties() ####
+### getProperties() ###
 
 Use this method to retrieve an event’s application properties. This method returns a table.
 
@@ -203,7 +201,7 @@ Use this method to retrieve an event’s application properties. This method ret
 local props = message2.getProperties();
 ```
 
-#### getBody() ####
+### getBody() ###
 
 Use this method to retrieve an event’s message content. Messages that have been created locally will be of the same type as they were when created, but messages from *AzureIoTHub.Delivery* objects are blobs.
 
@@ -211,11 +209,22 @@ Use this method to retrieve an event’s message content. Messages that have bee
 local body = message1.getBody();
 ```
 
+## AzureIoTHub.DirectMethodResponse ##
 
+This class is used to create a response to the received [Direct Method call] (https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-direct-methods) to send it back to Azure IoT Hub.
+
+### Constructor: AzureIoTHub.DirectMethodResponse(*status[, body]*) ###
+
+This method returns a new AzureIoTHub.DirectMethodResponse instance.
+
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *status* | String | Yes | Status of the Direct Method execution. Fully application specific. |
+| *body* | Table | Optional | Key-value table with the returned data. Every key is always a *String* with the name of the data field. The value is the corresponding value of the data field. Keys and values are fully application specific. |
 
 ## AzureIoTHub.Client ##
 
-The *AzureIoTHub.Client* class is used to transfer data to and from Azure IoT Hub. To use this class, the device must be registered as an IoT Hub device in an Azure account.
+This class is used to transfer data to and from Azure IoT Hub. To use this class, the device must be registered as an IoT Hub device in an Azure account.
 
 *AzureIoTHub.Client* works over MQTT v3.1.1 protocol. It supports the following functionality:
 - connecting and disconnecting to/from Azure IoT Hub. Azure IoT Hub supports only one connection per device.
@@ -424,7 +433,7 @@ The method returns nothing. The retrieved properties may be obtained via the [*o
 
 #### onRetrieve(*error, version, reportedProps, desiredProps*) ####
 
-This callback is called when [Device Twin properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#retrieving-a-device-twins-properties) are retrieved.
+This callback is called when [Device Twin properties are retrieved](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#retrieving-a-device-twins-properties).
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
@@ -439,7 +448,7 @@ TODO
 
 ### updateTwinProperties(*props[, onComplete]*) ###
 
-This method updates [Device Twin reported properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#update-device-twins-reported-properties).
+This method [updates Device Twin reported properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#update-device-twins-reported-properties).
 
 The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#oncompleteerror) callback, if specified in this method.
 
@@ -452,7 +461,35 @@ The method returns nothing. A result of the operation may be obtained via the [*
 
 TODO - not needed if already in the example for enableTwin()
 
+### enableDirectMethods(*onMethod[, onComplete]*) ###
 
+This method enables or disables [Azure IoT Hub Direct Methods](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-direct-methods).
+
+To enable the feature, specify the [*onMethod*](#onmethodname-params) callback. To disable the feature, specify `null` as that callback.
+
+The feature is automatically disabled every time the client is disconnected. It should be re-enabled after every new connection, if needed.
+
+The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#oncompleteerror) callback, if specified in this method.
+
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *[onMethod](#onmethodname-params)* | Function  | Yes | [Callback](#onmethodname-params) called every time a direct method is called. `null` disables the feature. |
+| *[onComplete](#oncompleteerror)* | Function  | Optional | [Callback](#oncompleteerror) called when the operation is completed or an error happens. |
+
+#### onMethod(*name, params*) ####
+
+This callback is called every time a [Direct Method is called](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method).
+
+The callback **must** return an instance of the [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse).
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *name* | String | Name of the called Direct Method. |
+| *params* | Table | Key-value table with the input parameters of the called Direct Method. Every key is always a *String* with the name of the input parameter. The value is the corresponding value of the input parameter. Keys and values are fully application specific. |
+
+#### Example ####
+
+TODO 
 
 ## Full Example ##
 
