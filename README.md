@@ -226,9 +226,9 @@ The *AzureIoTHub.Client* class is used to transfer data to and from Azure IoT Hu
 
 ### AzureIoTHub.Client Class Usage ###
 
-TODO - add some general explanation here ?
+TODO - add some general explanation here ? eg. - need to re-enable optional features after disconnection.
 
-Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. A typical [*onComplete* callback](#oncompleteerror) provides an [error code](#error-code) which specifies a concrete error (if any) happened during the operation. Specific callbacks are described within every method.
+Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. A typical [*onComplete*](#oncompleteerror) callback provides an [error code](#error-code) which specifies a concrete error (if any) happened during the operation. Specific callbacks are described within every method.
 
 #### onComplete(*error*) #####
 
@@ -246,7 +246,9 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | --- | --- |
 | 0 | No error. |
 | TODO | The client is disconnected. |
+| TODO | The client is already connected. |
 | TODO | The feature is not enabled. |
+| TODO | The feature is already enabled. |
 | TODO | General error. |
 | TODO | codes returned by EI MQTT lib... |
 
@@ -307,7 +309,7 @@ client <- AzureIoTHub.Client(DEVICE_CONNECT_STRING);
 
 This method opens a connection to Azure IoT Hub.
 
-The method returns nothing. A result of the connection opening may be obtained via the [*onConnect* callback](#onconnecterror), if specified in the client's constructor.
+The method returns nothing. A result of the connection opening may be obtained via the [*onConnect*](#onconnecterror) callback, if specified in the client's constructor.
 
 Azure IoT Hub supports only one connection per device.
 
@@ -317,13 +319,13 @@ All other methods of the client should be called when the client is connected.
 
 This method closes the connection to Azure IoT Hub. Does nothing if the connection is already closed.
 
-The method returns nothing. When the disconnection is completed the [*onDisconnect* callback](#ondisconnecterror) is called, if specified in the client's constructor.
+The method returns nothing. When the disconnection is completed the [*onDisconnect*](#ondisconnecterror) callback is called, if specified in the client's constructor.
 
 ### sendMessage(*message[, onComplete]*) ###
 
 This method sends a message to Azure IoT Hub.
 
-The method returns nothing. A result of the sending may be obtained via the [*onComplete* callback](#oncompleteerror), if specified in this method.
+The method returns nothing. A result of the sending may be obtained via the [*onComplete*](#oncompleteerror) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
@@ -350,35 +352,32 @@ client.sendEvent(message2, function(err) {
 });
 ```
 
-#### receive(*callback*) ####
+### enableMessageReceiving(*onReceive[, onComplete]*) ###
 
-This method opens a listener for cloud-to-device events targeted at this device. To open a receiver, pass a function into the *callback* parameter. To close a receiver, set the *callback* parameter to `null`. 
+This method enables or disables message receiving from Azure IoT Hub.
 
-The callback function has two parameters of its own, both of which are required: *error* and *delivery*. If an error is encountered or if the receiver session is unexpectedly closed, then the callback will be triggered and the *error* parameter will contain a message string. Otherwise *error* parameter will be `null`, and whenever an event is received, a *delivery* object will be passed to the provided callback’s *delivery* parameter. 
+To enable the feature, specify the [*onReceive*](#onreceivemessage) callback. To disable the feature, specify `null` as that callback.
 
-When a *delivery* is received it must be acknowledged or rejected by executing a feedback function on the delivery object. If no feedback function is called within the scope of the callback, the message will be automatically accepted. See [*AzureIoTHub.Delivery*](#azureiothubdelivery) for more details.
+The feature is automatically disabled every time the client is disconnected. It should be re-enabled after every new connection, if needed.
 
-```squirrel
-function receiveHandler(error, delivery) {
-    if (error) {
-        // Log the error
-        server.error(error);
-        // Reset the receiver
-        client.receive(null);
-        client.receive(receiveHandler);
-        return;
-    }
+The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#oncompleteerror) callback, if specified in this method.
 
-    local message = delivery.getMessage();
-    if (message.getBody().tostring() == "OK") {
-        delivery.complete();
-    } else {
-        delivery.reject();
-    }
-}
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *[onReceive](#onreceivemessage)* | Function  | Yes | [Callback](#onreceivemessage) called every time a new message is received. `null` disables the feature. |
+| *[onComplete](#oncompleteerror)* | Function  | Optional | [Callback](#oncompleteerror) called when the operation is completed or an error happens. |
 
-client.receive(receiveHandler);
-```
+#### onReceive(*message*) ####
+
+This callback is called every time a new message is received.
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *message* | [AzureIoTHub.Message](#azureiothubmessage) | Received message. |
+
+#### Example ####
+
+TODO
 
 
 ## Full Example ##
