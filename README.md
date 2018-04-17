@@ -63,7 +63,7 @@ The *AzureIoTHub.Registry* class is used to manage IoT Hub devices. This class a
 This constructs a *Registry* object which exposes the Device Registry functions. The *connectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication).
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:2.1.0"
+#require "AzureIoTHub.agent.lib.nut:3.0.0"
 
 // Instantiate a client using your connection string
 const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=<KEY_NAME>;SharedAccessKey=<KEY_HASH>";
@@ -142,7 +142,7 @@ The *getBody()* method returns the stored device properties. See the [Device Inf
 This example code will create an IoT Hub device using an imp’s agent ID if one isn’t found in the IoT Hub device registry. It will then instantiate the *AzureIoTHub.Client* class for later use.
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:2.1.0"
+#require "AzureIoTHub.agent.lib.nut:3.0.0"
 
 const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 
@@ -502,7 +502,7 @@ This example also shows how to send device-to-cloud messages. A listener will be
 ### Agent Code ###
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:2.1.0"
+#require "AzureIoTHub.agent.lib.nut:3.0.0"
 
 ////////// Application Variables //////////
 
