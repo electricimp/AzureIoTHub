@@ -226,7 +226,10 @@ The *AzureIoTHub.Client* class is used to transfer data to and from Azure IoT Hu
 
 ### AzureIoTHub.Client Class Usage ###
 
-TODO - add some general explanation here ? eg. - need to re-enable optional features after disconnection.
+TODO - add some general explanation here ? eg.
+- need to re-enable optional features after disconnection.
+- https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins#device-reconnection-flow
+- 
 
 Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. A typical [*onComplete*](#oncompleteerror) callback provides an [error code](#error-code) which specifies a concrete error (if any) happened during the operation. Specific callbacks are described within every method.
 
@@ -250,6 +253,8 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | TODO | The feature is not enabled. |
 | TODO | The feature is already enabled. |
 | TODO | General error. |
+| 429 | Too many requests (throttled), as per [Azure IoT Hub throttling](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-quotas-throttling) |
+| 5** | Azure IoT Hub server errors |
 | TODO | codes returned by EI MQTT lib... |
 
 ### Constructor: AzureIoTHub.Client(*deviceConnectionString, [onConnect[, onDisconnect[, options]]]*) ###
@@ -323,7 +328,7 @@ The method returns nothing. When the disconnection is completed the [*onDisconne
 
 ### sendMessage(*message[, onComplete]*) ###
 
-This method sends a message to Azure IoT Hub.
+This method [sends a message to Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#sending-device-to-cloud-messages).
 
 The method returns nothing. A result of the sending may be obtained via the [*onComplete*](#oncompleteerror) callback, if specified in this method.
 
@@ -354,7 +359,7 @@ client.sendEvent(message2, function(err) {
 
 ### enableMessageReceiving(*onReceive[, onComplete]*) ###
 
-This method enables or disables message receiving from Azure IoT Hub.
+This method enables or disables [message receiving from Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#receiving-cloud-to-device-messages).
 
 To enable the feature, specify the [*onReceive*](#onreceivemessage) callback. To disable the feature, specify `null` as that callback.
 
@@ -378,6 +383,75 @@ This callback is called every time a new message is received.
 #### Example ####
 
 TODO
+
+### enableTwin(*onChange[, onComplete]*) ###
+
+This method enables or disables [Azure IoT Hub Device Twins functionality](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins).
+
+To enable the feature, specify the [*onRequest*](#onrequestversion-props) callback. To disable the feature, specify `null` as that callback.
+
+The feature is automatically disabled every time the client is disconnected. It should be re-enabled after every new connection, if needed.
+
+The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#oncompleteerror) callback, if specified in this method.
+
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *[onRequest](#onrequestversion-props)* | Function  | Yes | [Callback](#onrequestversion-props) called every time a new request with desired Device Twin properties is received. `null` disables the feature. |
+| *[onComplete](#oncompleteerror)* | Function  | Optional | [Callback](#oncompleteerror) called when the operation is completed or an error happens. |
+
+#### onRequest(*version, props*) ####
+
+This callback is called every time a new [request with desired Device Twin properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#receiving-desired-properties-update-notifications) is received.
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *version* | Integer | Version of the Device Twin document which corresponds to the desired properties. The version is always incremented by Azure IoT Hub when the document is updated. |
+| *props* | Table | Key-value table with the desired properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
+
+#### Example ####
+
+TODO - maybe cover updateTwinProperties() as well ?
+
+### retrieveTwinProperties(*onRetrieve*) ###
+
+This method [retrieves Device Twin properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#retrieving-a-device-twins-properties).
+
+The method returns nothing. The retrieved properties may be obtained via the [*onRetrieve*](#onretrieveerror-version-reportedprops-desiredprops) callback specified in this method.
+
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *[onRetrieve](#onretrieveerror-version-reportedprops-desiredprops)* | Function  | Yes | [Callback](#onretrieveerror-version-reportedprops-desiredprops) called when the properties are retrieved. |
+
+#### onRetrieve(*error, version, reportedProps, desiredProps*) ####
+
+This callback is called when [Device Twin properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#retrieving-a-device-twins-properties) are retrieved.
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
+| *version* | Integer | Version of the Device Twin document with the properties. The version is always incremented by Azure IoT Hub when the document is updated. This parameter should be ignored if *error* is `0`. |
+| *reportedProps* | Table | Key-value table with the reported properties. This parameter should be ignored if *error* is `0`. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
+| *desiredProps* | Table | Key-value table with the desired properties. This parameter should be ignored if *error* is `0`. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
+
+#### Example ####
+
+TODO 
+
+### updateTwinProperties(*props[, onComplete]*) ###
+
+This method updates [Device Twin reported properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#update-device-twins-reported-properties).
+
+The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#oncompleteerror) callback, if specified in this method.
+
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *props* | Table | Yes | Key-value table with the reported properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
+| *[onComplete](#oncompleteerror)* | Function  | Optional | [Callback](#oncompleteerror) called when the operation is completed or an error happens. |
+
+#### Example ####
+
+TODO - not needed if already in the example for enableTwin()
+
 
 
 ## Full Example ##
