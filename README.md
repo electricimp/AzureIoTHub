@@ -228,7 +228,7 @@ The *AzureIoTHub.Client* class is used to transfer data to and from Azure IoT Hu
 
 TODO - add some general explanation here ?
 
-Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. A [typical *onComplete* callback](#oncompleteerror) provides an [error code](#error code) which specifies a concrete error (if any) happened during the operation. Specific callbacks are described within every method.
+Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. A typical [*onComplete* callback](#oncompleteerror) provides an [error code](#error-code) which specifies a concrete error (if any) happened during the operation. Specific callbacks are described within every method.
 
 #### onComplete(*error*) #####
 
@@ -236,25 +236,30 @@ This callback is called when an operation is completed.
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#errorcode) otherwise. |
+| *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
 
 #### Error Code ####
 
-An *Integer* error code specifies a concrete error (if any) happened during an operation.
+An *Integer* error code which specifies a concrete error (if any) happened during an operation.
 
 | Error Code | Description |
 | --- | --- |
 | 0 | No error. |
-| TODO | |
+| TODO | The client is disconnected. |
+| TODO | The feature is not enabled. |
+| TODO | General error. |
+| TODO | codes returned by EI MQTT lib... |
 
-### Constructor: AzureIoTHub.Client(*deviceConnectionString, [onConnect[, onDisconnect[, clientOptions]]]*) ###
+### Constructor: AzureIoTHub.Client(*deviceConnectionString, [onConnect[, onDisconnect[, options]]]*) ###
 
 This method returns a new AzureIoTHub.Client instance.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *deviceConnectionString* | String | Yes | Device connection string: includes the host name to connect, the device Id and the shared access string. It can be obtained from the Azure Portal [*(see above)*](#authentication). However, if the device was registered using the *AzureIoTHub.Registry* class, the *deviceConnectionString* parameter can be retrieved from the [*AzureIoTHub.Device*](#azureiothubdevice) instance passed to the *AzureIoTHub.Registry.get()* or *AzureIoTHub.Registry.create()* method callbacks. For more guidance, please see the [AzureIoTHub.registry example](#registry-example). |
+| *deviceConnectionString* | String | Yes | Device connection string: includes the host name to connect, the device Id and the shared access string. It can be obtained from the Azure Portal [*(see above)*](#authentication). However, if the device was registered using the *AzureIoTHub.Registry* class, the *deviceConnectionString* parameter can be retrieved from the [*AzureIoTHub.Device*](#azureiothubdevice) instance passed to the *AzureIoTHub.Registry.get()* or *AzureIoTHub.Registry.create()* method callbacks. For more guidance, please see the [AzureIoTHub.registry example](#azureiothubregistry-example). |
 | *[onConnect](#onconnecterror)* | Function  | Optional | [Callback](#onconnecterror) called every time the device is connected. |
+| *[onDisconnect](#ondisconnecterror)* | Function  | Optional | [Callback](#ondisconnecterror) called every time the device is disconnected. |
+| *[options](#optional-settings)* | Table  | Optional | [Key-value table](#optional-settings) with optional settings. |
 
 #### onConnect(*error*) ####
 
@@ -264,8 +269,28 @@ This is a right place to enable optional functionalities, if needed.
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *[error](#errorcode)* | Integer | `0` if the connection is successful, an [error code](#errorcode) otherwise. |
+| *[error](#error-code)* | Integer | `0` if the connection is successful, an [error code](#error-code) otherwise. |
 
+#### onDisconnect(*error*) ####
+
+This callback is called every time the device is disconnected.
+
+This is a good place to call the [connect()](#connect) method again, if it was an unexpected disconnection.
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *[error](#error-code)* | Integer | `0` if the disconnection was caused by the [disconnect()](#disconnect) method, an [error code](#error-code) which explains a reason of the disconnection otherwise. |
+
+#### Optional Settings ####
+
+These settings affect the client's behavior and the operations. Every setting is optional and has a default.
+
+| Key (String) | Value Type | Default | Description |
+| --- | --- | --- | --- |
+| "qos" | Integer | 0 | MQTT QoS. Azure IoT Hub supports QoS `0` and `1` only. |
+| "will-topic" | String | not specified | TODO |
+| "will-message" | String | not specified | TODO |
+| TODO |  |  |  |
 
 #### Example - TODO - update ####
 
@@ -364,61 +389,10 @@ function receiveHandler(error, delivery) {
 client.receive(receiveHandler);
 ```
 
-## AzureIoTHub.Delivery ##
-
-*AzureIoTHub.Delivery* objects are automatically created when an event is received from IoT Hub. You should never call the *AzureIoTHub.Delivery* constructor directly.
-
-When an event is received it must be acknowledged or rejected by executing a ‘feedback’ method &mdash; *complete()*, *abandon()*, or *reject()* &mdash; on the delivery object. If no feedback method is called within the scope of the callback, the message will be automatically accepted.
-
-### AzureIoTHub.Delivery Class Method ##
-
-#### getMessage() ####
-
-Use this method to retrieve the event from an IoT Hub delivery. This method returns a *AzureIoTHub.Message* object.
-
-```squirrel
-local expectedMsg = "EXPECTED MESSAGE CONTENT";
-
-client.receive(function(err, delivery) {
-    if (err) {
-        server.error(err);
-        return;
-    }
-
-    local message = delivery.getMessage();
-
-    // message properties are tables, so encode it to log
-    server.log( http.jsonencode(message.getProperties()) );
-    
-    // message body from deliveries are blobs
-    server.log( message.getBody() );
-
-    // send feedback
-    if (message.getBody().tostring() == expectedMsg) {
-        server.log("message accepted, mark as complete");
-        delivery.complete();
-    } else {
-        server.log("unexpected message, rejected");
-        delivery.reject();
-    }
-});
-```
-
-### AzureIoTHub.Delivery Feedback Methods ###
-
-#### complete() ####
-
-Use this feedback method to accept a delivery from IoT Hub. When this method is called, a positive acknowlegdement is sent and the delivery item is removed from the IoT Hub message queue.
-
-#### abandon() ####
-
-Use this feedback method to abandon a delivery from IoT Hub. When this method is called, it sends the delivery item back to IoT Hub to be re-queued. The message will be retried until the maximum delivery count has been reached (the default is 10), then it will be rejected.
-
-#### reject() ####
-
-Use this feedback method to reject a delivery from IoT Hub. When this method is called, a negative acknowlegdement is sent and the delivery item is removed from the IoT Hub message queue.
 
 ## Full Example ##
+
+TODO - not sure we need it here.
 
 The following example code will register a device with Azure IoT Hub (if needed), then open a connection. When a connection is established, a receiver for IoT Hub cloud-to-device messages will be opened. You can send cloud-to-device messages with [iothub-explorer](https://github.com/Azure/iothub-explorer). 
 
