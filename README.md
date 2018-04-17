@@ -215,7 +215,7 @@ local body = message1.getBody();
 
 ## AzureIoTHub.Client ##
 
-The *AzureIoTHub.Client* class is used to transfer data to and from Azure IoT Hub. To use this class, the device must be registered as an IoT Hub device in your Azure account.
+The *AzureIoTHub.Client* class is used to transfer data to and from Azure IoT Hub. To use this class, the device must be registered as an IoT Hub device in an Azure account.
 
 *AzureIoTHub.Client* works over MQTT v3.1.1 protocol. It supports the following functionality:
 - connecting and disconnecting to/from Azure IoT Hub. Azure IoT Hub supports only one connection per device.
@@ -226,11 +226,48 @@ The *AzureIoTHub.Client* class is used to transfer data to and from Azure IoT Hu
 
 ### AzureIoTHub.Client Class Usage ###
 
-### AzureIoTHub.Client Class Methods ###
+TODO - add some general explanation here ?
 
-#### Constructor: AzureIoTHub.Client(*deviceConnectionString*) ####
+Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. A [typical *onComplete* callback](#oncompleteerror) provides an [error code](#error code) which specifies a concrete error (if any) happened during the operation. Specific callbacks are described within every method.
 
-This constructs an AMQP-based *AzureIoTHub.Client* object which exposes the event functions. The *deviceConnectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication). However, if your device was registered using the *AzureIoTHub.Registry* class, the *deviceConnectionString* parameter can be retrieved from the [*AzureIoTHub.Device*](#azureiothubdevice) object passed to the *AzureIoTHub.Registry.get()* or *AzureIoTHub.Registry.create()* method callbacks. For more guidance, please see the [AzureIoTHub.registry example above](#registry-example).
+#### onComplete(*error*) #####
+
+This callback is called when an operation is completed.
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#errorcode) otherwise. |
+
+#### Error Code ####
+
+An *Integer* error code specifies a concrete error (if any) happened during an operation.
+
+| Error Code | Description |
+| --- | --- |
+| 0 | No error. |
+| TODO | |
+
+### Constructor: AzureIoTHub.Client(*deviceConnectionString, [onConnect[, onDisconnect[, clientOptions]]]*) ###
+
+This method returns a new AzureIoTHub.Client instance.
+
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *deviceConnectionString* | String | Yes | Device connection string: includes the host name to connect, the device Id and the shared access string. It can be obtained from the Azure Portal [*(see above)*](#authentication). However, if the device was registered using the *AzureIoTHub.Registry* class, the *deviceConnectionString* parameter can be retrieved from the [*AzureIoTHub.Device*](#azureiothubdevice) instance passed to the *AzureIoTHub.Registry.get()* or *AzureIoTHub.Registry.create()* method callbacks. For more guidance, please see the [AzureIoTHub.registry example](#registry-example). |
+| *[onConnect](#onconnecterror)* | Function  | Optional | [Callback](#onconnecterror) called every time the device is connected. |
+
+#### onConnect(*error*) ####
+
+This callback is called every time the device is connected.
+
+This is a right place to enable optional functionalities, if needed.
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *[error](#errorcode)* | Integer | `0` if the connection is successful, an [error code](#errorcode) otherwise. |
+
+
+#### Example - TODO - update ####
 
 ```squirrel
 const DEVICE_CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;DeviceId=<DEVICE_ID>;SharedAccessKey=<DEVICE_KEY_HASH>";
