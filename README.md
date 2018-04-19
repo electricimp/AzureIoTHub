@@ -240,9 +240,9 @@ TODO - add some general explanation here ? eg.
 - https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins#device-reconnection-flow
 - 
 
-Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. A typical [*onComplete*](#oncompleteerror) callback provides an [error code](#error-code) which specifies a concrete error (if any) happened during the operation. Specific callbacks are described within every method.
+Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. A typical [*onComplete*](#callback-oncompleteerror) callback provides an [error code](#error-code) which specifies a concrete error (if any) happened during the operation. Specific callbacks are described within every method.
 
-#### onComplete(*error*) #####
+#### Callback: onComplete(*error*) #####
 
 This callback is called when an operation is completed.
 
@@ -273,11 +273,11 @@ This method returns a new AzureIoTHub.Client instance.
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *deviceConnectionString* | String | Yes | Device connection string: includes the host name to connect, the device Id and the shared access string. It can be obtained from the Azure Portal [*(see above)*](#authentication). However, if the device was registered using the *AzureIoTHub.Registry* class, the *deviceConnectionString* parameter can be retrieved from the [*AzureIoTHub.Device*](#azureiothubdevice) instance passed to the *AzureIoTHub.Registry.get()* or *AzureIoTHub.Registry.create()* method callbacks. For more guidance, please see the [AzureIoTHub.registry example](#azureiothubregistry-example). |
-| *[onConnect](#onconnecterror)* | Function  | Yes | [Callback](#onconnecterror) called every time the device is connected. |
-| *[onDisconnect](#ondisconnecterror)* | Function  | Optional | [Callback](#ondisconnecterror) called every time the device is disconnected. |
+| *[onConnect](#callback-onconnecterror)* | Function  | Yes | [Callback](#callback-onconnecterror) called every time the device is connected. |
+| *[onDisconnect](#callback-ondisconnecterror)* | Function  | Optional | [Callback](#callback-ondisconnecterror) called every time the device is disconnected. |
 | *[options](#optional-settings)* | Table  | Optional | [Key-value table](#optional-settings) with optional settings. |
 
-#### onConnect(*error*) ####
+#### Callback: onConnect(*error*) ####
 
 This callback is called every time the device is connected.
 
@@ -287,7 +287,7 @@ This is a right place to enable optional functionalities, if needed.
 | --- | --- | --- |
 | *[error](#error-code)* | Integer | `0` if the connection is successful, an [error code](#error-code) otherwise. |
 
-#### onDisconnect(*error*) ####
+#### Callback: onDisconnect(*error*) ####
 
 This callback is called every time the device is disconnected.
 
@@ -323,7 +323,7 @@ client <- AzureIoTHub.Client(DEVICE_CONNECT_STRING);
 
 This method opens a connection to Azure IoT Hub.
 
-The method returns nothing. A result of the connection opening may be obtained via the [*onConnect*](#onconnecterror) callback specified in the client's constructor.
+The method returns nothing. A result of the connection opening may be obtained via the [*onConnect*](#callback-onconnecterror) callback specified in the client's constructor.
 
 Azure IoT Hub supports only one connection per device.
 
@@ -333,18 +333,24 @@ All other methods of the client should be called when the client is connected.
 
 This method closes the connection to Azure IoT Hub. Does nothing if the connection is already closed.
 
-The method returns nothing. When the disconnection is completed the [*onDisconnect*](#ondisconnecterror) callback is called, if specified in the client's constructor.
+The method returns nothing. When the disconnection is completed the [*onDisconnect*](#callback-ondisconnecterror) callback is called, if specified in the client's constructor.
+
+### isConnected() ###
+
+This method checks if the client is connected to Azure IoT Hub.
+
+The method returns *Boolean*: `true` if the client is connected, `false` otherwise.
 
 ### sendMessage(*message[, onComplete]*) ###
 
 This method [sends a message to Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#sending-device-to-cloud-messages).
 
-The method returns nothing. A result of the sending may be obtained via the [*onComplete*](#oncompleteerror) callback, if specified in this method.
+The method returns nothing. A result of the sending may be obtained via the [*onComplete*](#callback-oncompleteerror) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *message* | [AzureIoTHub.Message](#azureiothubmessage) | Yes | Message to sent. |
-| *[onComplete](#oncompleteerror)* | Function  | Optional | [Callback](#oncompleteerror) called when the message is considered as sent or an error happens. |
+| *[onComplete](#callback-oncompleteerror)* | Function  | Optional | [Callback](#callback-oncompleteerror) called when the message is considered as sent or an error happens. |
 
 #### Example ####
 
@@ -370,18 +376,18 @@ client.sendEvent(message2, function(err) {
 
 This method enables or disables [message receiving from Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#receiving-cloud-to-device-messages).
 
-To enable the feature, specify the [*onReceive*](#onreceivemessage) callback. To disable the feature, specify `null` as that callback.
+To enable the feature, specify the [*onReceive*](#callback-onreceivemessage) callback. To disable the feature, specify `null` as that callback.
 
 The feature is automatically disabled every time the client is disconnected. It should be re-enabled after every new connection, if needed.
 
-The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#oncompleteerror) callback, if specified in this method.
+The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#callback-oncompleteerror) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *[onReceive](#onreceivemessage)* | Function  | Yes | [Callback](#onreceivemessage) called every time a new message is received. `null` disables the feature. |
-| *[onComplete](#oncompleteerror)* | Function  | Optional | [Callback](#oncompleteerror) called when the operation is completed or an error happens. |
+| *[onReceive](#callback-onreceivemessage)* | Function  | Yes | [Callback](#callback-onreceivemessage) called every time a new message is received. `null` disables the feature. |
+| *[onComplete](#callback-oncompleteerror)* | Function  | Optional | [Callback](#callback-oncompleteerror) called when the operation is completed or an error happens. |
 
-#### onReceive(*message*) ####
+#### Callback: onReceive(*message*) ####
 
 This callback is called every time a new message is received.
 
@@ -397,18 +403,18 @@ TODO
 
 This method enables or disables [Azure IoT Hub Device Twins functionality](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins).
 
-To enable the feature, specify the [*onRequest*](#onrequestversion-props) callback. To disable the feature, specify `null` as that callback.
+To enable the feature, specify the [*onRequest*](#callback-onrequestversion-props) callback. To disable the feature, specify `null` as that callback.
 
 The feature is automatically disabled every time the client is disconnected. It should be re-enabled after every new connection, if needed.
 
-The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#oncompleteerror) callback, if specified in this method.
+The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#callback-oncompleteerror) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *[onRequest](#onrequestversion-props)* | Function  | Yes | [Callback](#onrequestversion-props) called every time a new request with desired Device Twin properties is received. `null` disables the feature. |
-| *[onComplete](#oncompleteerror)* | Function  | Optional | [Callback](#oncompleteerror) called when the operation is completed or an error happens. |
+| *[onRequest](#callback-onrequestversion-props)* | Function  | Yes | [Callback](#callback-onrequestversion-props) called every time a new request with desired Device Twin properties is received. `null` disables the feature. |
+| *[onComplete](#callback-oncompleteerror)* | Function  | Optional | [Callback](#callback-oncompleteerror) called when the operation is completed or an error happens. |
 
-#### onRequest(*version, props*) ####
+#### Callback: onRequest(*version, props*) ####
 
 This callback is called every time a new [request with desired Device Twin properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#receiving-desired-properties-update-notifications) is received.
 
@@ -425,13 +431,13 @@ TODO - maybe cover updateTwinProperties() as well ?
 
 This method [retrieves Device Twin properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#retrieving-a-device-twins-properties).
 
-The method returns nothing. The retrieved properties may be obtained via the [*onRetrieve*](#onretrieveerror-version-reportedprops-desiredprops) callback specified in this method.
+The method returns nothing. The retrieved properties may be obtained via the [*onRetrieve*](#callback-onretrieveerror-version-reportedprops-desiredprops) callback specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *[onRetrieve](#onretrieveerror-version-reportedprops-desiredprops)* | Function  | Yes | [Callback](#onretrieveerror-version-reportedprops-desiredprops) called when the properties are retrieved. |
+| *[onRetrieve](#callback-onretrieveerror-version-reportedprops-desiredprops)* | Function  | Yes | [Callback](#callback-onretrieveerror-version-reportedprops-desiredprops) called when the properties are retrieved. |
 
-#### onRetrieve(*error, version, reportedProps, desiredProps*) ####
+#### Callback: onRetrieve(*error, version, reportedProps, desiredProps*) ####
 
 This callback is called when [Device Twin properties are retrieved](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#retrieving-a-device-twins-properties).
 
@@ -450,12 +456,12 @@ TODO
 
 This method [updates Device Twin reported properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#update-device-twins-reported-properties).
 
-The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#oncompleteerror) callback, if specified in this method.
+The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#callback-oncompleteerror) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *props* | Table | Yes | Key-value table with the reported properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
-| *[onComplete](#oncompleteerror)* | Function  | Optional | [Callback](#oncompleteerror) called when the operation is completed or an error happens. |
+| *[onComplete](#callback-oncompleteerror)* | Function  | Optional | [Callback](#callback-oncompleteerror) called when the operation is completed or an error happens. |
 
 #### Example ####
 
@@ -465,18 +471,18 @@ TODO - not needed if already in the example for enableTwin()
 
 This method enables or disables [Azure IoT Hub Direct Methods](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-direct-methods).
 
-To enable the feature, specify the [*onMethod*](#onmethodname-params) callback. To disable the feature, specify `null` as that callback.
+To enable the feature, specify the [*onMethod*](#callback-onmethodname-params) callback. To disable the feature, specify `null` as that callback.
 
 The feature is automatically disabled every time the client is disconnected. It should be re-enabled after every new connection, if needed.
 
-The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#oncompleteerror) callback, if specified in this method.
+The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#callback-oncompleteerror) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *[onMethod](#onmethodname-params)* | Function  | Yes | [Callback](#onmethodname-params) called every time a direct method is called. `null` disables the feature. |
-| *[onComplete](#oncompleteerror)* | Function  | Optional | [Callback](#oncompleteerror) called when the operation is completed or an error happens. |
+| *[onMethod](#callback-onmethodname-params)* | Function  | Yes | [Callback](#callback-onmethodname-params) called every time a direct method is called. `null` disables the feature. |
+| *[onComplete](#callback-oncompleteerror)* | Function  | Optional | [Callback](#callback-oncompleteerror) called when the operation is completed or an error happens. |
 
-#### onMethod(*name, params*) ####
+#### Callback: onMethod(*name, params*) ####
 
 This callback is called every time a [Direct Method is called](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method).
 
