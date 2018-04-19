@@ -219,7 +219,7 @@ This method returns a new AzureIoTHub.DirectMethodResponse instance.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *status* | String | Yes | Status of the Direct Method execution. Fully application specific. |
+| *status* | Integer | Yes | Status of the Direct Method execution. Fully application specific. |
 | *body* | Table | Optional | Key-value table with the returned data. Every key is always a *String* with the name of the data field. The value is the corresponding value of the data field. Keys and values are fully application specific. |
 
 ## AzureIoTHub.Client ##
