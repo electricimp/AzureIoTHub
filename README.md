@@ -257,11 +257,11 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | Error Code | Description |
 | --- | --- |
 | 0 | No error. |
-| TODO | The client is disconnected. |
-| TODO | The client is already connected. |
-| TODO | The feature is not enabled. |
-| TODO | The feature is already enabled. |
-| TODO | General error. |
+| 1000 | The client is disconnected. |
+| 1001 | The client is already connected. |
+| 1002 | The feature is not enabled. |
+| 1003 | The feature is already enabled. |
+| 1004 | General error. |
 | 429 | Too many requests (throttled), as per [Azure IoT Hub throttling](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-quotas-throttling) |
 | 5** | Azure IoT Hub server errors |
 | TODO | codes returned by EI MQTT lib... |
@@ -444,9 +444,8 @@ This callback is called when [Device Twin properties are retrieved](https://docs
 | Parameter | Data Type | Description |
 | --- | --- | --- |
 | *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
-| *version* | Integer | Version of the Device Twin document with the properties. The version is always incremented by Azure IoT Hub when the document is updated. This parameter should be ignored if *error* is not `0`. |
-| *reportedProps* | Table | Key-value table with the reported properties. This parameter should be ignored if *error* is not `0`. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
-| *desiredProps* | Table | Key-value table with the desired properties. This parameter should be ignored if *error* is not `0`. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
+| *reportedProps* | Table | Key-value table with the reported properties and their version. This parameter should be ignored if *error* is not `0`. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
+| *desiredProps* | Table | Key-value table with the desired properties and their version. This parameter should be ignored if *error* is not `0`. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
 
 #### Example ####
 
