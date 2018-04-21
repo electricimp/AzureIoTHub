@@ -1144,7 +1144,7 @@ class AzureIoTHub {
 
         // Check HTTP status
         function _statusIsOk(status) {
-            return status / 100 == 2 ? true : false;
+            return status / 100 == 2;
         }
 
         // Metafunction to return class name when typeof <instance> is run
