@@ -755,8 +755,7 @@ class AzureIoTHub {
             if ((_state & SCONNECTED) && !(_state & SDISCONNECTING)) {
                 if (_state & (SENABLINGMSG | SDISABLINGMSG)) {
                     _callOnComplete(onComplete, EOPNOTALLOWEDNOW);
-                }
-                else if (_onMessageCb != null && onReceive == null) {
+                } else if (_onMessageCb != null && onReceive == null) {
                     // Should unsubscribe
                     // TODO: Make sure we have successfully unsubscribed
                     _state = _state ^ SDISABLINGMSG;
@@ -797,8 +796,7 @@ class AzureIoTHub {
             if ((_state & SCONNECTED) && !(_state & SDISCONNECTING)) {
                 if (_state & (SENABLINGTWIN | SDISABLINGTWIN)) {
                     _callOnComplete(onComplete, EOPNOTALLOWEDNOW);
-                }
-                else if (_onTwinReqCb != null && onRequest == null) {
+                } else if (_onTwinReqCb != null && onRequest == null) {
                     // Should unsubscribe
                     // TODO: Make sure we have successfully unsubscribed
                     _state = _state ^ SDISABLINGTWIN;
@@ -918,8 +916,7 @@ class AzureIoTHub {
             if ((_state & SCONNECTED) && !(_state & SDISCONNECTING)) {
                 if (_state & (SENABLINGMETH | SDISABLINGMETH)) {
                     _callOnComplete(onComplete, EOPNOTALLOWEDNOW);
-                }
-                else if (_onMethodCb != null && onMethod == null) {
+                } else if (_onMethodCb != null && onMethod == null) {
                     // Should unsubscribe
                     // TODO: Make sure we have successfully unsubscribed
                     _state = _state ^ SDISABLINGMETH;
