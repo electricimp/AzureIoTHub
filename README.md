@@ -262,6 +262,7 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | 1002 | The feature is not enabled. |
 | 1003 | The feature is already enabled. |
 | 1004 | General error. |
+| 1005 | The operation is not allowed now. |
 | 429 | Too many requests (throttled), as per [Azure IoT Hub throttling](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-quotas-throttling) |
 | 5** | Azure IoT Hub server errors |
 | TODO | codes returned by EI MQTT lib... |
@@ -437,7 +438,7 @@ The method returns nothing. The retrieved properties may be obtained via the [*o
 | --- | --- | --- | --- |
 | *[onRetrieve](#callback-onretrieveerror-version-reportedprops-desiredprops)* | Function  | Yes | [Callback](#callback-onretrieveerror-version-reportedprops-desiredprops) called when the properties are retrieved. |
 
-#### Callback: onRetrieve(*error, version, reportedProps, desiredProps*) ####
+#### Callback: onRetrieve(*error, reportedProps, desiredProps*) ####
 
 This callback is called when [Device Twin properties are retrieved](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#retrieving-a-device-twins-properties).
 
