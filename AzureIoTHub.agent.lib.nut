@@ -36,7 +36,7 @@
 
 /// Azure AzureIoTHub library
 
-const AZURE_HTTP_API_VERSION = "2016-11-14";
+const AZURE_API_VERSION = "2016-11-14";
 const AZURE_CLAIM_BASED_SECURITY_PATH = "$cbs";
 
 class AzureIoTHub {
@@ -183,7 +183,7 @@ class AzureIoTHub {
         }
 
         static function versionQueryString() {
-            return ("?api-version=" + AZURE_HTTP_API_VERSION);
+            return ("?api-version=" + AZURE_API_VERSION);
         }
     }
 
@@ -237,9 +237,6 @@ class AzureIoTHub {
 
     Message = class {
 
-        static VALUE = "string"; // message type for auth requests
-        static DATA = "binary"; // message type for stream analytics jobs
-
         _body = null;
         // these are application set properties, not the message properties set by azure
         _properties = null;
@@ -255,19 +252,6 @@ class AzureIoTHub {
 
         function getBody() {
             return _body;
-        }
-
-        // NOTE: This method differs from the original Node.js SDK
-        function createAMQPMessage(encoding = "binary") {
-            // encode message body
-            if (typeof _body == "table" || typeof _body == "array") _body = http.jsonencode(_body);
-            // set properties to empty table, if no application properties set
-            if (_properties == null ) _properties = {};
-            if (encoding == DATA) {
-                return amqp.createbinarymessage(_body, _properties);
-            } else {
-                return amqp.createmessage(_body, _properties);
-            }
         }
 
         function _typeof() {
@@ -303,6 +287,16 @@ class AzureIoTHub {
 
         function _typeof() {
             return "delivery";
+        }
+    }
+
+    DirectMethodResponse = class {
+        _status = null;
+        _body   = null;
+
+        constructor(status, body = null) {
+            _status = status;
+            _body = body;
         }
     }
 
@@ -629,513 +623,549 @@ class AzureIoTHub {
 
     //------------------------------------------------------------------------------
 
-    // Client transport class
-    // NOTE: This class differs from the original Node.js SDK
-    ClientAMQP = class {
-
-        _config = null;
-        _connection = null;
-        _sessions = null;
-        _senders = null;
-        _receivers = null;
-        _transfers = null;
-        _handlers = null;
-        _msgQueue = null;
-
-        _connecting = false;
-        _senderTokenError = false;
-        _receiverTokenError = false;
-        _debug = false;
-
-        constructor(config) {
-            _config = config;
-            _resetConnectionTables();
-        }
-
-        // done has one param (error)
-        // onDisconnect has one param (error)
-        function connect(done = null, onDisconnect = null) {
-            // set connecting flag
-            _connecting = true;
-
-            // set callbacks
-            _handlers.onConnected <- done;
-            _handlers.onDisconnect <- onDisconnect;
-
-            // TODO: create a state machine to clean up tracking connection status
-            // Don't open a connection if one is already open
-            if( _isOpen(_connection) ) {
-                if ( _isOpen(_sessions.auth) ) {
-                    if ( _isOpen(_receivers.auth) ) {
-                        if ( _isOpen(_senders.auth) ) {
-                            if ( _isOpen(_sessions.event) ) {
-                                if ( _isOpen(_senders.event) ) {
-                                    _connectionCallback(null);
-                                } else {
-                                    _openEventSender();
-                                }
-                            } else {
-                                _openEventSession();
-                            }
-                        } else {
-                            _openAuthSender();
-                        }
-                    } else {
-                        _openAuthReceiver();
-                    }
-                } else {
-                    _openAuthSession();
-                }
-            } else {
-                _connection = amqp.openconnection("amqps://" + _config.host, _amqpConnectionStatusHandler.bindenv(this));
-            }
-        }
-
-        function disconnect() {
-            _connection.close();
-            _resetConnectionTables();
-        }
-
-        // done cb params - err
-        function sendEvent(message, done = null) {
-            if ( !_isOpen(_sessions.event) ) {
-                if (done) done("Cannot send while disconnected.");
-            } else {
-                if ( !_isOpen(_senders.event) ) {
-                    _log("creating event sender");
-                    // add message to queue
-                    _msgQueue.push({"msg" : message, "cb" : done});
-                    // create a new sender & send message
-                    _openEventSender();
-                } else {
-                    _log("event sender open")
-                    _sendEvent(message, done);
-                }
-            }
-        }
-
-        // done is called everytime a message is available, params - error, data
-        function receive(done) {
-            _handlers.onEvent <- done;
-
-            if (done == null) {
-                _receivers.event.close();
-                // clear out handlers
-                return this;
-            }
-
-            if( !_isOpen(_sessions.event) ) {
-                _handlers.onEvent("Cannot receive while disconnected.", null);
-            } else {
-                // TODO: test/handle if receiver already open
-                if ( _isOpen(_receivers.event) ) _receivers.event.close();
-                _openEventReceiver();
-            }
-            return this;
-        }
-
-        // PRIVATE FUNCTIONS
-        // ------------------------------------------------------------------------------------
-        // ------------------------------------------------------------------------------------
-
-        // Open Auth/Event Session/Sender/Receivers
-        // ------------------------------------------------------------------------------------
-
-        function _openAuthSession() {
-            _sessions.auth <- _connection.opensession(_amqpAuthSessionStatusHandler.bindenv(this));
-        }
-
-        function _openAuthReceiver() {
-            _receivers.auth <- _sessions.auth.openreceiver(AZURE_CLAIM_BASED_SECURITY_PATH, _amqpAuthReceiverStatusHandler.bindenv(this), _authReceiverCB.bindenv(this));
-        }
-
-        function _openAuthSender() {
-            _senders.auth <- _sessions.auth.opensender(AZURE_CLAIM_BASED_SECURITY_PATH, _amqpAuthSenderStatusHandler.bindenv(this));
-        }
-
-        function _openEventSession() {
-            _sessions.event <- _connection.opensession(_amqpEventSessionStatusHandler.bindenv(this));
-        }
-
-        function _openEventSender() {
-            _senders.event <- _sessions.event.opensender(AzureIoTHub.Endpoint.eventPath(_config.deviceId), _amqpEventSenderStatusHandler.bindenv(this));
-        }
-
-        function _openEventReceiver() {
-            _receivers.event <- _sessions.event.openreceiver(AzureIoTHub.Endpoint.messagePath(_config.deviceId), _amqpEventReceiverStatusHandler.bindenv(this), function(deliveries) {
-                _handleDeliveries(deliveries, _handlers.onEvent);
-            }.bindenv(this));
-        }
-
-        // Status Handlers
-        // ------------------------------------------------------------------------------------
-        function _amqpConnectionStatusHandler(event, data) {
-            _log("Connection event: " + event);
-            switch(event) {
-                case "CONNECTION_OPEN":
-                    if (_connecting) _openAuthSession();
-                    break;
-                case "CONNECTION_CLOSED" :
-                    break;
-                case "CONNECTION_ERROR" :
-                    if (_connecting) {
-                        if (data == null) data = event;
-                        _connectionCallback(data);
-                    } else {
-                        // TODO: replace this with error handling
-                        _log(data);
-                    }
-                default:
-                    // TODO: replace this with known events
-                    _log(data);
-                    break;
-            }
-        }
-
-        function _amqpAuthSessionStatusHandler(event, data) {
-            _log("Auth Session event: " + event);
-            switch(event) {
-                case "SESSION_OPEN":
-                    _openAuthReceiver();
-                    break;
-                case "SESSION_CLOSED" :
-                    break;
-                case "SESSION_ERROR" :
-                    if (_connecting) {
-                        if (data == null) data = event;
-                        _connectionCallback(data);
-                    } else {
-                        // TODO: replace this with error handling
-                        _log(data);
-                    }
-                default:
-                    // TODO: replace this with known events
-                    _log(data);
-                    break;
-            }
-        }
-
-        function _amqpAuthReceiverStatusHandler(event, data) {
-            _log("Auth Receiver event: " + event);
-            switch(event) {
-                case "RECEIVER_OPEN":
-                    if ( !_isOpen(_senders.auth) )  {
-                        _openAuthSender();
-                    } else {
-                        _getPutToken( function() { _log("put token request sent") });
-                    }
-                    break;
-                case "RECEIVER_CLOSED":
-                    break;
-                case "RECEIVER_ERROR":
-                    if (_connecting) {
-                        if (data == null) data = event;
-                        _connectionCallback(data);
-                    } else {
-                        // TODO: replace this with error handling
-                        _log(data);
-                    }
-                default:
-                    // Should not need this, it's just a catch-all while in development
-                    _log(data);
-                    break;
-            }
-        }
-
-        // Note: auth receiver will open auth sender if needed, auth
-        function _amqpAuthSenderStatusHandler(event, data) {
-            _log("Auth Sender event: " + event);
-            switch(event) {
-                case "SENDER_OPEN":
-                    _getPutToken( function() { _log("put token request sent") });
-                    break;
-                case "SENDER_CLOSED":
-                    break;
-                case "SENDER_ERROR":
-                    if (_connecting) {
-                        if (data == null) data = event;
-                        _connectionCallback(data);
-                    } else {
-                        // TODO: replace this with error handling
-                        _log(data);
-                    }
-                    break;
-                default:
-                    _log(data);
-                    break;
-            }
-        }
-
-        function _amqpEventSessionStatusHandler(event, data) {
-            _log("Event Session event: " + event);
-
-            switch(event) {
-                case "SESSION_OPEN":
-                    _openEventSender();
-                    break;
-                case "SESSION_CLOSED" :
-                    // Session closed notify user (different error messages for debug purposes)
-                    if (_isOpen(_connection)) {
-                        _handlers.onDisconnect("Event session closed. Please reconnect to send or receive events.");
-                    } else {
-                        _handlers.onDisconnect("Connection to IoT Hub closed. Please reconnect to send or receive events.");
-                    }
-                    break;
-                case "SESSION_ERROR" :
-                    if (_connecting) {
-                        if (data == null) data = event;
-                        _connectionCallback(data);
-                    } else {
-                        // TODO: replace this with error handling
-                        _log(data);
-                    }
-                default:
-                    // TODO: replace this with known events
-                    _log(data);
-                    break;
-            }
-        }
-
-        function _amqpEventSenderStatusHandler(event, data) {
-            _log("Msg Sender event: " + event);
-
-            switch(event) {
-                case "SENDER_OPEN":
-                    if (_connecting) {
-                        _connectionCallback(null);
-                    }
-                    if (_msgQueue.len() > 0) {
-                        while (_msgQueue.len()) {
-                            local item = _msgQueue.remove(0);
-                            _sendEvent(item.msg, item.cb);
-                        }
-                    }
-                    break;
-                case "SENDER_CLOSED":
-                    break;
-                case "SENDER_ERROR":
-                    if (_connecting) {
-                        if (data == null) data = event;
-                        _connectionCallback(data);
-                    } else if (_msgQueue.len() > 0) {
-                        while (_msgQueue.len()) {
-                            local item = _msgQueue.remove(0);
-                            if (item.cb) item.cb(event, item.msg);
-                        }
-                    } else {
-                        _log(data);
-                        // Renew Token
-                        if (data.find("unauthorized-access") != null) {
-                            _senderTokenError = true;
-                            _updateConfigSASExpiry();
-                            _getPutToken(function() {_log("renewing token")});
-                        }
-                    }
-                    break;
-                default:
-                    // Should not need this, it's just a catch-all while in development
-                    _log(data);
-                    break;
-            }
-        }
-
-        function _amqpEventReceiverStatusHandler(event, data) {
-            _log("Msg Receiver event: " + event);
-
-            switch(event) {
-                case "RECEIVER_OPEN":
-                    break;
-                case "RECEIVER_CLOSED":
-                    // Event session is open and we have a handlers registered, so this is an unexpected disconnect
-                    if (_isOpen(_sessions.event) && "onEvent" in _handlers && _handlers.onEvent != null) {
-                        // Call receiver callback with an error.
-                        _handlers.onEvent("Unexpected disconnect", null);  
-                    }
-                    break;
-                case "RECEIVER_ERROR":
-                    _log(data);
-                    // TODO: is this the correct error message (it is different than event sender - should these messages be the same??)
-                    if (data.find("Token Invalid") != null) {
-                        _receiverTokenError = true;
-                        _updateConfigSASExpiry();
-                        _getPutToken(function() {_log("renewing token")});
-                    }
-                    break;
-                default:
-                    // Should not need this, it's just a catch-all while in development
-                    _log(data);
-                    break;
-            }
-        }
-
-        // Authorization
-        // ------------------------------------------------------------------------------------
-
-        function _authReceiverCB(deliveries) {
-            _log("in auth receiver callback")
-            local authorized = false;
-
-            foreach(deliveryItem in deliveries) {
-                deliveryItem.accept();
-                local properties = deliveryItem.message().properties();
-
-                if ("status-code" in properties && properties["status-code"] == 200 && "status-description" in properties && properties["status-description"] == "OK") {
-                    authorized = true;
-
-                    if (_senderTokenError) {
-                        _openEventSender();
-                        _senderTokenError = false;
-                    } else if (_receiverTokenError) {
-                        if ("onEvent" in _handlers && _handlers.onEvent != null) _openEventReceiver();
-                        _receiverTokenError = false;
-                    } else {
-                        // We are connected and authorized, check event session status
-                        if ( _isOpen(_sessions.event) ) {
-                            if ( _isOpen(_senders.event) ) {
-                                if (_connecting) _connectionCallback(null);
-                            } else {
-                                _openEventSender();
-                            }
-                        } else {
-                            _openEventSession();
-                        }
-                    }
-
-                }
-            } // end foreach loop
-
-            if (_connecting && !authorized) {
-                _connectionCallback("Not authorised with Azure IOT Hub");
-            }
-        }
-
-        function _getPutToken(done) {
-            _log("get put token");
-
-            local properties = {};
-            properties["operation"] <- "put-token";
-            properties["type"] <- "azure-devices.net:sastoken";
-            properties["name"] <- _config.host + "/devices/" + _config.deviceId;
-
-            // this message transfer will trigger response message when received by cloud
-            // if auth receiver is open response will trigger _authReceiverCB
-            local msg = amqp.createmessage(_config.sharedAccessSignature, properties);
-            _transfers.auth <- _senders.auth.createtransfer(msg);
-            _transfers.auth.sendasync(done.bindenv(this));
-        }
-
-        // updates the config SAS expiry time
-        function _updateConfigSASExpiry() {
-            if ("sharedAccessExpiry" in _config && "connectionString" in _config) {
-                local cn = AzureIoTHub.ConnectionString.Parse(_config.connectionString);
-                local resourceUri = cn.HostName + "/devices/" + AzureIoTHub.Authorization.encodeUri(cn.DeviceId);
-                local sas = AzureIoTHub.SharedAccessSignature.create(resourceUri, null, cn.SharedAccessKey, AzureIoTHub.Authorization.anHourFromNow());
-                _config.sharedAccessSignature = sas.toString();
-                _config.sharedAccessExpiry = sas.se;
-            }
-        }
-
-        // Helper Methods
-        // ------------------------------------------------------------------------------------
-
-        function _isOpen(amqpObj) {
-            return (amqpObj != null && amqpObj.isopen());
-        }
-
-        function _connectionCallback(error) {
-            _connecting = false;
-            if (_handlers.onConnected) {
-                imp.wakeup(0, function() {
-                    _handlers.onConnected(error);
-                }.bindenv(this));
-            }
-        }
-
-        function _resetConnectionTables() {
-            _sessions = _getDefaultConnectionTable();
-            _transfers = _getDefaultConnectionTable();
-            _senders = _getDefaultConnectionTable();
-            _receivers = _getDefaultConnectionTable();
-            _msgQueue = [];
-            _handlers = {};
-        }
-
-        function _getDefaultConnectionTable() {
-            return {"event" : null, "auth" : null};
-        }
-
-        function _sendEvent(message, done) {
-            // create transfer and send
-            _transfers.event <- _senders.event.createtransfer(message.createAMQPMessage());
-            _log("send event transfer created")
-            _transfers.event.sendasync(function() {
-                _log("in send event transfer callback");
-                if (done) done(null);
-            }.bindenv(this));
-        }
-
-        function _handleDeliveries(deliveries, cb) {
-            while (deliveries.len()) {
-                local item = AzureIoTHub.Delivery(deliveries.remove(0));
-                cb(null, item);
-            }
-        }
-
-        function _log(logMsg) {
-            if (_debug) server.log(logMsg);
-        }
-
-    }
-
     Client = class {
 
-        _transport = null;
-        _config = null;
+        static DEFAULT_CLIENT_OPTIONS = {"qos" : 0};
 
-        constructor(deviceConnectionString) {
-            local config = fromConnectionString(deviceConnectionString);
-            _config = config;
-            _transport = AzureIoTHub.ClientAMQP(config);
+        static SDISCONNECTED        = 1;
+        static SDISCONNECTING       = 2;
+        static SCONNECTED           = 4;
+        static SCONNECTING          = 8;
+        static SENABLINGMSG         = 1024;
+        static SENABLINGTWIN        = 2048;
+        static SENABLINGMETH        = 4096;
+        static SDISABLINGMSG        = 1048576;
+        static SDISABLINGTWIN       = 2097152;
+        static SDISABLINGMETH       = 4194304;
+
+        static ENOTCONNECTED        = 1000;
+        static EALREADYCONNECTED    = 1001;
+        static ENOTENABLED          = 1002;
+        static EALREADYENABLED      = 1003;
+        static EGENERAL             = 1004;
+        static EOPNOTALLOWEDNOW     = 1005;
+
+        static RETRIEVE_REQ_TYPE    = 0;
+        static UPDATE_REQ_TYPE      = 1;
+
+        _debugEnabled               = true;
+
+        _connStrParsed              = null;
+        _options                    = null;
+        _mqttclient                 = null;
+        _state                      = null;
+        _topics                     = null;
+
+        _onConnectCb                = null;
+        _onDisconnectCb             = null;
+        _onMessageCb                = null;
+        _onTwinReqCb                = null;
+        _onMethodCb                 = null;
+
+        _reqNum                     = 0;
+        // Map reqID -> [<request type>, <callback>]
+        // TODO: How to clean this table sometimes?
+        _reqCbMap                   = {};
+
+        constructor(deviceConnStr, onConnect, onDisconnect = null, options = {}) {
+            _state = SDISCONNECTED;
+            _options = DEFAULT_CLIENT_OPTIONS;
+
+            _onConnectCb      = onConnect;
+            _onDisconnectCb   = onDisconnect;
+
+            _connStrParsed = AzureIoTHub.ConnectionString.Parse(deviceConnStr);
+            _mqttclient = mqtt.createclient();
+            _mqttclient.onconnect(_onConnect.bindenv(this));
+            _mqttclient.onconnectionlost(_onDisconnect.bindenv(this));
+            _mqttclient.onmessage(_onMessage.bindenv(this));
+
+            foreach (optName, optVal in options) {
+                _options[optName] <- optVal;
+            }
+
+            _fillTopics(_connStrParsed.DeviceId);
         }
 
-        function fromConnectionString(deviceConnectionString) {
+        function connect() {
+            if (_state == SDISCONNECTED) {
+                _log("Connecting...");
 
-            local cn = AzureIoTHub.ConnectionString.Parse(deviceConnectionString);
-            local resourceUri = cn.HostName + "/devices/" + AzureIoTHub.Authorization.encodeUri(cn.DeviceId);
-            local sas = AzureIoTHub.SharedAccessSignature.create(resourceUri, null, cn.SharedAccessKey, AzureIoTHub.Authorization.anHourFromNow());
+                local devPath = "/" + _connStrParsed.DeviceId;
+                local username = _connStrParsed.HostName + devPath + format("/api-version=%s", AZURE_API_VERSION);
+                local resourcePath = "/devices" + devPath + format("/api-version=%s", AZURE_API_VERSION);
+                local resourceUri = AzureIoTHub.Authorization.encodeUri(_connStrParsed.HostName + resourcePath);
+                local passwDeadTime = AzureIoTHub.Authorization.anHourFromNow();
+                local sas = AzureIoTHub.SharedAccessSignature.create(
+                    resourceUri, null, _connStrParsed.SharedAccessKey, passwDeadTime).toString();
 
-            local config = {
-                "host": cn.HostName,
-                "deviceId": cn.DeviceId,
-                "hubName": split(cn.HostName, ".")[0],
-                "sharedAccessSignature": sas.toString(),
-                "sharedAccessExpiry": sas.se,
-                "connectionString": deviceConnectionString
-            };
+                local options = {
+                    "username" : username,
+                    "password" : sas
+                };
 
-            return config;
-        }
+                local url = "ssl://" + _connStrParsed.HostName;
 
-        function connect(done = null, onDisconnect = null) {
-            _transport.connect(done, onDisconnect);
-            return this;
+                _state =  SDISCONNECTED | SCONNECTING;
+
+                _mqttclient.connect(url, _connStrParsed.DeviceId, options);
+            } else {
+                try {
+                    // We are connected or connecting now
+                    _onConnectCb(_state & SCONNECTED ? EALREADYCONNECTED : EOPNOTALLOWEDNOW);
+                } catch (e) {
+                    _error("Exception at onConnect user callback: " + e);
+                }
+            }
         }
 
         function disconnect() {
-            _transport.disconnect();
-            return this;
+            // TODO: What if we are connecting or enabling some feature now?
+            if (!(_state & (SDISCONNECTED | SDISCONNECTING | SCONNECTING))) {
+                _state = _state | SDISCONNECTING;
+                _mqttclient.disconnect(_onDisconnect.bindenv(this));
+            }
         }
 
-        function sendEvent(message, done = null) {
-            _transport.sendEvent(message, done);
-            return this;
+        function isConnected() {
+            return _state & SCONNECTED > 0;
         }
 
-        function receive(done) {
-            _transport.receive(done);
-            return this;
+        function sendMessage(msg, onComplete = null) {
+            if ((_state & SCONNECTED) && !(_state & SDISCONNECTING)) {
+                // TODO: http.urlencode follows RFC3986, but Azure expects RFC2396 string. Should we worry about it?
+                local props = http.urlencode(msg.getProperties());
+                local topic = _topics.msgSend + props;
+
+                local mqttMsg = _mqttclient.createmessage(topic, msg.getBody(), _options.qos);
+
+                local callback = function (rc) {
+                    // TODO: What should we pass to onComplete?
+                    _callOnComplete(onComplete, rc);
+                }.bindenv(this);
+
+                mqttMsg.sendasync(callback);
+            } else {
+                local err = _state & SCONNECTED ? EOPNOTALLOWEDNOW : ENOTCONNECTED;
+                _callOnComplete(onComplete, err);
+            }
         }
 
+        function enableMessageReceiving(onReceive, onComplete = null){
+            if ((_state & SCONNECTED) && !(_state & SDISCONNECTING)) {
+                if (_state & (SENABLINGMSG | SDISABLINGMSG)) {
+                    _callOnComplete(onComplete, EOPNOTALLOWEDNOW);
+                }
+                else if (_onMessageCb != null && onReceive == null) {
+                    // Should unsubscribe
+                    // TODO: Make sure we have successfully unsubscribed
+                    _state = _state ^ SDISABLINGMSG;
+                    _mqttclient.unsubscribe(_topics.msgRecv + "#");
+                    _onMessageCb = null;
+                    _state = _state ^ SDISABLINGMSG;
+                    _callOnComplete(onComplete, 0);
+                } else if (_onMessageCb != null) {
+                    // Already subscribed
+                    _callOnComplete(onComplete, EALREADYENABLED);
+                } else if (onReceive == null) {
+                    // Already disabled
+                    _callOnComplete(onComplete, ENOTENABLED);
+                } else {
+                    // Should send subscribe packet
+                    local topic = _topics.msgRecv + "#";
+
+                    local callback = function (rc, qos) {
+                        if (rc == 0) {
+                            _log("SETTING _onMessageCb");
+                            _onMessageCb = onReceive;
+                        }
+                        _state = _state ^ SENABLINGMSG;
+                        // TODO: What should we pass to onComplete?
+                        _callOnComplete(onComplete, rc);
+                    }.bindenv(this);
+
+                    _state = _state ^ SENABLINGMSG;
+                    _mqttclient.subscribe(topic, _options.qos, callback);
+                }
+            } else {
+                local err = _state & SCONNECTED ? EOPNOTALLOWEDNOW : ENOTCONNECTED;
+                _callOnComplete(onComplete, err);
+            }
+        }
+
+        function enableTwin(onRequest, onComplete = null) {
+            if ((_state & SCONNECTED) && !(_state & SDISCONNECTING)) {
+                if (_state & (SENABLINGTWIN | SDISABLINGTWIN)) {
+                    _callOnComplete(onComplete, EOPNOTALLOWEDNOW);
+                }
+                else if (_onTwinReqCb != null && onRequest == null) {
+                    // Should unsubscribe
+                    // TODO: Make sure we have successfully unsubscribed
+                    _state = _state ^ SDISABLINGTWIN;
+                    _mqttclient.unsubscribe(_topics.twinNotif + "#");
+                    _mqttclient.unsubscribe(_topics.twinRecv + "#");
+                    _onTwinReqCb = null;
+                    _state = _state ^ SDISABLINGTWIN;
+                    _callOnComplete(onComplete, 0);
+                } else if (_onTwinReqCb != null) {
+                    // Already subscribed
+                    _callOnComplete(onComplete, EALREADYENABLED);
+                } else if (onRequest == null) {
+                    // Already disabled
+                    _callOnComplete(onComplete, ENOTENABLED);
+                } else {
+                    // Should send subscribe packet for notifications and GET
+
+                    local callback2 = function (rc, qos) {
+                        if (rc == 0) {
+                            _log("SETTING _onTwinReqCb");
+                            _onTwinReqCb = onRequest;
+                        }
+                        _state = _state ^ SENABLINGTWIN;
+                        // TODO: What should we pass to onComplete?
+                        _callOnComplete(onComplete, rc);
+                    }.bindenv(this);
+
+                    local callback1 = function (rc, qos) {
+                        if (rc == 0) {
+                            local topic = _topics.twinRecv + "#";
+                            _mqttclient.subscribe(topic, _options.qos, callback2);
+                        } else {
+                            _state = _state ^ SENABLINGTWIN;
+                            _callOnComplete(onComplete, rc);
+                        }
+                    }.bindenv(this);
+
+                    local topic = _topics.twinNotif + "#";
+                    _state = _state ^ SENABLINGTWIN;
+                    _mqttclient.subscribe(topic, _options.qos, callback1);
+                }
+            } else {
+                local err = _state & SDISCONNECTING ? EOPNOTALLOWEDNOW : ENOTCONNECTED;
+                _callOnComplete(onComplete, err);
+            }
+        }
+
+        function retrieveTwinProperties(onRetrieve) {
+            if ((_state & SCONNECTED) && !(_state & SDISCONNECTING) && _onTwinReqCb != null) {
+                local reqId = _reqNum.tostring();
+                local topic = _topics.twinGet + "?$rid=" + reqId;
+                _reqNum++;
+
+                local mqttMsg = _mqttclient.createmessage(topic, "", _options.qos);
+
+                local callback = function (rc) {
+                    if (rc == 0) {
+                        _reqCbMap[reqId] <- [RETRIEVE_REQ_TYPE, onRetrieve];
+                    } else {
+                       try {
+                            // TODO: What should we pass to onRetrieve?
+                            onRetrieve(rc, null, null);
+                        } catch (e) {
+                            _error("Exception at onRetrieve user callback: " + e);
+                        }
+                    }
+                }.bindenv(this);
+
+                mqttMsg.sendasync(callback);
+            } else {
+                local err = null;
+                if (_onTwinReqCb == null) {
+                    err = ENOTENABLED;
+                } else {
+                    // We are disconnected or disconnecting now
+                    err = _state & SDISCONNECTING ? EOPNOTALLOWEDNOW : ENOTCONNECTED;
+                }
+                try {
+                    onRetrieve(err, null, null);
+                } catch (e) {
+                    _error("Exception at onRetrieve user callback: " + e);
+                }
+            }
+        }
+
+        function updateTwinProperties(props, onComplete = null) {
+            if ((_state & SCONNECTED) && !(_state & SDISCONNECTING) && _onTwinReqCb != null) {
+                local reqId = _reqNum.tostring();
+                local topic = _topics.twinUpd + "?$rid=" + reqId;
+                _reqNum++;
+
+                local mqttMsg = _mqttclient.createmessage(topic, http.jsonencode(props), _options.qos);
+
+                local callback = function (rc) {
+                    if (rc == 0) {
+                        _reqCbMap[reqId] <- [UPDATE_REQ_TYPE, onComplete];
+                    } else {
+                        // TODO: What should we pass to onComplete?
+                       _callOnComplete(onComplete, rc);
+                    }
+                }.bindenv(this);
+
+                mqttMsg.sendasync(callback);
+            } else {
+                local err = null;
+                if (_onTwinReqCb == null) {
+                    err = ENOTENABLED;
+                } else {
+                    // We are disconnected or disconnecting now
+                    err = _state & SDISCONNECTING ? EOPNOTALLOWEDNOW : ENOTCONNECTED;
+                }
+                _callOnComplete(onComplete, err);
+            }
+        }
+
+        function enableDirectMethods(onMethod, onComplete = null) {
+            if ((_state & SCONNECTED) && !(_state & SDISCONNECTING)) {
+                if (_state & (SENABLINGMETH | SDISABLINGMETH)) {
+                    _callOnComplete(onComplete, EOPNOTALLOWEDNOW);
+                }
+                else if (_onMethodCb != null && onMethod == null) {
+                    // Should unsubscribe
+                    // TODO: Make sure we have successfully unsubscribed
+                    _state = _state ^ SDISABLINGMETH;
+                    _mqttclient.unsubscribe(_topics.methNotif + "#");
+                    _onMethodCb = null;
+                    _state = _state ^ SDISABLINGMETH;
+                    _callOnComplete(onComplete, 0);
+                } else if (_onMethodCb != null) {
+                    // Already subscribed
+                    _callOnComplete(onComplete, EALREADYENABLED);
+                } else if (onMethod == null) {
+                    // Already disabled
+                    _callOnComplete(onComplete, ENOTENABLED);
+                } else {
+                    // Should send subscribe packet for methods
+
+                    local callback = function (rc, qos) {
+                        if (rc == 0) {
+                            _log("SETTING _onMethodCb");
+                            _onMethodCb = onMethod;
+                        }
+                        _state = _state ^ SENABLINGMETH;
+                        // TODO: What should we pass to onComplete?
+                        _callOnComplete(onComplete, rc);
+                    }.bindenv(this);
+
+                    local topic = _topics.methNotif + "#";
+                    _state = _state ^ SENABLINGMETH;
+                    _mqttclient.subscribe(topic, _options.qos, callback);
+                }
+            } else {
+                local err = _state & SDISCONNECTING ? EOPNOTALLOWEDNOW : ENOTCONNECTED;
+                _callOnComplete(onComplete, err);
+            }
+        }
+
+        function setDebug(enable) {
+            _debugEnabled = enable;
+        }
+
+        // -------------------- PRIVATE METHODS -------------------- //
+
+        function _fillTopics(deviceId) {
+            _topics = {};
+            _topics.msgSend <- format("devices/%s/messages/events/", deviceId);
+            _topics.msgRecv <- format("devices/%s/messages/devicebound/", deviceId);
+            _topics.twinRecv <- "$iothub/twin/res/";
+            _topics.twinGet <- "$iothub/twin/GET/";
+            _topics.twinUpd <- "$iothub/twin/PATCH/properties/reported/";
+            _topics.twinNotif <- "$iothub/twin/PATCH/properties/desired/";
+            _topics.methNotif <- "$iothub/methods/POST/";
+            _topics.methResp <- "$iothub/methods/res/";
+        }
+
+        function _onConnect(rc) {
+            _log("_onConnect: " + rc);
+            _state = rc == 0 ? SCONNECTED : SDISCONNECTED;
+            try {
+                // TODO: What should we pass to _onConnectCb?
+                _onConnectCb(rc);
+            } catch (e) {
+                _error("Exception at onConnect user callback: " + e);
+            }
+        }
+
+        function _onDisconnect() {
+            _log("_onDisconnect");
+            local reason = _state & SDISCONNECTING ? 0 : EGENERAL;
+            _state = SDISCONNECTED;
+            _cleanup();
+            if (_onDisconnectCb != null) {
+                try {
+                    _onDisconnectCb(reason);
+                } catch (e) {
+                    _error("Exception at onDisconnect user callback: " + e);
+                }
+            }
+        }
+
+        function _onMessage(msg) {
+            local message = null;
+            local topic = null;
+            try {
+                message = msg["message"];
+                topic = msg["topic"];
+                _log(format("_onMessage: topic=%s | body=%s", topic, message));
+            } catch (e) {
+                _error("Could not read message: " + e);
+                return;
+            }
+
+            local props = {};
+
+            // Cloud-to-device message received
+            if (topic.find(_topics.msgRecv) != null) {
+                local splittedTopic = split(topic, "/");
+                if (splittedTopic[splittedTopic.len() - 1] != "devicebound") {
+                    // We have properties sent with message
+                    props = http.urldecode(splittedTopic[splittedTopic.len() - 1]);
+                }
+                try {
+                    _onMessageCb(AzureIoTHub.Message(message, props));
+                } catch (e) {
+                    _error("Exception at onReceive user callback: " + e);
+                }
+            // Desired properties were updated
+            } else if (topic.find(_topics.twinNotif) != null) {
+                local version = null;
+                local parsedMsg = null;
+                try {
+                    version = split(topic, "=")[1];
+                    parsedMsg = http.jsondecode(message);
+                } catch (e) {
+                    _error("Exception at parsing the message: " + e);
+                    return;
+                }
+                try {
+                    _onTwinReqCb(version, parsedMsg);
+                } catch (e) {
+                    _error("Exception at onRequest user callback: " + e);
+                }
+            // Twin's properties received
+            } else if (topic.find(_topics.twinRecv) != null) {
+                local status = null;
+                local reqId = null;
+                local parsedMsg = null;
+                try {
+                    local splitted = split(topic, "/");
+                    status = splitted[3].tointeger();
+                    reqId = http.urldecode(splitted[4])["?$rid"];
+                    if (_statusIsOk(status) && message != "") {
+                        parsedMsg = http.jsondecode(message);
+                    }
+                } catch (e) {
+                    _error("Exception at parsing the message: " + e);
+                    return;
+                }
+                if (reqId in _reqCbMap) {
+                    local reqType = _reqCbMap[reqId][0];
+                    local cb = _reqCbMap[reqId][1];
+                    delete _reqCbMap[reqId];
+                    // Twin's properties received after GET request
+                    if (reqType == RETRIEVE_REQ_TYPE) {
+                        if (!_statusIsOk(status)) {
+                            try {
+                                cb(status, null, null);
+                            } catch (e) {
+                                _error("Exception at onRetrieve user callback: " + e);
+                            }
+                            return;
+                        }
+                        local repProps = null;
+                        local desProps = null;
+                        try {
+                            repProps = parsedMsg["reported"];
+                            desProps = parsedMsg["desired"];
+                        } catch (e) {
+                            _error("Exception at parsing the message: " + e);
+                            return;
+                        }
+                        try {
+                            cb(0, repProps, desProps);
+                        } catch (e) {
+                            _error("Exception at onRetrieve user callback: " + e);
+                        }
+                    // Twin's properties received after UPDATE request
+                    } else if (reqType == UPDATE_REQ_TYPE) {
+                        // TODO: In fact Azure sends status=204 and empty body
+                        _callOnComplete(cb, _statusIsOk(status) ? 0 : status);
+                    }
+                }
+            // Direct method called
+            } else if (topic.find(_topics.methNotif) != null) {
+                local methodName = null;
+                local reqId = null;
+                local params = null;
+
+                try {
+                    methodName = split(topic, "/")[3];
+                    reqId = split(topic, "=")[1];
+                    params = http.jsondecode(message);
+                } catch (e) {
+                    _error("Exception at parsing the message: " + e);
+                    return;
+                }
+
+                local resp = null;
+                try {
+                    resp = _onMethodCb(methodName, params);
+                } catch (e) {
+                    _error("Exception at onMethod user callback: " + e);
+                    return;
+                }
+                local topic = _topics.methResp + format("%i/?$rid=%s", resp._status, reqId);
+
+                local mqttMsg = _mqttclient.createmessage(topic, http.jsonencode(resp._body), _options.qos);
+
+                local callback = function (rc) {
+                    if (rc != 0) {
+                        _error("Could not send Direct Method response. Return code = " + rc);
+                    }
+                }.bindenv(this);
+
+                mqttMsg.sendasync(callback);
+            }
+        }
+
+        function _callOnComplete(cb, err) {
+            if (cb != null) {
+                try {
+                    cb(err);
+                } catch (e) {
+                    _error("Exception at onComplete user callback: " + e);
+                }
+            }
+        }
+
+        function _cleanup() {
+            _state = SDISCONNECTED;
+            _onMessageCb                = null;
+            _onTwinReqCb                = null;
+            _onMethodCb                 = null;
+            _reqCbMap                   = {};
+        }
+
+        // Check HTTP status
+        function _statusIsOk(status) {
+            return status / 100 == 2 ? true : false;
+        }
+
+        // Metafunction to return class name when typeof <instance> is run
+        function _typeof() {
+            return "AzureIoTHubMQTTClient";
+        }
+
+        // Information level logger
+        function _log(txt) {
+            if (_debugEnabled) {
+                server.log("[" + (typeof this) + "] " + txt);
+            }
+        }
+
+        // Error level logger
+        function _error(txt) {
+            server.error("[" + (typeof this) + "] " + txt);
+        }
     }
 
 }

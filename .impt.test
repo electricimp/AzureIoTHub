@@ -1,0 +1,12 @@
+{
+  "deviceGroupId": "c2b77a7f-642e-0bf5-cd1e-f2fbe77fe9f3",
+  "timeout": 30,
+  "stopOnFail": false,
+  "allowDisconnect": false,
+  "builderCache": false,
+  "testFiles": [
+    "*.test.nut",
+    "tests/**/*.test.nut"
+  ],
+  "agentFile": "AzureIoTHub.agent.lib.nut"
+}
