@@ -1,3 +1,27 @@
+// MIT License
+//
+// Copyright 2018 Electric Imp
+//
+// SPDX-License-Identifier: MIT
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+// EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+// OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+
 const AZURE_DEVICE_CONN_STRING = "@{AZURE_DEVICE_CONN_STRING}";
 
 class MessagesTestCase extends ImpTestCase {
@@ -56,10 +80,10 @@ class MessagesTestCase extends ImpTestCase {
                 return _disableTwin();
             }.bindenv(this))
             .then(function (value) {
-                return Promise.reject("Should have returned ENOTENABLED error");
+                return Promise.reject("Should have returned E_NOT_ENABLED error");
             }.bindenv(this), function (reason) {
-                if (reason != AzureIoTHub.Client.ENOTENABLED) {
-                    return Promise.reject("Should have returned ENOTENABLED error");
+                if (reason != AzureIoTHub.Client.E_NOT_ENABLED) {
+                    return Promise.reject("Should have returned E_NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
             }.bindenv(this));
@@ -71,10 +95,10 @@ class MessagesTestCase extends ImpTestCase {
                 return _enableTwin();
             }.bindenv(this))
             .then(function (value) {
-                return Promise.reject("Should have returned EALREADYENABLED error");
+                return Promise.reject("Should have returned E_ALREADY_ENABLED error");
             }.bindenv(this), function (reason) {
-                if (reason != AzureIoTHub.Client.EALREADYENABLED) {
-                    return Promise.reject("Should have returned EALREADYENABLED error");
+                if (reason != AzureIoTHub.Client.E_ALREADY_ENABLED) {
+                    return Promise.reject("Should have returned E_ALREADY_ENABLED error");
                 }
                 return _disableTwin();
             }.bindenv(this))
@@ -86,11 +110,11 @@ class MessagesTestCase extends ImpTestCase {
     function testRetrieveTwin() {
         return _retrieveTwin()
             .then(function (value) {
-                return Promise.reject("Should have returned ENOTENABLED error");
+                return Promise.reject("Should have returned E_NOT_ENABLED error");
             }.bindenv(this),
                 function (reason) {
-                if (reason != AzureIoTHub.Client.ENOTENABLED) {
-                    return Promise.reject("Should have returned ENOTENABLED error");
+                if (reason != AzureIoTHub.Client.E_NOT_ENABLED) {
+                    return Promise.reject("Should have returned E_NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
             }.bindenv(this));
@@ -99,11 +123,11 @@ class MessagesTestCase extends ImpTestCase {
     function testUpdateTwin() {
         return _updateTwin()
             .then(function (value) {
-                return Promise.reject("Should have returned ENOTENABLED error");
+                return Promise.reject("Should have returned E_NOT_ENABLED error");
             }.bindenv(this),
                 function (reason) {
-                if (reason != AzureIoTHub.Client.ENOTENABLED) {
-                    return Promise.reject("Should have returned ENOTENABLED error");
+                if (reason != AzureIoTHub.Client.E_NOT_ENABLED) {
+                    return Promise.reject("Should have returned E_NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
             }.bindenv(this));
@@ -112,23 +136,15 @@ class MessagesTestCase extends ImpTestCase {
     function testDisableTwin() {
         return _disableTwin()
             .then(function (value) {
-                return Promise.reject("Should have returned ENOTENABLED error");
+                return Promise.reject("Should have returned E_NOT_ENABLED error");
             }.bindenv(this),
                 function (reason) {
-                if (reason != AzureIoTHub.Client.ENOTENABLED) {
-                    return Promise.reject("Should have returned ENOTENABLED error");
+                if (reason != AzureIoTHub.Client.E_NOT_ENABLED) {
+                    return Promise.reject("Should have returned E_NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
             }.bindenv(this));
     }
-
-    // function testRetrieveTwin() {
-    //  return _retrieveTwin();
-    // }
-
-    // function testUpdateTwin() {
-    //  return _updateTwin();
-    // }
 
     function _connect() {
         return Promise(function (resolve, reject) {
