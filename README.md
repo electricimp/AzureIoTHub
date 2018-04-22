@@ -2,6 +2,7 @@
 
 Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub version “2016-11-14”. The library consists of the following classes:
 
+TODO - update
 - [AzureIoTHub.Registry](#azureiothubregistry) &mdash; Device management class, all requests use HTTP to connect to Azure IoT Hub.
   - [create()](#createdeviceinfo-callback) &mdash; Creates a a new device identity in Azure IoT Hub.
   - [update()](#updatedeviceinfo-callback) &mdash; Updates an existing device identity in Azure IoT Hub.
@@ -19,12 +20,6 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 **To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:3.0.0"` **to the top of your agent code.**
 
 [![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=master)](https://travis-ci.org/electricimp/AzureIoTHub)
-
-**Note** Azure IoT Hub device twins are currently available only to devices that access IoT Hub via the MQTT protocol. Since the AzureIoTHub Library uses AMQP, device twins are not accessible at this time. However, the programmable Electric Imp device and cloud agent architecture allows developers to easily implement not just static device twin concepts but advanced functionality including custom data models, device state caching/mirroring, properties and triggers, message queuing and batch processing, or remote callbacks. The AzureIoTHub Library is planned to be updated with IoT Hub device twin support once available with the AMQP protocol.
-
-**Step-by-Step Azure IoT Hub Recipes**
-
-In addition to the example code at the bottom of this page there are also two detailed step-by-step 'recipes' for connecting an Electric Imp-powered environmental sensor to Azure IoT Hub, complete with screenshots and diagrams. One recipe is for manual device registration, the other is for automatic device registration. See the [examples folder](./examples).
 
 ## Authentication ##
 
@@ -140,6 +135,8 @@ The *getBody()* method returns the stored device properties. See the [Device Inf
 ### AzureIoTHub.Registry Example ###
 
 This example code will create an IoT Hub device using an imp’s agent ID if one isn’t found in the IoT Hub device registry. It will then instantiate the *AzureIoTHub.Client* class for later use.
+
+TODO - update
 
 ```squirrel
 #require "AzureIoTHub.agent.lib.nut:3.0.0"
@@ -497,146 +494,14 @@ The callback **must** return an instance of the [AzureIoTHub.DirectMethodRespons
 
 TODO 
 
-## Full Example ##
 
-TODO - not sure we need it here.
+## Examples ##
 
-The following example code will register a device with Azure IoT Hub (if needed), then open a connection. When a connection is established, a receiver for IoT Hub cloud-to-device messages will be opened. You can send cloud-to-device messages with [iothub-explorer](https://github.com/Azure/iothub-explorer). 
+Full working examples are provided in the [examples](./examples) directory and described [here](./Examples/README.md).
 
-This example also shows how to send device-to-cloud messages. A listener will be opened on the agent for messages coming from its paired imp-enabled device. If a connection to Azure has been established, the message from the imp will be transmitted as an event to IoT Hub. 
+## Testing ##
 
-### Agent Code ###
-
-```squirrel
-#require "AzureIoTHub.agent.lib.nut:3.0.0"
-
-////////// Application Variables //////////
-
-const CONNECT_STRING = "HostName=<YOUR-HOST-NAME>.azure-devices.net;SharedAccessKeyName=<YOUR-KEY-NAME>;SharedAccessKey=<YOUR-KEY-HASH>";
-
-client <- null;
-registry <- AzureIoTHub.Registry(CONNECT_STRING);
-hostName <- AzureIoTHub.ConnectionString.Parse(CONNECT_STRING).HostName;
-
-agentid <- split(http.agenturl(), "/").pop();
-connected <- false;
-
-
-////////// Application Functions //////////
-
-// Create a receive handler
-function receiveHandler(err, delivery) {
-    if (err) {
-        server.error(err);
-        return;
-    }
-
-    local message = delivery.getMessage();
-
-    // send feedback
-    if (typeof message.getBody() == "blob") {
-        
-        server.log( message.getBody() );
-        server.log( http.jsonencode(message.getProperties()) );
-        
-        delivery.complete();
-    } else {
-        
-        server.log( message.getBody() );
-        server.log( http.jsonencode(message.getProperties()) );
-        
-        delivery.reject();
-    }
-}
-
-// Create a client, open a connection and receive listener
-function createClient(devConnectionString) {
-    client = AzureIoTHub.Client(devConnectionString);
-    client.connect(function(err) {
-        if (err) {
-            server.error(err);
-        } else {
-            connected = true;
-            server.log("Device connected");
-            client.receive(receiveHandler);
-        }
-    }.bindenv(this));
-}
-
-// Formats the date object as a UTC string
-function formatDate(){
-    local d = date();
-    return format("%04d-%02d-%02d %02d:%02d:%02d", d.year, (d.month+1), d.day, d.hour, d.min, d.sec);
-}
-
-////////// Runtime //////////
-
-// Find this device in the registry
-registry.get(agentid, function(err, iothubDevice) {
-    if (err) {
-        if (err.response.statuscode == 404) {
-            // No such device, let's create it, connect & open receiver
-            registry.create(function(error, hubDevice) {
-                if (error) {
-                    server.error(error.message);
-                } else {
-                    server.log("Dev created " + hubDevice.getBody().deviceId);
-                    createClient(hubDevice.connectionString(hostName));
-                }
-            }.bindenv(this));
-        } else {
-            server.error(err.message);
-        }
-    } else {
-        // Found device, let's connect & open receiver
-        server.log("Device registered as " + iothubDevice.getBody().deviceId);
-        createClient(iothubDevice.connectionString(hostName));
-    }
-});
-
-// Open a listener for events from local device, pass them to IoT Hub if connection is established
-device.on("event", function(event) {
-    event.agentid <- agentid;
-    event.time <- formatDate();
-    local message = AzureIoTHub.Message(event);
-
-    // make sure device is connected, then send event
-    if (connected) {
-        client.sendEvent(message, function(err) {
-            if (err) {
-                 server.error("sendEvent error: " + err);
-            } else {
-                server.log("sendEvent successful");
-            }
-        });
-    }
-});
-```
-
-### Device Code ###
-
-```squirrel
-// Time to wait between readings
-const LOOP_TIME = 30;
-
-// Time to connect to Azure
-const START_TIME = 5;
-
-// Gets an integer value from the imp's light sensor and sends it to the agent
-function getData() {
-    local event = { "light": hardware.lightlevel(),
-                    "power": hardware.voltage() }
-    
-    // Send event to agent
-    agent.send("event", event);
-
-    // Set timer for next event
-    imp.wakeup(LOOP_TIME, getData);
-}
-
-// Give the agent time to connect to Azure then start the loop
-imp.wakeup(START_TIME, getData);
-```
+Tests for the library are provided in the [tests](./tests) directory and described [here](./tests/README.md).
 
 ## License ##
 
