@@ -350,7 +350,7 @@ The method returns nothing. A result of the sending may be obtained via the [*on
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *message* | [AzureIoTHub.Message](#azureiothubmessage) | Yes | Message to sent. |
+| *message* | [AzureIoTHub.Message](#azureiothubmessage) | Yes | Message to send. |
 | *[onComplete](#callback-oncompleteerror)* | Function  | Optional | [Callback](#callback-oncompleteerror) called when the message is considered as sent or an error happens. |
 
 #### Example ####
