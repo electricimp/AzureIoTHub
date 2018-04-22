@@ -265,6 +265,16 @@ class AzureIoTHub {
         _status = null;
         _body   = null;
 
+        // DirectMethodResponse class constructor.
+        //
+        // Parameters:
+        //     status : Integer             Status of the Direct Method execution. Fully application specific.
+        //     options : Table              Key-value table with the returned data.
+        //          (optional)              Every key is always a String with the name of the data field.
+        //                                  The value is the corresponding value of the data field.
+        //                                  Keys and values are fully application specific.
+        //
+        // Returns:                         AzureIoTHub.DirectMethodResponse instance created.
         constructor(status, body = null) {
             _status = status;
             _body = body;
