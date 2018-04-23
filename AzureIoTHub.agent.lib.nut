@@ -719,7 +719,7 @@ class AzureIoTHub {
             } else {
                 try {
                     // We are connected or connecting now
-                    // TODO: Should we call this and next all callbacks with imp.wakeup?
+                    // TODO: Should we call this one and next all callbacks with imp.wakeup?
                     _onConnectCb(_state & S_CONNECTED ? E_ALREADY_CONNECTED : E_OP_NOT_ALLOWED_NOW);
                 } catch (e) {
                     _error("Exception at onConnect user callback: " + e);
@@ -731,8 +731,7 @@ class AzureIoTHub {
         //
         // Returns:                         Nothing.
         function disconnect() {
-            // TODO: What if we are connecting or enabling some feature now?
-            if (!(_state & (S_DISCONNECTED | S_DISCONNECTING | S_CONNECTING))) {
+            if (!(_state & (S_DISCONNECTED | S_DISCONNECTING))) {
                 _state = _state | S_DISCONNECTING;
                 _mqttclient.disconnect(_onDisconnect.bindenv(this));
             }
@@ -1120,120 +1119,135 @@ class AzureIoTHub {
                 return;
             }
 
-            local props = {};
-
             // Cloud-to-device message received
             if (topic.find(_topics.msgRecv) != null) {
-                local splittedTopic = split(topic, "/");
-                if (splittedTopic[splittedTopic.len() - 1] != "devicebound") {
-                    // We have properties sent with message
-                    props = http.urldecode(splittedTopic[splittedTopic.len() - 1]);
-                }
-                try {
-                    _onMessageCb(AzureIoTHub.Message(message, props));
-                } catch (e) {
-                    _error("Exception at onReceive user callback: " + e);
-                }
+                _handleCloudToDevMsg(message, topic);
             // Desired properties were updated
             } else if (topic.find(_topics.twinNotif) != null) {
-                local version = null;
-                local parsedMsg = null;
-                try {
-                    version = split(topic, "=")[1];
-                    parsedMsg = http.jsondecode(message);
-                } catch (e) {
-                    _error("Exception at parsing the message: " + e);
-                    return;
-                }
-                try {
-                    _onTwinReqCb(version, parsedMsg);
-                } catch (e) {
-                    _error("Exception at onRequest user callback: " + e);
-                }
-            // Twin's properties received
+                _handleDesPropsMsg(message, topic);
+            // Twin request result received
             } else if (topic.find(_topics.twinRecv) != null) {
-                local status = null;
-                local reqId = null;
-                local parsedMsg = null;
-                try {
-                    local splitted = split(topic, "/");
-                    status = splitted[3].tointeger();
-                    reqId = http.urldecode(splitted[4])["?$rid"];
-                    if (_statusIsOk(status) && message != "") {
-                        parsedMsg = http.jsondecode(message);
-                    }
-                } catch (e) {
-                    _error("Exception at parsing the message: " + e);
-                    return;
+                _handleTwinReqResMsg(message, topic);
+            // Direct method called
+            } else if (topic.find(_topics.methNotif) != null) {
+                _handleDirMethMsg(message, topic);
+            }
+        }
+
+        function _handleCloudToDevMsg(message, topic) {
+            local props = {};
+            local splittedTopic = split(topic, "/");
+            if (splittedTopic[splittedTopic.len() - 1] != "devicebound") {
+                // We have properties sent with message
+                props = http.urldecode(splittedTopic[splittedTopic.len() - 1]);
+            }
+            try {
+                _onMessageCb(AzureIoTHub.Message(message, props));
+            } catch (e) {
+                _error("Exception at onReceive user callback: " + e);
+            }
+        }
+
+        function _handleDesPropsMsg(message, topic) {
+            local version = null;
+            local parsedMsg = null;
+            try {
+                version = split(topic, "=")[1];
+                parsedMsg = http.jsondecode(message);
+            } catch (e) {
+                _error("Exception at parsing the message: " + e);
+                return;
+            }
+            try {
+                _onTwinReqCb(version, parsedMsg);
+            } catch (e) {
+                _error("Exception at onRequest user callback: " + e);
+            }
+        }
+
+        function _handleTwinReqResMsg(message, topic) {
+            local status = null;
+            local reqId = null;
+            local parsedMsg = null;
+            try {
+                local splitted = split(topic, "/");
+                status = splitted[3].tointeger();
+                reqId = http.urldecode(splitted[4])["?$rid"];
+                if (_statusIsOk(status) && message != "") {
+                    parsedMsg = http.jsondecode(message);
                 }
-                if (reqId in _reqCbMap) {
-                    local reqType = _reqCbMap[reqId][0];
-                    local cb = _reqCbMap[reqId][1];
-                    delete _reqCbMap[reqId];
-                    // Twin's properties received after GET request
-                    if (reqType == RETRIEVE_REQ_TYPE) {
-                        if (!_statusIsOk(status)) {
-                            try {
-                                cb(status, null, null);
-                            } catch (e) {
-                                _error("Exception at onRetrieve user callback: " + e);
-                            }
-                            return;
-                        }
-                        local repProps = null;
-                        local desProps = null;
+            } catch (e) {
+                _error("Exception at parsing the message: " + e);
+                return;
+            }
+            if (reqId in _reqCbMap) {
+                local reqType = _reqCbMap[reqId][0];
+                local cb = _reqCbMap[reqId][1];
+                delete _reqCbMap[reqId];
+                // Twin's properties received after GET request
+                if (reqType == RETRIEVE_REQ_TYPE) {
+                    if (!_statusIsOk(status)) {
                         try {
-                            repProps = parsedMsg["reported"];
-                            desProps = parsedMsg["desired"];
-                        } catch (e) {
-                            _error("Exception at parsing the message: " + e);
-                            return;
-                        }
-                        try {
-                            cb(0, repProps, desProps);
+                            cb(status, null, null);
                         } catch (e) {
                             _error("Exception at onRetrieve user callback: " + e);
                         }
-                    // Twin's properties received after UPDATE request
-                    } else if (reqType == UPDATE_REQ_TYPE) {
-                        // TODO: In fact Azure sends status=204 and empty body
-                        _callOnComplete(cb, _statusIsOk(status) ? 0 : status);
+                        return;
                     }
-                }
-            // Direct method called
-            } else if (topic.find(_topics.methNotif) != null) {
-                local methodName = null;
-                local reqId = null;
-                local params = null;
-
-                try {
-                    methodName = split(topic, "/")[3];
-                    reqId = split(topic, "=")[1];
-                    params = http.jsondecode(message);
-                } catch (e) {
-                    _error("Exception at parsing the message: " + e);
-                    return;
-                }
-
-                local resp = null;
-                try {
-                    resp = _onMethodCb(methodName, params);
-                } catch (e) {
-                    _error("Exception at onMethod user callback: " + e);
-                    return;
-                }
-                local topic = _topics.methResp + format("%i/?$rid=%s", resp._status, reqId);
-
-                local mqttMsg = _mqttclient.createmessage(topic, http.jsonencode(resp._body), _options.qos);
-
-                local callback = function (rc) {
-                    if (rc != 0) {
-                        _error("Could not send Direct Method response. Return code = " + rc);
+                    local repProps = null;
+                    local desProps = null;
+                    try {
+                        repProps = parsedMsg["reported"];
+                        desProps = parsedMsg["desired"];
+                    } catch (e) {
+                        _error("Exception at parsing the message: " + e);
+                        return;
                     }
-                }.bindenv(this);
-
-                mqttMsg.sendasync(callback);
+                    try {
+                        cb(0, repProps, desProps);
+                    } catch (e) {
+                        _error("Exception at onRetrieve user callback: " + e);
+                    }
+                // Twin's properties received after UPDATE request
+                } else if (reqType == UPDATE_REQ_TYPE) {
+                    // TODO: In fact Azure sends status=204 and empty body
+                    _callOnComplete(cb, _statusIsOk(status) ? 0 : status);
+                }
             }
+        }
+
+        function _handleDirMethMsg(message, topic) {
+            local methodName = null;
+            local reqId = null;
+            local params = null;
+
+            try {
+                methodName = split(topic, "/")[3];
+                reqId = split(topic, "=")[1];
+                params = http.jsondecode(message);
+            } catch (e) {
+                _error("Exception at parsing the message: " + e);
+                return;
+            }
+
+            local resp = null;
+            try {
+                resp = _onMethodCb(methodName, params);
+            } catch (e) {
+                _error("Exception at onMethod user callback: " + e);
+                return;
+            }
+            local topic = _topics.methResp + format("%i/?$rid=%s", resp._status, reqId);
+
+            local mqttMsg = _mqttclient.createmessage(topic, http.jsonencode(resp._body), _options.qos);
+
+            local callback = function (rc) {
+                if (rc != 0) {
+                    _error("Could not send Direct Method response. Return code = " + rc);
+                }
+            }.bindenv(this);
+
+            mqttMsg.sendasync(callback);
         }
 
         function _callOnComplete(cb, err) {
