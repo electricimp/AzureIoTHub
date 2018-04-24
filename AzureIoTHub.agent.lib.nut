@@ -776,7 +776,10 @@ class AzureIoTHub {
                     return;
                 }
                 // TODO: http.urlencode follows RFC3986, but Azure expects RFC2396 string. Should we worry about it?
-                local props = http.urlencode(msg.getProperties());
+                local props = "";
+                if (msg.getProperties() != null) {
+                    props = http.urlencode(msg.getProperties());
+                }
                 local topic = _topics.msgSend + props;
                 local reqId = _reqNum;
                 _reqNum++;
@@ -1315,7 +1318,9 @@ class AzureIoTHub {
             try {
                 methodName = split(topic, "/")[3];
                 reqId = split(topic, "=")[1];
-                params = http.jsondecode(message);
+                if (message != "") {
+                    params = http.jsondecode(message);
+                }
             } catch (e) {
                 _error("Exception at parsing the message: " + e);
                 _logMsg(message, topic);
@@ -1419,8 +1424,8 @@ class AzureIoTHub {
 
         function _logMsg(message, topic) {
             _log("===BEGIN MQTT MESSAGE===");
-            _log("Topic: " + message);
-            _log("Message: " + topic);
+            _log("Topic: " + topic);
+            _log("Message: " + message);
             _log("===END MQTT MESSAGE===");
         }
 
