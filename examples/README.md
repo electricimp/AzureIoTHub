@@ -2,7 +2,9 @@
 
 This document describes the example application provided with the [AzureIoTHub library](../README.md). 
 
-There are three examples for all the features available with Azure IoT Hub: Messages, Twins, Direct Methods.
+There are three examples for all the features available with Azure IoT Hub: [Messages](#example-1-messages), [Twins](#example-2-twins), [Direct Methods](#example-3-direct-methods).
+
+The first example ([Messages](#example-1-messages)) means manual device registration, while the others mean programmatical registration.
 
 
 ## Azure IoT Hub how to's
