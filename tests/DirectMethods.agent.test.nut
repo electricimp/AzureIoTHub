@@ -54,10 +54,10 @@ class DirectMethodsTestCase extends ImpTestCase {
                 return _disableMethods();
             }.bindenv(this))
             .then(function (value) {
-                return Promise.reject("Should have returned E_NOT_ENABLED error");
+                return Promise.reject("Should have returned NOT_ENABLED error");
             }.bindenv(this), function (reason) {
-                if (reason != AzureIoTHub.Client.E_NOT_ENABLED) {
-                    return Promise.reject("Should have returned E_NOT_ENABLED error");
+                if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
+                    return Promise.reject("Should have returned NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
             }.bindenv(this));
@@ -69,10 +69,10 @@ class DirectMethodsTestCase extends ImpTestCase {
                 return _enableMethods();
             }.bindenv(this))
             .then(function (value) {
-                return Promise.reject("Should have returned E_ALREADY_ENABLED error");
+                return Promise.reject("Should have returned ALREADY_ENABLED error");
             }.bindenv(this), function (reason) {
-                if (reason != AzureIoTHub.Client.E_ALREADY_ENABLED) {
-                    return Promise.reject("Should have returned E_ALREADY_ENABLED error");
+                if (reason != AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED) {
+                    return Promise.reject("Should have returned ALREADY_ENABLED error");
                 }
                 return _disableMethods();
             }.bindenv(this))
@@ -84,11 +84,11 @@ class DirectMethodsTestCase extends ImpTestCase {
     function testDisableMethods() {
         return _disableMethods()
             .then(function (value) {
-                return Promise.reject("Should have returned E_NOT_ENABLED error");
+                return Promise.reject("Should have returned NOT_ENABLED error");
             }.bindenv(this),
                 function (reason) {
-                if (reason != AzureIoTHub.Client.E_NOT_ENABLED) {
-                    return Promise.reject("Should have returned E_NOT_ENABLED error");
+                if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
+                    return Promise.reject("Should have returned NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
             }.bindenv(this));
@@ -107,9 +107,9 @@ class DirectMethodsTestCase extends ImpTestCase {
     }
 
     function _enableMethods() {
-        local onMeth = function (name, params) {};
+        local onMethod = function (name, params) {};
         return Promise(function (resolve, reject) {
-            _azureMqttClient.enableDirectMethods(onMeth, function (err) {
+            _azureMqttClient.enableDirectMethods(onMethod, function (err) {
                 if (err != 0) {
                     return reject(err);
                 }

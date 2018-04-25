@@ -24,6 +24,14 @@
 
 #require "AzureIoTHub.agent.lib.nut:3.0.0"
 
+// AzureIoTHub library example.
+// - automatically registers the device (if not registered yet) using the provided Registry Connection String
+// - connects using an automatically obtained Device Connection String
+// - enables Twin functionality
+// - retrieves and logs Twin's properties (both Desired and Reported)
+// - receives and logs notifications when Desired properties are updated, reads value of a property "test"
+// - puts that value to Reported properties, sends updated Reported properties to Azure IoT Hub
+
 const PROPERTY_NAME = "test";
 
 class TwinsExample {
@@ -77,8 +85,6 @@ class TwinsExample {
             }
         }.bindenv(this));
     }
-
-    // -------------------- PRIVATE METHODS -------------------- //
 
     function _onConnected(err) {
         if (err != 0) {
@@ -147,8 +153,8 @@ class TwinsExample {
 
 // AzureIoTHub constants
 // ---------------------------------------------------------------------------------
-const AZURE_CONN_STRING = "<YOUR_AZURE_CONN_STRING>";
+const AZURE_REGISTRY_CONN_STRING = "<YOUR_AZURE_REGISTRY_CONN_STRING>";
 
 // Start application
-twinsExample <- TwinsExample(AZURE_CONN_STRING);
+twinsExample <- TwinsExample(AZURE_REGISTRY_CONN_STRING);
 twinsExample.start();

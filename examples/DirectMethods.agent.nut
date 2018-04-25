@@ -24,6 +24,12 @@
 
 #require "AzureIoTHub.agent.lib.nut:3.0.0"
 
+// AzureIoTHub library example.
+// - automatically registers the device (if not registered yet) using the provided Registry Connection String
+// - connects using an automatically obtained Device Connection String
+// - enables Direct Methods functionality
+// - logs all comming Direct Method calls, always responds success
+
 class DirectMethodsExample {
     _azureClient = null;
 
@@ -76,8 +82,6 @@ class DirectMethodsExample {
         }.bindenv(this));
     }
 
-    // -------------------- PRIVATE METHODS -------------------- //
-
     function _onConnected(err) {
         if (err != 0) {
             server.error("AzureIoTHub connect failed: " + err);
@@ -120,8 +124,8 @@ class DirectMethodsExample {
 
 // AzureIoTHub constants
 // ---------------------------------------------------------------------------------
-const AZURE_CONN_STRING = "<YOUR_AZURE_CONN_STRING>";
+const AZURE_REGISTRY_CONN_STRING = "<YOUR_AZURE_REGISTRY_CONN_STRING>";
 
 // Start application
-directMethodsExample <- DirectMethodsExample(AZURE_CONN_STRING);
+directMethodsExample <- DirectMethodsExample(AZURE_REGISTRY_CONN_STRING);
 directMethodsExample.start();

@@ -24,6 +24,12 @@
 
 #require "AzureIoTHub.agent.lib.nut:3.0.0"
 
+// AzureIoTHub library example.
+// - connects using a manually obtained Device Connection String
+// - enables Message Receiving functionality
+// - logs all comming messages
+// - sends messages with current value of a counter and timestamp every 10 seconds, increments the counter
+
 const SEND_MESSAGE_PERIOD = 10.0;
 
 class MessagesExample {
@@ -56,8 +62,6 @@ class MessagesExample {
         }
         _azureClient.sendMessage(message, onMessageSent.bindenv(this));
     }
-
-    // -------------------- PRIVATE METHODS -------------------- //
 
     function _onConnected(err) {
         if (err != 0) {

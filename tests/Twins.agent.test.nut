@@ -80,10 +80,10 @@ class MessagesTestCase extends ImpTestCase {
                 return _disableTwin();
             }.bindenv(this))
             .then(function (value) {
-                return Promise.reject("Should have returned E_NOT_ENABLED error");
+                return Promise.reject("Should have returned NOT_ENABLED error");
             }.bindenv(this), function (reason) {
-                if (reason != AzureIoTHub.Client.E_NOT_ENABLED) {
-                    return Promise.reject("Should have returned E_NOT_ENABLED error");
+                if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
+                    return Promise.reject("Should have returned NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
             }.bindenv(this));
@@ -95,10 +95,10 @@ class MessagesTestCase extends ImpTestCase {
                 return _enableTwin();
             }.bindenv(this))
             .then(function (value) {
-                return Promise.reject("Should have returned E_ALREADY_ENABLED error");
+                return Promise.reject("Should have returned ALREADY_ENABLED error");
             }.bindenv(this), function (reason) {
-                if (reason != AzureIoTHub.Client.E_ALREADY_ENABLED) {
-                    return Promise.reject("Should have returned E_ALREADY_ENABLED error");
+                if (reason != AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED) {
+                    return Promise.reject("Should have returned ALREADY_ENABLED error");
                 }
                 return _disableTwin();
             }.bindenv(this))
@@ -110,11 +110,11 @@ class MessagesTestCase extends ImpTestCase {
     function testRetrieveTwin() {
         return _retrieveTwin()
             .then(function (value) {
-                return Promise.reject("Should have returned E_NOT_ENABLED error");
+                return Promise.reject("Should have returned NOT_ENABLED error");
             }.bindenv(this),
                 function (reason) {
-                if (reason != AzureIoTHub.Client.E_NOT_ENABLED) {
-                    return Promise.reject("Should have returned E_NOT_ENABLED error");
+                if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
+                    return Promise.reject("Should have returned NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
             }.bindenv(this));
@@ -123,11 +123,11 @@ class MessagesTestCase extends ImpTestCase {
     function testUpdateTwin() {
         return _updateTwin()
             .then(function (value) {
-                return Promise.reject("Should have returned E_NOT_ENABLED error");
+                return Promise.reject("Should have returned NOT_ENABLED error");
             }.bindenv(this),
                 function (reason) {
-                if (reason != AzureIoTHub.Client.E_NOT_ENABLED) {
-                    return Promise.reject("Should have returned E_NOT_ENABLED error");
+                if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
+                    return Promise.reject("Should have returned NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
             }.bindenv(this));
@@ -136,11 +136,11 @@ class MessagesTestCase extends ImpTestCase {
     function testDisableTwin() {
         return _disableTwin()
             .then(function (value) {
-                return Promise.reject("Should have returned E_NOT_ENABLED error");
+                return Promise.reject("Should have returned NOT_ENABLED error");
             }.bindenv(this),
                 function (reason) {
-                if (reason != AzureIoTHub.Client.E_NOT_ENABLED) {
-                    return Promise.reject("Should have returned E_NOT_ENABLED error");
+                if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
+                    return Promise.reject("Should have returned NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
             }.bindenv(this));

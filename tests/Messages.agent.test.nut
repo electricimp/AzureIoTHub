@@ -67,10 +67,10 @@ class MessagesTestCase extends ImpTestCase {
                 return _disableMessageReceiving();
             }.bindenv(this))
             .then(function (value) {
-                return Promise.reject("Should have returned E_NOT_ENABLED error");
+                return Promise.reject("Should have returned NOT_ENABLED error");
             }.bindenv(this), function (reason) {
-                if (reason != AzureIoTHub.Client.E_NOT_ENABLED) {
-                    return Promise.reject("Should have returned E_NOT_ENABLED error");
+                if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
+                    return Promise.reject("Should have returned NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
             }.bindenv(this));
@@ -82,10 +82,10 @@ class MessagesTestCase extends ImpTestCase {
                 return _enableMessageReceiving();
             }.bindenv(this))
             .then(function (value) {
-                return Promise.reject("Should have returned E_ALREADY_ENABLED error");
+                return Promise.reject("Should have returned ALREADY_ENABLED error");
             }.bindenv(this), function (reason) {
-                if (reason != AzureIoTHub.Client.E_ALREADY_ENABLED) {
-                    return Promise.reject("Should have returned E_ALREADY_ENABLED error");
+                if (reason != AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED) {
+                    return Promise.reject("Should have returned ALREADY_ENABLED error");
                 }
                 return _disableMessageReceiving();
             }.bindenv(this))
@@ -101,11 +101,11 @@ class MessagesTestCase extends ImpTestCase {
     function testDisableMessages() {
         return _disableMessageReceiving()
             .then(function (value) {
-                return Promise.reject("Should have returned E_NOT_ENABLED error");
+                return Promise.reject("Should have returned NOT_ENABLED error");
             }.bindenv(this),
                 function (reason) {
-                if (reason != AzureIoTHub.Client.E_NOT_ENABLED) {
-                    return Promise.reject("Should have returned E_NOT_ENABLED error");
+                if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
+                    return Promise.reject("Should have returned NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
             }.bindenv(this));
