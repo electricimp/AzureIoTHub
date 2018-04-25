@@ -29,13 +29,53 @@ const PROPERTY_NAME = "test";
 class TwinsExample {
     _azureClient = null;
 
-    constructor(deviceConnStr) {
-        _azureClient = AzureIoTHub.Client(deviceConnStr, 
-            _onConnected.bindenv(this), _onDisconnected.bindenv(this));
+    _connectionString = null;
+    _deviceConnString = null;
+
+    constructor(connectionString) {
+        _connectionString = connectionString;
     }
 
     function start() {
-        _azureClient.connect();
+        registerDevice(function (err) {
+            if (err == null) {
+                _azureClient = AzureIoTHub.Client(_deviceConnString,
+                    _onConnected.bindenv(this), _onDisconnected.bindenv(this));
+                _azureClient.connect();
+            }
+        }.bindenv(this));
+    }
+
+    function registerDevice(onCompleted) {
+        local deviceID = imp.configparams.deviceid;
+        local hostName = AzureIoTHub.ConnectionString.Parse(_connectionString).HostName;
+        local registry = AzureIoTHub.Registry(_connectionString);
+        // Find this device in the registry
+        registry.get(deviceID, function(err, iotHubDev) {
+            if (err) {
+                if (err.response.statuscode == 404) {
+                    // No such device, let's create it, connect & open receiver
+                    registry.create({"deviceId" : deviceID}, function(error, iotHubDevice) {
+                        if (error) {
+                            server.error(error.message);
+                            onCompleted(error);
+                        } else {
+                            _deviceConnString = iotHubDevice.connectionString(hostName);
+                            server.log("Device created: " + iotHubDevice.getBody().deviceId);
+                            onCompleted(null);
+                        }
+                    }.bindenv(this));
+                } else {
+                    server.error(err.message);
+                    onCompleted(err);
+                }
+            } else {
+                _deviceConnString = iotHubDev.connectionString(hostName);
+                // Found device, let's connect & open receiver
+                server.log("Device already registered as " + iotHubDev.getBody().deviceId);
+                onCompleted(null);
+            }
+        }.bindenv(this));
     }
 
     // -------------------- PRIVATE METHODS -------------------- //
@@ -107,8 +147,8 @@ class TwinsExample {
 
 // AzureIoTHub constants
 // ---------------------------------------------------------------------------------
-const AZURE_DEVICE_CONN_STRING = "<YOUR_AZURE_DEVICE_CONN_STRING>";
+const AZURE_CONN_STRING = "<YOUR_AZURE_CONN_STRING>";
 
 // Start application
-twinsExample <- TwinsExample(AZURE_DEVICE_CONN_STRING);
+twinsExample <- TwinsExample(AZURE_CONN_STRING);
 twinsExample.start();
