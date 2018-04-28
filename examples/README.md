@@ -43,7 +43,7 @@ The first example (Messages(TODO)) means manual device registration, while the o
 
 ### Manually Register A Device In IoT Hub
 
-We will register the device via the Azure portal. Please note that devices can also be registered programmatically by using the Electric Imp AzureIoTHub library’s *AzureIoTHub.Registry* class methods.
+Here we will register the device via the Azure portal. Please note that devices can also be registered programmatically by using the Electric Imp AzureIoTHub library’s *AzureIoTHub.Registry* class methods.
 
 1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
 
@@ -62,7 +62,7 @@ We will register the device via the Azure portal. Please note that devices can a
 
 5. After the device is created, open the device in the **IoT Devices** pane.
 
-6. Make a note of the **Connection string--primary key**. We will use this when running our sample application:
+6. Make a note of the **Connection string--primary key**. We will use this when running our sample applications:
 
 ![Device connection string](./example_imgs/IoTHubDeviceConnectionString.png)
 
@@ -70,9 +70,11 @@ We will register the device via the Azure portal. Please note that devices can a
 
 1. In your IoT hub, open the device you want to send a message to.
 
+2. Click **Message To Device**.
+
  ![Device Message](./example_imgs/IoTHubSendMessageToDevice1.png)
 
-2. Click **Message To Device**. Type some message in the **Message Body** field. Add some properties, if needed.
+3. Type some message in the **Message Body** field. Add some properties, if needed.
 
  ![Device Explorer](./example_imgs/IoTHubSendMessageToDevice2.png)
 
@@ -82,9 +84,11 @@ We will register the device via the Azure portal. Please note that devices can a
 
 1. In your IoT hub, open the device you want to get the twin's document of.
 
+2. Click **Device Twin**.
+
  ![Device Twin](./example_imgs/IoTHubDeviceTwin1.png)
 
-2. Click **Device Twin**. Here you can see and update the twin's document.
+3. Here you can see and update the twin's document.
 
  ![Device Twin Retrieve](./example_imgs/IoTHubDeviceTwinRetrieve.png)
 
@@ -92,7 +96,7 @@ We will register the device via the Azure portal. Please note that devices can a
 
  ![Device Twin Update](./example_imgs/IoTHubDeviceTwinUpdate.png)
 
-**Note**: Use **Refresh** to refresh the document and get the latest changes.
+**Note**: Use **Refresh** button to refresh the document and get the latest changes.
 
 ### Call A Direct Method
 
