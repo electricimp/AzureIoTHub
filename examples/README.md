@@ -100,7 +100,7 @@ Here we will register the device via the Azure portal. Please note that devices 
 
 ### Call A Direct Method
 
-1. In your IoT hub, open the device you want to send a message to.
+1. In your IoT hub, open the device you want to call a direct method of.
 
  ![Device Message](./example_imgs/IoTHubDirectMethod.png)
 
