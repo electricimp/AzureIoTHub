@@ -40,17 +40,6 @@
 const AZURE_API_VERSION = "2016-11-14";
 const AZURE_CLAIM_BASED_SECURITY_PATH = "$cbs";
 
-const AZURE_IOT_CLIENT_STATE_DISCONNECTED           = 1;
-const AZURE_IOT_CLIENT_STATE_DISCONNECTING          = 2;
-const AZURE_IOT_CLIENT_STATE_CONNECTED              = 4;
-const AZURE_IOT_CLIENT_STATE_CONNECTING             = 8;
-const AZURE_IOT_CLIENT_STATE_ENABLING_MSG           = 1024;
-const AZURE_IOT_CLIENT_STATE_DISABLING_MSG          = 2048;
-const AZURE_IOT_CLIENT_STATE_ENABLING_TWIN          = 4096;
-const AZURE_IOT_CLIENT_STATE_DISABLING_TWIN         = 8192;
-const AZURE_IOT_CLIENT_STATE_ENABLING_DMETHOD       = 16384;
-const AZURE_IOT_CLIENT_STATE_DISABLING_DMETHOD      = 32768;
-
 const AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED          = 1000;
 const AZURE_IOT_CLIENT_ERROR_ALREADY_CONNECTED      = 1001;
 const AZURE_IOT_CLIENT_ERROR_NOT_ENABLED            = 1002;
@@ -636,10 +625,20 @@ class AzureIoTHub {
 
         _debugEnabled               = false;
 
+        _isDisconnected             = true;
+        _isDisconnecting            = false;
+        _isConnected                = false;
+        _isConnecting               = false;
+        _isEnablingMsg              = false;
+        _isDisablingMsg             = false;
+        _isEnablingTwin             = false;
+        _isDisablingTwin            = false;
+        _isEnablingDMethod          = false;
+        _isDisablingDMethod         = false;
+
         _connStrParsed              = null;
         _options                    = null;
         _mqttclient                 = null;
-        _state                      = AZURE_IOT_CLIENT_STATE_DISCONNECTED;
         _topics                     = null;
 
         // Long term user callbacks. Like onReceive, onRequest, onMethod
@@ -651,14 +650,16 @@ class AzureIoTHub {
 
         // Short term user callbacks. Like onComplete, onRetrieve
         // User can send several messages in parallel, so we need a map reqId -> <callback>
-        _msgSentCbMap               = null;
+        _msgPendingQueue            = null;
         _msgEnabledCb               = null;
         _twinEnabledCb              = null;
-        // Contains [<reqId>, <callback>, <timer>] or null
-        _twinRetrCb                 = null;
-        // User can update twin several times in parallel, so we need a map reqId -> [<callback>, <timer>]
-        _twinUpdCbMap               = null;
-        _dMethodEnabledCb              = null;
+        // Contains [<reqId>, <callback>, <timestamp>] or null
+        _twinRetrievedCb            = null;
+        // User can update twin several times in parallel, so we need a map reqId -> [<callback>, <timestamp>]
+        _twinPendingRequests        = null;
+        _dMethodEnabledCb           = null;
+
+        _cleanQueueTimer            = null;
 
         _reqNum                     = 0;
 
@@ -686,14 +687,13 @@ class AzureIoTHub {
         //
         // Returns:                         AzureIoTHub.Client instance created.
         constructor(deviceConnStr, onConnect, onDisconnect = null, options = {}) {
-            _msgSentCbMap = {};
-            _twinUpdCbMap = {};
-            // TODO: Should we define options' names as constants?
+            _msgPendingQueue = {};
+            _twinPendingRequests = {};
             _options = {
                 "qos" : AZURE_IOT_CLIENT_DEFAULT_QOS,
                 "timeout" : AZURE_IOT_CLIENT_DEFAULT_TIMEOUT,
-                "twinUpdParallelReqs" : AZURE_IOT_CLIENT_DEFAULT_TWIN_UPD_PARAL_REQS,
-                "sendMsgParallelReqs" : AZURE_IOT_CLIENT_DEFAULT_MSG_SEND_PARAL_REQS
+                "maxPendingTwinRequests" : AZURE_IOT_CLIENT_DEFAULT_TWIN_UPD_PARAL_REQS,
+                "maxPendingSendRequests" : AZURE_IOT_CLIENT_DEFAULT_MSG_SEND_PARAL_REQS
             };
 
             _onConnectCb      = onConnect;
@@ -716,43 +716,38 @@ class AzureIoTHub {
         //
         // Returns:                         Nothing.
         function connect() {
-            if (_state == AZURE_IOT_CLIENT_STATE_DISCONNECTED) {
-                _log("Connecting...");
-
-                local devPath = "/" + _connStrParsed.DeviceId;
-                local username = _connStrParsed.HostName + devPath + format("/api-version=%s", AZURE_API_VERSION);
-                local resourcePath = "/devices" + devPath + format("/api-version=%s", AZURE_API_VERSION);
-                local resourceUri = AzureIoTHub.Authorization.encodeUri(_connStrParsed.HostName + resourcePath);
-                local passwDeadTime = AzureIoTHub.Authorization.anHourFromNow();
-                local sas = AzureIoTHub.SharedAccessSignature.create(
-                    resourceUri, null, _connStrParsed.SharedAccessKey, passwDeadTime).toString();
-
-                local options = {
-                    "username" : username,
-                    "password" : sas
-                };
-
-                local url = "ssl://" + _connStrParsed.HostName;
-
-                _state =  AZURE_IOT_CLIENT_STATE_DISCONNECTED | AZURE_IOT_CLIENT_STATE_CONNECTING;
-
-                _mqttclient.connect(url, _connStrParsed.DeviceId, options);
-            } else {
-                try {
-                    // We are connected or connecting now
-                    _onConnectCb(_state & AZURE_IOT_CLIENT_STATE_CONNECTED ? AZURE_IOT_CLIENT_ERROR_ALREADY_CONNECTED : AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
-                } catch (e) {
-                    _error("Exception at onConnect user callback: " + e);
-                }
+            if (_isConnected || _isConnecting) {
+                _onConnectCb(_isConnected ? AZURE_IOT_CLIENT_ERROR_ALREADY_CONNECTED : AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
+                return;
             }
+            _log("Connecting...");
+
+            local devPath = "/" + _connStrParsed.DeviceId;
+            local username = format("%s%s/api-version=%s", _connStrParsed.HostName, devPath, AZURE_API_VERSION);
+            local resourcePath = format("/devices%s/api-version=%s", devPath, AZURE_API_VERSION);
+            local resourceUri = AzureIoTHub.Authorization.encodeUri(_connStrParsed.HostName + resourcePath);
+            local passwDeadTime = AzureIoTHub.Authorization.anHourFromNow();
+            local sas = AzureIoTHub.SharedAccessSignature.create(
+                resourceUri, null, _connStrParsed.SharedAccessKey, passwDeadTime).toString();
+
+            local options = {
+                "username" : username,
+                "password" : sas
+            };
+
+            local url = "ssl://" + _connStrParsed.HostName;
+
+            _isConnecting = true;
+
+            _mqttclient.connect(url, _connStrParsed.DeviceId, options);
         }
 
         // Closes the connection to Azure IoT Hub. Does nothing if the connection is already closed.
         //
         // Returns:                         Nothing.
         function disconnect() {
-            if (_state != AZURE_IOT_CLIENT_STATE_DISCONNECTED && !(_state & AZURE_IOT_CLIENT_STATE_DISCONNECTING)) {
-                _state = _state | AZURE_IOT_CLIENT_STATE_DISCONNECTING;
+            if ((!_isDisconnected || _isConnecting) && !_isDisconnecting) {
+                _isDisconnecting = true;
                 _mqttclient.disconnect(_onDisconnect.bindenv(this));
             }
         }
@@ -761,7 +756,7 @@ class AzureIoTHub {
         //
         // Returns:                         Boolean: true if the client is connected, false otherwise.
         function isConnected() {
-            return _state & AZURE_IOT_CLIENT_STATE_CONNECTED > 0;
+            return _isConnected;
         }
 
         // Sends a message to Azure IoT Hub (https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#sending-device-to-cloud-messages).
@@ -775,36 +770,38 @@ class AzureIoTHub {
         //
         // Returns:                         Nothing.
         function sendMessage(msg, onComplete = null) {
-            if ((_state & AZURE_IOT_CLIENT_STATE_CONNECTED) && !(_state & AZURE_IOT_CLIENT_STATE_DISCONNECTING)) {
-                if (_msgSentCbMap.len() >= _options.sendMsgParallelReqs) {
-                    _callOnComplete(onComplete, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
-                    return;
-                }
-                // TODO: http.urlencode follows RFC3986, but Azure expects RFC2396 string. Should we worry about it?
-                local props = "";
-                if (msg.getProperties() != null) {
-                    props = http.urlencode(msg.getProperties());
-                }
-                local topic = _topics.msgSend + props;
-                local reqId = _reqNum;
-                _reqNum++;
+            local tooManyRequests = _msgPendingQueue.len() >= _options.maxPendingSendRequests;
 
-                local mqttMsg = _mqttclient.createmessage(topic, msg.getBody(), _options.qos);
-
-                local msgSentCb = function (err) {
-                    if (reqId in _msgSentCbMap) {
-                        delete _msgSentCbMap[reqId];
-                        // TODO: What should we pass to onComplete?
-                        _callOnComplete(onComplete, err);
-                    }
-                }.bindenv(this);
-
-                _msgSentCbMap[reqId] <- onComplete;
-                mqttMsg.sendasync(msgSentCb);
-            } else {
-                local err = _state & AZURE_IOT_CLIENT_STATE_CONNECTED ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED;
-                _callOnComplete(onComplete, err);
+            if (!_isConnected || _isDisconnecting) {
+                _error(onComplete, _isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                return;
             }
+
+            if (tooManyRequests) {
+                _error(onComplete, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
+                return;
+            }
+
+            local props = "";
+            if (msg.getProperties() != null) {
+                props = http.urlencode(msg.getProperties());
+            }
+            local topic = _topics.msgSend + props;
+            local reqId = _reqNum;
+            _reqNum++;
+
+            local mqttMsg = _mqttclient.createmessage(topic, msg.getBody(), _options.qos);
+
+            local msgSentCb = function (err) {
+                if (reqId in _msgPendingQueue) {
+                    delete _msgPendingQueue[reqId];
+                    // TODO: What should we pass to onComplete?
+                    _error(onComplete, err);
+                }
+            }.bindenv(this);
+
+            _msgPendingQueue[reqId] <- onComplete;
+            mqttMsg.sendasync(msgSentCb);
         }
 
         // Enables or disables message receiving from Azure IoT Hub (https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#receiving-cloud-to-device-messages).
@@ -821,49 +818,53 @@ class AzureIoTHub {
         //                                      error : Integer     0 if the operation is completed successfully, an error code otherwise.
         //
         // Returns:                         Nothing.
-        function enableMessageReceiving(onReceive, onComplete = null){
-            if ((_state & AZURE_IOT_CLIENT_STATE_CONNECTED) && !(_state & AZURE_IOT_CLIENT_STATE_DISCONNECTING)) {
-                if (_state & (AZURE_IOT_CLIENT_STATE_ENABLING_MSG | AZURE_IOT_CLIENT_STATE_DISABLING_MSG)) {
-                    _callOnComplete(onComplete, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
-                } else if (_onMessageCb != null && onReceive == null) {
-                    // Should unsubscribe
-                    // TODO: Make sure we have successfully unsubscribed
-                    // TODO: Handle the case with disconnection when unsubscribing
-                    // TODO: Will be done once EI make callback for unsubscribe method
-                    _state = _state | AZURE_IOT_CLIENT_STATE_DISABLING_MSG;
-                    _mqttclient.unsubscribe(_topics.msgRecv + "#");
-                    _onMessageCb = null;
-                    _state = _state & ~AZURE_IOT_CLIENT_STATE_DISABLING_MSG;
-                    _callOnComplete(onComplete, 0);
-                } else if (_onMessageCb != null) {
-                    // Already subscribed
-                    _callOnComplete(onComplete, AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED);
-                } else if (onReceive == null) {
-                    // Already disabled
-                    _callOnComplete(onComplete, AZURE_IOT_CLIENT_ERROR_NOT_ENABLED);
-                } else {
-                    // Should send subscribe packet
-                    local topic = _topics.msgRecv + "#";
+        function enableMessageReceiving(onReceive, onComplete = null) {
+            local enabled = _onMessageCb != null;
+            local disable = onReceive == null;
 
-                    local subscribedCb = function (err, qos) {
-                        if (_msgEnabledCb != null) {
-                            if (err == 0) {
-                                _onMessageCb = onReceive;
-                            }
-                            _msgEnabledCb = null;
-                            _state = _state & ~AZURE_IOT_CLIENT_STATE_ENABLING_MSG;
-                            // TODO: What should we pass to onComplete?
-                            _callOnComplete(onComplete, err);
-                        }
-                    }.bindenv(this);
+            if (!_isConnected || _isDisconnecting) {
+                _error(onComplete, _isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                return;
+            }
 
-                    _msgEnabledCb = onComplete;
-                    _state = _state | AZURE_IOT_CLIENT_STATE_ENABLING_MSG;
-                    _mqttclient.subscribe(topic, _options.qos, subscribedCb);
-                }
+            if (_isEnablingMsg || _isDisablingMsg) {
+                _error(onComplete, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
+                return;
+            }
+
+            if (enabled && disable) {
+                // Should unsubscribe
+                // TODO: Make sure we have successfully unsubscribed
+                // TODO: Handle the case with disconnection when unsubscribing
+                // TODO: Will be done once EI make callback for unsubscribe method
+                _isDisablingMsg = true;
+                _mqttclient.unsubscribe(_topics.msgRecv + "#");
+                _onMessageCb = null;
+                _isDisablingMsg = false;
+                _ok(onComplete);
+            } else if (enabled) {
+                _error(onComplete, AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED);
+            } else if (disable) {
+                _error(onComplete, AZURE_IOT_CLIENT_ERROR_NOT_ENABLED);
             } else {
-                local err = _state & AZURE_IOT_CLIENT_STATE_CONNECTED ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED;
-                _callOnComplete(onComplete, err);
+                // Should send subscribe packet
+                local topic = _topics.msgRecv + "#";
+
+                local subscribedCb = function (err, qos) {
+                    if (_msgEnabledCb != null) {
+                        if (err == 0) {
+                            _onMessageCb = onReceive;
+                        }
+                        _msgEnabledCb = null;
+                        _isEnablingMsg = false;
+                        // TODO: What should we pass to onComplete?
+                        _error(onComplete, err);
+                    }
+                }.bindenv(this);
+
+                _msgEnabledCb = onComplete;
+                _isEnablingMsg = true;
+                _mqttclient.subscribe(topic, _options.qos, subscribedCb);
             }
         }
 
@@ -886,63 +887,69 @@ class AzureIoTHub {
         //
         // Returns:                         Nothing.
         function enableTwin(onRequest, onComplete = null) {
-            if ((_state & AZURE_IOT_CLIENT_STATE_CONNECTED) && !(_state & AZURE_IOT_CLIENT_STATE_DISCONNECTING)) {
-                if (_state & (AZURE_IOT_CLIENT_STATE_ENABLING_TWIN | AZURE_IOT_CLIENT_STATE_DISABLING_TWIN)) {
-                    _callOnComplete(onComplete, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
-                } else if (_onTwinReqCb != null && onRequest == null) {
-                    // Should unsubscribe
-                    // TODO: Make sure we have successfully unsubscribed
-                    // TODO: Handle the case with disconnection when unsubscribing
-                    // TODO: Will be done once EI make callback for unsubscribe method
-                    _state = _state | AZURE_IOT_CLIENT_STATE_DISABLING_TWIN;
-                    _mqttclient.unsubscribe(_topics.twinNotif + "#");
-                    _mqttclient.unsubscribe(_topics.twinRecv + "#");
-                    _onTwinReqCb = null;
-                    _state = _state & ~AZURE_IOT_CLIENT_STATE_DISABLING_TWIN;
-                    _callOnComplete(onComplete, 0);
-                } else if (_onTwinReqCb != null) {
-                    // Already subscribed
-                    _callOnComplete(onComplete, AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED);
-                } else if (onRequest == null) {
-                    // Already disabled
-                    _callOnComplete(onComplete, AZURE_IOT_CLIENT_ERROR_NOT_ENABLED);
-                } else {
-                    // Should send subscribe packet for notifications and GET
+            local enabled = _onTwinReqCb != null;
+            local disable = onRequest == null;
 
-                    local subscribedTwinRecvCb = function (err, qos) {
-                        if (_twinEnabledCb =! null) {
-                            if (err == 0) {
-                                _onTwinReqCb = onRequest;
-                            }
-                            _twinEnabledCb = null;
-                            _state = _state & ~AZURE_IOT_CLIENT_STATE_ENABLING_TWIN;
-                            // TODO: What should we pass to onComplete?
-                            _callOnComplete(onComplete, err);
-                        }
-                    }.bindenv(this);
+            if (!_isConnected || _isDisconnecting) {
+                _error(onComplete, _isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                return;
+            }
 
-                    local subscribedTwinNotifCb = function (err, qos) {
-                        if (_twinEnabledCb != null) {
-                            if (err == 0) {
-                                local topic = _topics.twinRecv + "#";
-                                _mqttclient.subscribe(topic, _options.qos, subscribedTwinRecvCb);
-                            } else {
-                                _twinEnabledCb = null;
-                                _state = _state & ~AZURE_IOT_CLIENT_STATE_ENABLING_TWIN;
-                                // TODO: What should we pass to onComplete?
-                                _callOnComplete(onComplete, err);
-                            }
-                        }
-                    }.bindenv(this);
+            if (_isEnablingTwin || _isDisablingTwin) {
+                _error(onComplete, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
+                return;
+            }
 
-                    local topic = _topics.twinNotif + "#";
-                    _twinEnabledCb = onComplete;
-                    _state = _state | AZURE_IOT_CLIENT_STATE_ENABLING_TWIN;
-                    _mqttclient.subscribe(topic, _options.qos, subscribedTwinNotifCb);
-                }
+            if (enabled && disable) {
+                // Should unsubscribe
+                // TODO: Make sure we have successfully unsubscribed
+                // TODO: Handle the case with disconnection when unsubscribing
+                // TODO: Will be done once EI make callback for unsubscribe method
+                _isDisablingTwin = true;
+                _mqttclient.unsubscribe(_topics.twinNotif + "#");
+                _mqttclient.unsubscribe(_topics.twinRecv + "#");
+                _onTwinReqCb = null;
+                _isDisablingTwin = false;
+                _ok(onComplete);
+            } else if (enabled) {
+                _error(onComplete, AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED);
+            } else if (disable) {
+                _error(onComplete, AZURE_IOT_CLIENT_ERROR_NOT_ENABLED);
             } else {
-                local err = _state & AZURE_IOT_CLIENT_STATE_DISCONNECTING ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED;
-                _callOnComplete(onComplete, err);
+                // Should send subscribe packet for notifications and GET
+
+                local subscribedTwinRecvCb = function (err, qos) {
+                    if (_twinEnabledCb =! null) {
+                        _twinEnabledCb = null;
+                        _isEnablingTwin = false;
+                        // TODO: What should we pass to onComplete?
+                        if (err == 0) {
+                            _onTwinReqCb = onRequest;
+                            _ok(onComplete);
+                        } else {
+                            _error(onComplete, err);
+                        }
+                    }
+                }.bindenv(this);
+
+                local subscribedTwinNotifCb = function (err, qos) {
+                    if (_twinEnabledCb != null) {
+                        if (err == 0) {
+                            local topic = _topics.twinRecv + "#";
+                            _mqttclient.subscribe(topic, _options.qos, subscribedTwinRecvCb);
+                        } else {
+                            _twinEnabledCb = null;
+                            _isEnablingTwin = false;
+                            // TODO: What should we pass to onComplete?
+                            _error(onComplete, err);
+                        }
+                    }
+                }.bindenv(this);
+
+                local topic = _topics.twinNotif + "#";
+                _twinEnabledCb = onComplete;
+                _isEnablingTwin = true;
+                _mqttclient.subscribe(topic, _options.qos, subscribedTwinNotifCb);
             }
         }
 
@@ -966,65 +973,49 @@ class AzureIoTHub {
         //
         // Returns:                         Nothing.
         function retrieveTwinProperties(onRetrieve) {
-            if ((_state & AZURE_IOT_CLIENT_STATE_CONNECTED) && !(_state & AZURE_IOT_CLIENT_STATE_DISCONNECTING) && _onTwinReqCb != null) {
-                // Only one retrieve operation at a time is allowed
-                if (_twinRetrCb != null) {
-                    try {
-                        onRetrieve(AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW, null, null);
-                    } catch (e) {
-                        _error("Exception at onRetrieve user callback: " + e);
-                    }
-                    return;
-                }
-                local reqId = _reqNum.tostring();
-                local topic = _topics.twinGet + "?$rid=" + reqId;
-                _reqNum++;
+            local enabled = _onTwinReqCb != null;
+            local isRetrieving = _twinRetrievedCb != null;
 
-                local mqttMsg = _mqttclient.createmessage(topic, "", _options.qos);
-
-                local msgSentCb = function (err) {
-                    if (_twinRetrCb != null) {
-                        if (err == 0) {
-                            local timer = imp.wakeup(_options.timeout, function () {
-                                if (_twinRetrCb == null) {
-                                    return;
-                                }
-                                _twinRetrCb = null;
-                                try {
-                                    onRetrieve(AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT, null, null);
-                                } catch (e) {
-                                    _error("Exception at onRetrieve user callback: " + e);
-                                }
-                            }.bindenv(this));
-                            _twinRetrCb = [reqId, onRetrieve, timer];
-                        } else {
-                            try {
-                                _twinRetrCb = null;
-                                // TODO: What should we pass to onRetrieve?
-                                onRetrieve(err, null, null);
-                            } catch (e) {
-                                _error("Exception at onRetrieve user callback: " + e);
-                            }
-                        }
-                    }
-                }.bindenv(this);
-
-                _twinRetrCb = [reqId, onRetrieve, null];
-                mqttMsg.sendasync(msgSentCb);
-            } else {
-                local err = null;
-                if (_onTwinReqCb == null) {
-                    err = AZURE_IOT_CLIENT_ERROR_NOT_ENABLED;
-                } else {
-                    // We are disconnected or disconnecting now
-                    err = _state & AZURE_IOT_CLIENT_STATE_DISCONNECTING ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED;
-                }
-                try {
-                    onRetrieve(err, null, null);
-                } catch (e) {
-                    _error("Exception at onRetrieve user callback: " + e);
-                }
+            if (!_isConnected || _isDisconnecting) {
+                onRetrieve(_isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, null, null);
+                return;
             }
+
+            if (!enabled) {
+                onRetrieve(AZURE_IOT_CLIENT_ERROR_NOT_ENABLED, null, null);
+                return;
+            }
+
+            // Only one retrieve operation at a time is allowed
+            if (isRetrieving) {
+                onRetrieve(AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW, null, null);
+                return;
+            }
+
+            local reqId = _reqNum.tostring();
+            local topic = _topics.twinGet + "?$rid=" + reqId;
+            _reqNum++;
+
+            local mqttMsg = _mqttclient.createmessage(topic, "", _options.qos);
+
+            local msgSentCb = function (err) {
+                if (_twinRetrievedCb != null) {
+                    if (err == 0) {
+                        _twinRetrievedCb = [reqId, onRetrieve, time()];
+                        if (_cleanQueueTimer == null) {
+                            _cleanQueueTimer = imp.wakeup(_options.timeout, _cleanQueue.bindenv(this));
+                        }
+                    } else {
+                        _twinRetrievedCb = null;
+                        // TODO: What should we pass to onRetrieve?
+                        onRetrieve(err, null, null);
+                    }
+                }
+            }.bindenv(this);
+
+            _twinRetrievedCb = [reqId, onRetrieve, null];
+            mqttMsg.sendasync(msgSentCb);
+
         }
 
         // Updates Device Twin reported properties (https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#update-device-twins-reported-properties).
@@ -1041,48 +1032,47 @@ class AzureIoTHub {
         //
         // Returns:                         Nothing.
         function updateTwinProperties(props, onComplete = null) {
-            if ((_state & AZURE_IOT_CLIENT_STATE_CONNECTED) && !(_state & AZURE_IOT_CLIENT_STATE_DISCONNECTING) && _onTwinReqCb != null) {
-                if (_twinUpdCbMap.len() >= _options.twinUpdParallelReqs) {
-                    _callOnComplete(onComplete, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
-                    return;
-                }
-                local reqId = _reqNum.tostring();
-                local topic = _topics.twinUpd + "?$rid=" + reqId;
-                _reqNum++;
+            local enabled = _onTwinReqCb != null;
+            local tooManyRequests = _twinPendingRequests.len() >= _options.maxPendingTwinRequests;
 
-                local mqttMsg = _mqttclient.createmessage(topic, http.jsonencode(props), _options.qos);
-
-                local msgSentCb = function (err) {
-                    if (reqId in _twinUpdCbMap) {
-                        if (err == 0) {
-                            local timer = imp.wakeup(_options.timeout, function () {
-                                if (!(reqId in _twinUpdCbMap)) {
-                                    return;
-                                }
-                                delete _twinUpdCbMap[reqId];
-                                _callOnComplete(onComplete, AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT);
-                            }.bindenv(this));
-                            _twinUpdCbMap[reqId] = [onComplete, timer];
-                        } else {
-                            delete _twinUpdCbMap[reqId];
-                            // TODO: What should we pass to onComplete?
-                           _callOnComplete(onComplete, err);
-                        }
-                    }
-                }.bindenv(this);
-
-                _twinUpdCbMap[reqId] <- [onComplete, null];
-                mqttMsg.sendasync(msgSentCb);
-            } else {
-                local err = null;
-                if (_onTwinReqCb == null) {
-                    err = AZURE_IOT_CLIENT_ERROR_NOT_ENABLED;
-                } else {
-                    // We are disconnected or disconnecting now
-                    err = _state & AZURE_IOT_CLIENT_STATE_DISCONNECTING ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED;
-                }
-                _callOnComplete(onComplete, err);
+            if (!_isConnected || _isDisconnecting) {
+                _error(onComplete, _isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                return;
             }
+
+            if (!enabled) {
+                _error(onComplete, AZURE_IOT_CLIENT_ERROR_NOT_ENABLED);
+                return;
+            }
+
+            if (tooManyRequests) {
+                _error(onComplete, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
+                return;
+            }
+
+            local reqId = _reqNum.tostring();
+            local topic = _topics.twinUpd + "?$rid=" + reqId;
+            _reqNum++;
+
+            local mqttMsg = _mqttclient.createmessage(topic, http.jsonencode(props), _options.qos);
+
+            local msgSentCb = function (err) {
+                if (reqId in _twinPendingRequests) {
+                    if (err == 0) {
+                        _twinPendingRequests[reqId] = [onComplete, time()];
+                        if (_cleanQueueTimer == null) {
+                            _cleanQueueTimer = imp.wakeup(_options.timeout, _cleanQueue.bindenv(this));
+                        }
+                    } else {
+                        delete _twinPendingRequests[reqId];
+                        // TODO: What should we pass to onComplete?
+                       _error(onComplete, err);
+                    }
+                }
+            }.bindenv(this);
+
+            _twinPendingRequests[reqId] <- [onComplete, null];
+            mqttMsg.sendasync(msgSentCb);
         }
 
         // Enables or disables Azure IoT Hub Direct Methods (https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-direct-methods).
@@ -1104,49 +1094,55 @@ class AzureIoTHub {
         //
         // Returns:                         Nothing.
         function enableDirectMethods(onMethod, onComplete = null) {
-            if ((_state & AZURE_IOT_CLIENT_STATE_CONNECTED) && !(_state & AZURE_IOT_CLIENT_STATE_DISCONNECTING)) {
-                if (_state & (AZURE_IOT_CLIENT_STATE_ENABLING_DMETHOD | AZURE_IOT_CLIENT_STATE_DISABLING_DMETHOD)) {
-                    _callOnComplete(onComplete, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
-                } else if (_onMethodCb != null && onMethod == null) {
-                    // Should unsubscribe
-                    // TODO: Make sure we have successfully unsubscribed
-                    // TODO: Handle the case with disconnection when unsubscribing
-                    // TODO: Will be done once EI make callback for unsubscribe method
-                    _state = _state | AZURE_IOT_CLIENT_STATE_DISABLING_DMETHOD;
-                    _mqttclient.unsubscribe(_topics.dMethodNotif + "#");
-                    _onMethodCb = null;
-                    _state = _state & ~AZURE_IOT_CLIENT_STATE_DISABLING_DMETHOD;
-                    _callOnComplete(onComplete, 0);
-                } else if (_onMethodCb != null) {
-                    // Already subscribed
-                    _callOnComplete(onComplete, AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED);
-                } else if (onMethod == null) {
-                    // Already disabled
-                    _callOnComplete(onComplete, AZURE_IOT_CLIENT_ERROR_NOT_ENABLED);
-                } else {
-                    // Should send subscribe packet for methods
+            local enabled = _onMethodCb != null;
+            local disable = onMethod == null;
 
-                    local subscribedCb = function (err, qos) {
-                        if (_dMethodEnabledCb != null) {
-                            if (err == 0) {
-                                _onMethodCb = onMethod;
-                            }
-                            _dMethodEnabledCb = null;
-                            _state = _state & ~AZURE_IOT_CLIENT_STATE_ENABLING_DMETHOD;
-                            // TODO: What should we pass to onComplete?
-                            _callOnComplete(onComplete, err);
-                        }
-                    }.bindenv(this);
+            if (!_isConnected || _isDisconnecting) {
+                _error(onComplete, _isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                return;
+            }
 
-                    local topic = _topics.dMethodNotif + "#";
+            if (_isEnablingDMethod || _isDisablingDMethod) {
+                _error(onComplete, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
+                return;
+            }
 
-                    _dMethodEnabledCb = onComplete;
-                    _state = _state | AZURE_IOT_CLIENT_STATE_ENABLING_DMETHOD;
-                    _mqttclient.subscribe(topic, _options.qos, subscribedCb);
-                }
+            if (enabled && disable) {
+                // Should unsubscribe
+                // TODO: Make sure we have successfully unsubscribed
+                // TODO: Handle the case with disconnection when unsubscribing
+                // TODO: Will be done once EI make callback for unsubscribe method
+                _isDisablingDMethod = true;
+                _mqttclient.unsubscribe(_topics.dMethodNotif + "#");
+                _onMethodCb = null;
+                _isDisablingDMethod = false;
+                _ok(onComplete);
+            } else if (enabled) {
+                _error(onComplete, AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED);
+            } else if (disable) {
+                _error(onComplete, AZURE_IOT_CLIENT_ERROR_NOT_ENABLED);
             } else {
-                local err = _state & AZURE_IOT_CLIENT_STATE_DISCONNECTING ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED;
-                _callOnComplete(onComplete, err);
+                // Should send subscribe packet for methods
+
+                local subscribedCb = function (err, qos) {
+                    if (_dMethodEnabledCb != null) {
+                        _dMethodEnabledCb = null;
+                        _isEnablingDMethod = false;
+                        // TODO: What should we pass to onComplete?
+                        if (err == 0) {
+                            _onMethodCb = onMethod;
+                            _ok(onComplete);
+                        } else {
+                            _error(onComplete, err);
+                        }
+                    }
+                }.bindenv(this);
+
+                local topic = _topics.dMethodNotif + "#";
+
+                _dMethodEnabledCb = onComplete;
+                _isEnablingDMethod = true;
+                _mqttclient.subscribe(topic, _options.qos, subscribedCb);
             }
         }
 
@@ -1175,27 +1171,20 @@ class AzureIoTHub {
         }
 
         function _onConnect(err) {
-            _log("_onConnect: " + err);
-            _state = err == 0 ? AZURE_IOT_CLIENT_STATE_CONNECTED : AZURE_IOT_CLIENT_STATE_DISCONNECTED;
-            try {
-                // TODO: What should we pass to _onConnectCb?
-                _onConnectCb(err);
-            } catch (e) {
-                _error("Exception at onConnect user callback: " + e);
+            if (err == 0) {
+                _isConnected = true;
+                _isDisconnected = false;
             }
+            _isConnecting = false;
+            // TODO: What should we pass to _onConnectCb?
+            _onConnectCb(err);
         }
 
         function _onDisconnect() {
             _log("Disconnected!");
-            local reason = _state & AZURE_IOT_CLIENT_STATE_DISCONNECTING ? 0 : AZURE_IOT_CLIENT_ERROR_GENERAL;
+            local reason = _isDisconnecting ? 0 : AZURE_IOT_CLIENT_ERROR_GENERAL;
             _cleanup();
-            if (_onDisconnectCb != null) {
-                try {
-                    _onDisconnectCb(reason);
-                } catch (e) {
-                    _error("Exception at onDisconnect user callback: " + e);
-                }
-            }
+            _onDisconnectCb && _onDisconnectCb(reason);
         }
 
         function _onMessage(msg) {
@@ -1206,7 +1195,7 @@ class AzureIoTHub {
                 topic = msg["topic"];
                 _log(format("_onMessage: topic=%s | body=%s", topic, message));
             } catch (e) {
-                _error("Could not read message: " + e);
+                _logError("Could not read message: " + e);
                 return;
             }
 
@@ -1218,7 +1207,7 @@ class AzureIoTHub {
                 _handleDesPropsMsg(message, topic);
             // Twin request result received
             } else if (topic.find(_topics.twinRecv) != null) {
-                _handleTwinReqResMsg(message, topic);
+                _handleTwinResponse(message, topic);
             // Direct method called
             } else if (topic.find(_topics.dMethodNotif) != null) {
                 _handleDirMethodMsg(message, topic);
@@ -1232,11 +1221,7 @@ class AzureIoTHub {
                 // We have properties sent with message
                 props = http.urldecode(splittedTopic[splittedTopic.len() - 1]);
             }
-            try {
-                _onMessageCb(AzureIoTHub.Message(message, props));
-            } catch (e) {
-                _error("Exception at onReceive user callback: " + e);
-            }
+            _onMessageCb(AzureIoTHub.Message(message, props));
         }
 
         function _handleDesPropsMsg(message, topic) {
@@ -1246,18 +1231,14 @@ class AzureIoTHub {
                 version = split(topic, "=")[1];
                 parsedMsg = http.jsondecode(message);
             } catch (e) {
-                _error("Exception at parsing the message: " + e);
+                _logError("Exception at parsing the message: " + e);
                 _logMsg(message, topic);
                 return;
             }
-            try {
-                _onTwinReqCb(version, parsedMsg);
-            } catch (e) {
-                _error("Exception at onRequest user callback: " + e);
-            }
+            _onTwinReqCb(version, parsedMsg);
         }
 
-        function _handleTwinReqResMsg(message, topic) {
+        function _handleTwinResponse(message, topic) {
             local status = null;
             local reqId = null;
             local parsedMsg = null;
@@ -1265,33 +1246,39 @@ class AzureIoTHub {
                 local splitted = split(topic, "/");
                 status = splitted[3].tointeger();
                 reqId = http.urldecode(splitted[4])["?$rid"];
-                if (_statusIsOk(status) && message != "") {
+                if (_statusIsOk(status) && message != null && message != "") {
                     parsedMsg = http.jsondecode(message);
                 }
             } catch (e) {
-                _error("Exception at parsing the message: " + e);
+                _logError("Exception at parsing the message: " + e);
                 _logMsg(message, topic);
                 return;
             }
             // Twin's properties received after UPDATE request
-            if (reqId in _twinUpdCbMap) {
-                local cb = _twinUpdCbMap[reqId][0];
-                local timer = _twinUpdCbMap[reqId][1];
-                delete _twinUpdCbMap[reqId];
-                imp.cancelwakeup(timer);
-                _callOnComplete(cb, _statusIsOk(status) ? 0 : status);
+            if (reqId in _twinPendingRequests) {
+                local cbTime = delete _twinPendingRequests[reqId];
+                // If no pending requests, cancel the timer
+                if (_twinRetrievedCb == null && _twinPendingRequests.len() == 0) {
+                    imp.cancelwakeup(_cleanQueueTimer);
+                    _cleanQueueTimer = null;
+                }
+                local cb = cbTime[0];
+                if (_statusIsOk(status)) {
+                    _ok(cb);
+                } else {
+                    _error(cb, status);
+                }
             // Twin's properties received after GET request
-            } else if (_twinRetrCb != null && _twinRetrCb[0] == reqId) {
-                local cb = _twinRetrCb[1];
-                local timer = _twinRetrCb[2];
-                _twinRetrCb = null;
-                imp.cancelwakeup(timer);
+            } else if (_twinRetrievedCb != null && _twinRetrievedCb[0] == reqId) {
+                local cb = _twinRetrievedCb[1];
+                _twinRetrievedCb = null;
+                // If no pending requests, cancel the timer
+                if (_twinPendingRequests.len() == 0) {
+                    imp.cancelwakeup(_cleanQueueTimer);
+                    _cleanQueueTimer = null;
+                }
                 if (!_statusIsOk(status)) {
-                    try {
-                        cb(status, null, null);
-                    } catch (e) {
-                        _error("Exception at onRetrieve user callback: " + e);
-                    }
+                    cb(status, null, null);
                     return;
                 }
                 local repProps = null;
@@ -1300,17 +1287,13 @@ class AzureIoTHub {
                     repProps = parsedMsg["reported"];
                     desProps = parsedMsg["desired"];
                 } catch (e) {
-                    _error("Exception at parsing the message: " + e);
+                    _logError("Exception at parsing the message: " + e);
                     _logMsg(message, topic);
                     return;
                 }
-                try {
-                    cb(0, repProps, desProps);
-                } catch (e) {
-                    _error("Exception at onRetrieve user callback: " + e);
-                }
+                cb(0, repProps, desProps);
             } else {
-                _log("Message with unknown request ID recceived: ");
+                _log("Message with unknown request ID received: ");
                 _logMsg(message, topic);
             }
         }
@@ -1323,96 +1306,119 @@ class AzureIoTHub {
             try {
                 methodName = split(topic, "/")[3];
                 reqId = split(topic, "=")[1];
-                if (message != "") {
+                if (message != null && message != "") {
                     params = http.jsondecode(message);
                 }
             } catch (e) {
-                _error("Exception at parsing the message: " + e);
+                _logError("Exception at parsing the message: " + e);
                 _logMsg(message, topic);
                 return;
             }
 
-            local resp = null;
-            try {
-                resp = _onMethodCb(methodName, params);
-            } catch (e) {
-                _error("Exception at onMethod user callback: " + e);
-                return;
-            }
+            local resp = _onMethodCb(methodName, params);
             local topic = _topics.dMethodResp + format("%i/?$rid=%s", resp._status, reqId);
 
             local mqttMsg = _mqttclient.createmessage(topic, http.jsonencode(resp._body), _options.qos);
 
             local msgSentCb = function (err) {
                 if (err != 0) {
-                    _error("Could not send Direct Method response. Return code = " + err);
+                    _logError("Could not send Direct Method response. Return code = " + err);
                 }
             }.bindenv(this);
 
             mqttMsg.sendasync(msgSentCb);
         }
 
-        function _callOnComplete(cb, err) {
-            if (cb != null) {
-                try {
-                    cb(err);
-                } catch (e) {
-                    _error("Exception at onComplete user callback: " + e);
+        function _cleanQueue() {
+            local cb = null;
+            local timestamp = null;
+            local isPending = _twinRetrievedCb != null && _twinRetrievedCb[2] != null;
+
+            if (isPending) {
+                cb = _twinRetrievedCb[1];
+                timestamp = _twinRetrievedCb[2];
+                // TODO: Is it precise enough?
+                if (time() - timestamp >= _options.timeout) {
+                    _twinRetrievedCb = null;
+                    cb(AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT, null, null);
                 }
+            }
+
+            foreach (reqId, arr in _twinPendingRequests) {
+                cb = arr[0];
+                timestamp = arr[1];
+                isPending = timestamp != null;
+                if (isPending &&
+                    (time() - timestamp >= _options.timeout)) {
+                    // TODO: Make sure it works correctly
+                    delete _twinPendingRequests[reqId];
+                    _error(onComplete, AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT);
+                }
+            }
+
+            if (_twinRetrievedCb != null || _twinPendingRequests.len() > 0) {
+                _cleanQueueTimer = imp.wakeup(_options.timeout, _cleanQueue.bindenv(this));
+            } else {
+                _cleanQueueTimer = null;
             }
         }
 
+        function _ok(cb) {
+            cb && cb(0);
+        }
+
+        function _error(cb, err) {
+            cb && cb(err);
+        }
+
         function _cleanup() {
-            _state = AZURE_IOT_CLIENT_STATE_DISCONNECTED;
+            _isDisconnected             = true;
+            _isDisconnecting            = false;
+            _isConnected                = false;
+            _isConnecting               = false;
+            _isEnablingMsg              = false;
+            _isDisablingMsg             = false;
+            _isEnablingTwin             = false;
+            _isDisablingTwin            = false;
+            _isEnablingDMethod          = false;
+            _isDisablingDMethod         = false;
+
             _onMessageCb                = null;
             _onTwinReqCb                = null;
             _onMethodCb                 = null;
 
-            foreach (reqId, cb in _msgSentCbMap) {
-                // TODO: Should we use imp.wakeup here?
-                _callOnComplete(cb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+            if (_cleanQueueTimer != null) {
+                imp.cancelwakeup(_cleanQueueTimer);
+                _cleanQueueTimer = null;
+            }
+
+            foreach (reqId, cb in _msgPendingQueue) {
+                _error(cb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
             }
             // TODO: Is it ok? Or we should delete every slot of this map
-            _msgSentCbMap = {};
+            _msgPendingQueue = {};
 
             if (_msgEnabledCb != null) {
-                // TODO: Should we use imp.wakeup here?
-                _callOnComplete(_msgEnabledCb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                _error(_msgEnabledCb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
                 _msgEnabledCb = null;
             }
             if (_twinEnabledCb != null) {
-                // TODO: Should we use imp.wakeup here?
-                _callOnComplete(_twinEnabledCb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                _error(_twinEnabledCb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
                 _twinEnabledCb = null;
             }
-            if (_twinRetrCb != null) {
-                local cb = _twinRetrCb[1];
-                local timer = _twinRetrCb[2];
-                _twinRetrCb = null;
-                if (timer != null) {
-                    imp.cancelwakeup(timer);
-                }
-                try {
-                    // TODO: Should we use imp.wakeup here?
-                    cb(AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, null, null);
-                } catch (e) {
-                    _error("Exception at onRetrieve user callback: " + e);
-                }
+            if (_twinRetrievedCb != null) {
+                local cb = _twinRetrievedCb[1];
+                _twinRetrievedCb = null;
+                cb(AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, null, null);
             }
-            foreach (reqId, arr in _twinUpdCbMap) {
+            foreach (reqId, arr in _twinPendingRequests) {
                 local cb = arr[0];
-                local timer = arr[1];
-                if (timer != null) {
-                    imp.cancelwakeup(timer);
-                }
-                // TODO: Should we use imp.wakeup here?
-                _callOnComplete(cb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                _error(cb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
             }
             // TODO: Is it ok? Or we should delete every slot of this map
-            _twinUpdCbMap = {};
+            _twinPendingRequests = {};
             if (_dMethodEnabledCb != null) {
-                // TODO: Should we use imp.wakeup here?
-                _callOnComplete(_dMethodEnabledCb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                _error(_dMethodEnabledCb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
                 _dMethodEnabledCb = null;
             }
         }
@@ -1428,10 +1434,8 @@ class AzureIoTHub {
         }
 
         function _logMsg(message, topic) {
-            _log("===BEGIN MQTT MESSAGE===");
-            _log("Topic: " + topic);
-            _log("Message: " + message);
-            _log("===END MQTT MESSAGE===");
+            local text = format("===BEGIN MQTT MESSAGE===\nTopic: %s\nMessage: %s\n===END MQTT MESSAGE===");
+            _log(text);
         }
 
         // Information level logger
@@ -1442,7 +1446,7 @@ class AzureIoTHub {
         }
 
         // Error level logger
-        function _error(txt) {
+        function _logError(txt) {
             server.error("[" + (typeof this) + "] " + txt);
         }
     }
