@@ -47,7 +47,7 @@ We will register the device via the Azure portal. Please note that devices can a
 
 1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
 
-2. Click **Device Explorer**. (TODO: device explorer was renamed to **IoT Devices** in **DEVICE MANAGEMENT**)
+2. Click **IoT Devices** in the **DEVICE MANAGEMENT** section.
 
 3. Click **Add** to add a device to your IoT hub. Enter:
 
@@ -60,7 +60,7 @@ We will register the device via the Azure portal. Please note that devices can a
 
 4. Click **Save**.
 
-5. After the device is created, open the device in the **Device Explorer** pane.
+5. After the device is created, open the device in the **IoT Devices** pane.
 
 6. Make a note of the **Connection string--primary key**. We will use this when running our sample application:
 
@@ -68,7 +68,7 @@ We will register the device via the Azure portal. Please note that devices can a
 
 ### Send A Message To The Device
 
-1. Open the device you want to send a message to.
+1. In your IoT hub, open the device you want to send a message to.
 
  ![Device Message](./example_imgs/IoTHubSendMessageToDevice1.png)
 
@@ -78,12 +78,33 @@ We will register the device via the Azure portal. Please note that devices can a
 
 3. Click **Send Message** to send the message.
 
-### Retrieve Twin's Document
+### Retrieve/Update Twin's Document
 
-### Update Twin's Desired Properties
+1. In your IoT hub, open the device you want to get the twin's document of.
+
+ ![Device Twin](./example_imgs/IoTHubDeviceTwin1.png)
+
+2. Click **Device Twin**. Here you can see and update the twin's document.
+
+ ![Device Twin Retrieve](./example_imgs/IoTHubDeviceTwinRetrieve.png)
+
+3. If you want to update desired properties, make changes and click **Save**. For example:
+
+ ![Device Twin Update](./example_imgs/IoTHubDeviceTwinUpdate.png)
+
+**Note**: Use **Refresh** to refresh the document and get the latest changes.
 
 ### Call A Direct Method
 
+1. In your IoT hub, open the device you want to send a message to.
+
+ ![Device Message](./example_imgs/IoTHubDirectMethod.png)
+
+2. Click **Direct Method**. Input some Method Name. Add some payload, if needed. Payload is always a valid JSON or nothing.
+
+ ![Device Explorer](./example_imgs/IoTHubDirectMethodInvoke.png)
+
+3. Click **Invoke Method**.
 
 ## Example 1: Messages
 
