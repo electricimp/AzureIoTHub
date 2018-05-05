@@ -129,7 +129,7 @@ class TwinsExample {
             local propUpd = {};
             propUpd[PROPERTY_NAME] <- props[PROPERTY_NAME];
 
-            _azureClient.updateTwinProperties(propUpd, function (err) {
+            _azureClient.updateTwinProperties(propUpd, function (props, err) {
                 if (err != 0) {
                     server.error("AzureIoTHub updateTwinProperties failed: " + err);
                 } else {

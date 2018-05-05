@@ -24,7 +24,7 @@
 
 const AZURE_DEVICE_CONN_STRING = "@{AZURE_DEVICE_CONN_STRING}";
 
-class MessagesTestCase extends ImpTestCase {
+class TwinsTestCase extends ImpTestCase {
     _azureMqttClient = null;
 
     function setUp() {
@@ -195,7 +195,7 @@ class MessagesTestCase extends ImpTestCase {
     function _updateTwin() {
         local props = {"testProp" : "testVal"};
         return Promise(function (resolve, reject) {
-            _azureMqttClient.updateTwinProperties(props, function (err) {
+            _azureMqttClient.updateTwinProperties(props, function (props, err) {
                 if (err != 0) {
                     return reject(err);
                 }

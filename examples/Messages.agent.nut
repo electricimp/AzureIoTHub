@@ -50,7 +50,7 @@ class MessagesExample {
         local message = AzureIoTHub.Message(msgBody);
         _counter++;
 
-        local onMessageSent = function (err) {
+        local onMessageSent = function (msg, err) {
             if (err != 0) {
                 server.error("AzureIoTHub sendMessage failed: " + err);
             } else {

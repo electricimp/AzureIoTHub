@@ -126,7 +126,7 @@ class MessagesTestCase extends ImpTestCase {
     function _sendMessage() {
         local msg = AzureIoTHub.Message("test message", {"prop1" : "val1"});
         return Promise(function (resolve, reject) {
-            _azureMqttClient.sendMessage(msg, function (err) {
+            _azureMqttClient.sendMessage(msg, function (msg, err) {
                 if (err != 0) {
                     return reject(err);
                 }
