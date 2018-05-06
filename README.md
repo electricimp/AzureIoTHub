@@ -362,24 +362,24 @@ This method checks if the client is connected to Azure IoT Hub.
 
 The method returns *Boolean*: `true` if the client is connected, `false` otherwise.
 
-### sendMessage(*message[, onSent]*) ###
+### sendMessage(*message[, onSend]*) ###
 
 This method [sends a message to Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#sending-device-to-cloud-messages).
 
-The method returns nothing. A result of the sending may be obtained via the [*onSent*](#callback-onsentmessageerror) callback, if specified in this method.
+The method returns nothing. A result of the sending may be obtained via the [*onSend*](#callback-onsendmessage-error) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *message* | [AzureIoTHub.Message](#azureiothubmessage) | Yes | Message to send. |
-| *[onSent](#callback-onsentmessageerror)* | Function  | Optional | [Callback](#callback-onsentmessageerror) called when the message is considered as sent or an error happens. |
+| *[onSend](#callback-onsendmessage-error)* | Function  | Optional | [Callback](#callback-onsendmessage-error) called when the message is considered as sent or an error happens. |
 
-#### Callback: onSent(*message*, *error*) ####
+#### Callback: onSend(*message, error*) ####
 
 This callback is called when the message is considered as sent or an error happens.
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *message* | [AzureIoTHub.Message](#azureiothubmessage) | The original message passed to sendMessage. |
+| *message* | [AzureIoTHub.Message](#azureiothubmessage) | The original *message* passed to sendMessage. |
 | *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
 
 #### Example ####
@@ -394,8 +394,8 @@ client.sendMessage(message1);
 // Send a string with a callback
 local message2 = AzureIoTHub.Message("This is another string");
 client.sendMessage(message2, function(msg, err) {
-    if (err) {
-        server.error(err);
+    if (err != 0) {
+        server.error("AzureIoTHub sendMessage failed: " + err);
     } else {
         server.log("Message sent at " + time());
     }
@@ -429,6 +429,20 @@ This callback is called every time a new message is received.
 
 TODO
 
+```squirrel
+function onReceive(msg) {
+    server.log("Message received: " + msg.getBody());
+}
+
+client.enableMessageReceiving(onReceive, function(err) {
+    if (err != 0) {
+        server.error("AzureIoTHub enableMessageReceiving failed: " + err);
+    } else {
+        server.log("MessageReceiving enabled successfully");
+    }
+});
+```
+
 ### enableTwin(*onRequest[, onDone]*) ###
 
 This method enables or disables [Azure IoT Hub Device Twins functionality](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins).
@@ -457,6 +471,20 @@ This callback is called every time a new [request with desired Device Twin prope
 
 TODO - maybe cover updateTwinProperties() as well ?
 
+```squirrel
+function onRequest(version, props) {
+    server.log("Desired properties received. Version = " + version);
+}
+
+client.enableTwin(onRequest, function(err) {
+    if (err != 0) {
+        server.error("AzureIoTHub enableTwin failed: " + err);
+    } else {
+        server.log("Twin enabled successfully");
+    }
+});
+```
+
 ### retrieveTwinProperties(*onRetrieve*) ###
 
 This method [retrieves Device Twin properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#retrieving-a-device-twins-properties).
@@ -479,22 +507,57 @@ This callback is called when [Device Twin properties are retrieved](https://docs
 
 #### Example ####
 
-TODO 
+TODO
 
-### updateTwinProperties(*props[, onDone]*) ###
+```squirrel
+function onRetrieve(err, repProps, desProps) {
+    if (err != 0) {
+        server.error("AzureIoTHub retrieveTwinProperties failed: " + err);
+        return;
+    }
+    server.log("Twin properties retrieved successfully");
+}
+
+// It is assumed that Twins functionality is enabled
+client.retrieveTwinProperties(onRetrieve);
+```
+
+### updateTwinProperties(*props[, onUpdate]*) ###
 
 This method [updates Device Twin reported properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#update-device-twins-reported-properties).
 
-The method returns nothing. A result of the operation may be obtained via the [*onDone*](#callback-ondoneerror) callback, if specified in this method.
+The method returns nothing. A result of the operation may be obtained via the [*onUpdate*](#callback-onupdateprops-error) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *props* | Table | Yes | Key-value table with the reported properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
-| *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the operation is completed or an error happens. |
+| *[onUpdate](#callback-onupdateprops-error)* | Function  | Optional | [Callback](#callback-onupdateprops-error) called when the operation is completed or an error happens. |
+
+#### Callback: onUpdate(*props, error*) ####
+
+This callback is called when the message is considered as sent or an error happens.
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *props* | Table | The original *props* passed to updateTwinProperties. |
+| *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
 
 #### Example ####
 
 TODO - not needed if already in the example for enableTwin()
+
+```squirrel
+props <- {"exampleProp": "val"};
+
+// It is assumed that Twins functionality is enabled
+client.updateTwinProperties(props, function(props, err) {
+    if (err != 0) {
+        server.error("AzureIoTHub updateTwinProperties failed: " + err);
+    } else {
+        server.log("Twin's reported properties updated successfully");
+    }
+});
+```
 
 ### enableDirectMethods(*onMethod[, onDone]*) ###
 
@@ -526,6 +589,22 @@ The callback **must** return an instance of the [AzureIoTHub.DirectMethodRespons
 
 TODO 
 
+```squirrel
+function onMethod(name, params) {
+    server.log("Direct Method called. Name = " + name);
+    local responseStatusCode = 200;
+    local responseBody = {"example" : "val"};
+    return AzureIoTHub.DirectMethodResponse(responseStatusCode, responseBody);
+}
+
+client.enableDirectMethods(onMethod, function(err) {
+    if (err != 0) {
+        server.error("AzureIoTHub enableDirectMethods failed: " + err);
+    } else {
+        server.log("Direct Methods enabled successfully");
+    }
+});
+```
 
 ## Examples ##
 
