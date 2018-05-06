@@ -237,9 +237,9 @@ TODO - add some general explanation here ? eg.
 - https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins#device-reconnection-flow
 - 
 
-Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. A typical [*onComplete*](#callback-oncompleteerror) callback provides an [error code](#error-code) which specifies a concrete error (if any) happened during the operation. Specific callbacks are described within every method.
+Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. A typical [*onDone*](#callback-ondoneerror) callback provides an [error code](#error-code) which specifies a concrete error (if any) happened during the operation. Specific callbacks are described within every method.
 
-#### Callback: onComplete(*error*) #####
+#### Callback: onDone(*error*) #####
 
 This callback is called when an operation is completed.
 
@@ -339,16 +339,16 @@ This method checks if the client is connected to Azure IoT Hub.
 
 The method returns *Boolean*: `true` if the client is connected, `false` otherwise.
 
-### sendMessage(*message[, onComplete]*) ###
+### sendMessage(*message[, onDone]*) ###
 
 This method [sends a message to Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#sending-device-to-cloud-messages).
 
-The method returns nothing. A result of the sending may be obtained via the [*onComplete*](#callback-oncompleteerror) callback, if specified in this method.
+The method returns nothing. A result of the sending may be obtained via the [*onDone*](#callback-ondoneerror) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *message* | [AzureIoTHub.Message](#azureiothubmessage) | Yes | Message to send. |
-| *[onComplete](#callback-oncompleteerror)* | Function  | Optional | [Callback](#callback-oncompleteerror) called when the message is considered as sent or an error happens. |
+| *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the message is considered as sent or an error happens. |
 
 #### Example ####
 
@@ -370,7 +370,7 @@ client.sendEvent(message2, function(err) {
 });
 ```
 
-### enableMessageReceiving(*onReceive[, onComplete]*) ###
+### enableMessageReceiving(*onReceive[, onDone]*) ###
 
 This method enables or disables [message receiving from Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#receiving-cloud-to-device-messages).
 
@@ -378,12 +378,12 @@ To enable the feature, specify the [*onReceive*](#callback-onreceivemessage) cal
 
 The feature is automatically disabled every time the client is disconnected. It should be re-enabled after every new connection, if needed.
 
-The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#callback-oncompleteerror) callback, if specified in this method.
+The method returns nothing. A result of the operation may be obtained via the [*onDone*](#callback-ondoneerror) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *[onReceive](#callback-onreceivemessage)* | Function  | Yes | [Callback](#callback-onreceivemessage) called every time a new message is received. `null` disables the feature. |
-| *[onComplete](#callback-oncompleteerror)* | Function  | Optional | [Callback](#callback-oncompleteerror) called when the operation is completed or an error happens. |
+| *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the operation is completed or an error happens. |
 
 #### Callback: onReceive(*message*) ####
 
@@ -397,7 +397,7 @@ This callback is called every time a new message is received.
 
 TODO
 
-### enableTwin(*onRequest[, onComplete]*) ###
+### enableTwin(*onRequest[, onDone]*) ###
 
 This method enables or disables [Azure IoT Hub Device Twins functionality](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins).
 
@@ -405,12 +405,12 @@ To enable the feature, specify the [*onRequest*](#callback-onrequestversion-prop
 
 The feature is automatically disabled every time the client is disconnected. It should be re-enabled after every new connection, if needed.
 
-The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#callback-oncompleteerror) callback, if specified in this method.
+The method returns nothing. A result of the operation may be obtained via the [*onDone*](#callback-ondoneerror) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *[onRequest](#callback-onrequestversion-props)* | Function  | Yes | [Callback](#callback-onrequestversion-props) called every time a new request with desired Device Twin properties is received. `null` disables the feature. |
-| *[onComplete](#callback-oncompleteerror)* | Function  | Optional | [Callback](#callback-oncompleteerror) called when the operation is completed or an error happens. |
+| *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the operation is completed or an error happens. |
 
 #### Callback: onRequest(*version, props*) ####
 
@@ -449,22 +449,22 @@ This callback is called when [Device Twin properties are retrieved](https://docs
 
 TODO 
 
-### updateTwinProperties(*props[, onComplete]*) ###
+### updateTwinProperties(*props[, onDone]*) ###
 
 This method [updates Device Twin reported properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#update-device-twins-reported-properties).
 
-The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#callback-oncompleteerror) callback, if specified in this method.
+The method returns nothing. A result of the operation may be obtained via the [*onDone*](#callback-ondoneerror) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *props* | Table | Yes | Key-value table with the reported properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
-| *[onComplete](#callback-oncompleteerror)* | Function  | Optional | [Callback](#callback-oncompleteerror) called when the operation is completed or an error happens. |
+| *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the operation is completed or an error happens. |
 
 #### Example ####
 
 TODO - not needed if already in the example for enableTwin()
 
-### enableDirectMethods(*onMethod[, onComplete]*) ###
+### enableDirectMethods(*onMethod[, onDone]*) ###
 
 This method enables or disables [Azure IoT Hub Direct Methods](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-direct-methods).
 
@@ -472,12 +472,12 @@ To enable the feature, specify the [*onMethod*](#callback-onmethodname-params) c
 
 The feature is automatically disabled every time the client is disconnected. It should be re-enabled after every new connection, if needed.
 
-The method returns nothing. A result of the operation may be obtained via the [*onComplete*](#callback-oncompleteerror) callback, if specified in this method.
+The method returns nothing. A result of the operation may be obtained via the [*onDone*](#callback-ondoneerror) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *[onMethod](#callback-onmethodname-params)* | Function  | Yes | [Callback](#callback-onmethodname-params) called every time a direct method is called. `null` disables the feature. |
-| *[onComplete](#callback-oncompleteerror)* | Function  | Optional | [Callback](#callback-oncompleteerror) called when the operation is completed or an error happens. |
+| *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the operation is completed or an error happens. |
 
 #### Callback: onMethod(*name, params*) ####
 
