@@ -254,15 +254,15 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | Error Code | Description |
 | --- | --- |
 | 0 | No error. |
+| 1-99 TODO | codes returned by EI MQTT API... |
+| 100-999 | Azure IoT Hub errors. See [Azure IoT Hub documentation](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support). |
 | 1000 | The client is not connected. |
 | 1001 | The client is already connected. |
 | 1002 | The feature is not enabled. |
 | 1003 | The feature is already enabled. |
-| 1004 | The operation is not allowed now. |
+| 1004 | The operation is not allowed now. Eg. the same operation is already in process. |
 | 1005 | The operation is timed out. |
 | 1010 | General error. |
-| 100-999 | Azure IoT Hub errors. See [Azure IoT Hub documentation](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support). |
-| TODO | codes returned by EI MQTT lib... |
 
 ### Constructor: AzureIoTHub.Client(*deviceConnectionString, onConnect[, onDisconnect[, options]]*) ###
 
@@ -302,23 +302,20 @@ These settings affect the client's behavior and the operations. Every setting is
 | Key (String) | Value Type | Default | Description |
 | --- | --- | --- | --- |
 | "qos" | Integer | 0 | MQTT QoS. Azure IoT Hub supports QoS `0` and `1` only. |
-| "timeout" | Integer | 10 | Timeout (seconds) for Retrieve/Update Twin operations. |
-| "maxPendingTwinRequests" | Integer | 3 | Maximum amount of pending Update Twin requests. |
-| "maxPendingSendRequests" | Integer | 3 | Maximum amount of pending Send Message requests. |
-| "will-topic" | String | not specified | TODO |
-| "will-message" | String | not specified | TODO |
-| TODO |  |  |  |
+| "timeout" | Integer | 10 | Timeout (in seconds) for [Retrieve Twin](#retrievetwinpropertiesonretrieve) and [Update Twin](#updatetwinpropertiesprops-onupdate) operations. |
+| "maxPendingTwinRequests" | Integer | 3 | Maximum amount of pending [Update Twin](#updatetwinpropertiesprops-onupdate) operations. |
+| "maxPendingSendRequests" | Integer | 3 | Maximum amount of pending [Send Message](#sendmessagemessage-onsend) operations. |
+| "will-topic" | String | not specified | TODO - remove? |
+| "will-message" | String | not specified | TODO - remove? |
 
 #### Example ####
-
-TODO - update - full example for constructor, connect, disconnect - a recommended practice
 
 ```squirrel
 const AZURE_DEVICE_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;DeviceId=<DEVICE_ID>;SharedAccessKey=<DEVICE_KEY_HASH>";
 
 function onConnect(err) {
     if (err != 0) {
-        server.error("AzureIoTHub connect failed: " + err);
+        server.error("Connect failed: " + err);
         return;
     }
     server.log("Connected");
@@ -327,15 +324,15 @@ function onConnect(err) {
 
 function onDisconnect(err) {
     if (err != 0) {
-        server.error("AzureIoTHub client disconnected with code: " + err);
-        // Reconnect if disconnection is not initiated by user
+        server.error("Disconnected unexpectedly with code: " + err);
+        // Reconnect if disconnection is not initiated by application
         client.connect();
     } else {
         server.log("Disconnected by application");
     }
 }
 
-// Instantiate a client
+// Instantiate and connect a client
 client <- AzureIoTHub.Client(AZURE_DEVICE_CONN_STRING, onConnect, onDisconnect);
 client.connect();
 ```
@@ -368,6 +365,9 @@ This method [sends a message to Azure IoT Hub](https://docs.microsoft.com/en-us/
 
 The method returns nothing. A result of the sending may be obtained via the [*onSend*](#callback-onsendmessage-error) callback, if specified in this method.
 
+It is allowed to send a new message while the previous send operation is not completed yet. 
+Maximum amount of pending operations is defined by the [client settings](#optional-settings).
+
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *message* | [AzureIoTHub.Message](#azureiothubmessage) | Yes | Message to send. |
@@ -379,12 +379,12 @@ This callback is called when the message is considered as sent or an error happe
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *message* | [AzureIoTHub.Message](#azureiothubmessage) | The original *message* passed to sendMessage. |
+| *message* | [AzureIoTHub.Message](#azureiothubmessage) | The original *message* passed to [sendMessage()](#sendmessagemessage-onsend) method. |
 | *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
 
 #### Example ####
 
-TODO - update
+TODO - update - use "global" callback and resend the message (?)
 
 ```squirrel
 // Send a string with no callback
@@ -395,7 +395,7 @@ client.sendMessage(message1);
 local message2 = AzureIoTHub.Message("This is another string");
 client.sendMessage(message2, function(msg, err) {
     if (err != 0) {
-        server.error("AzureIoTHub sendMessage failed: " + err);
+        server.error("Message sending failed: " + err);
     } else {
         server.log("Message sent at " + time());
     }
@@ -414,12 +414,12 @@ The method returns nothing. A result of the operation may be obtained via the [*
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *[onReceive](#callback-onreceivemessage)* | Function  | Yes | [Callback](#callback-onreceivemessage) called every time a new message is received. `null` disables the feature. |
+| *[onReceive](#callback-onreceivemessage)* | Function  | Yes | [Callback](#callback-onreceivemessage) called every time a new message is received from Azure IoT Hub. `null` disables the feature. |
 | *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the operation is completed or an error happens. |
 
 #### Callback: onReceive(*message*) ####
 
-This callback is called every time a new message is received.
+This callback is called every time a new message is received from Azure IoT Hub.
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
@@ -427,7 +427,7 @@ This callback is called every time a new message is received.
 
 #### Example ####
 
-TODO
+TODO - update after Message class is changed (?)
 
 ```squirrel
 function onReceive(msg) {
@@ -436,9 +436,9 @@ function onReceive(msg) {
 
 client.enableMessageReceiving(onReceive, function(err) {
     if (err != 0) {
-        server.error("AzureIoTHub enableMessageReceiving failed: " + err);
+        server.error("Enabling message receiving failed: " + err);
     } else {
-        server.log("Message Receiving enabled successfully");
+        server.log("Message receiving enabled successfully");
     }
 });
 ```
@@ -455,12 +455,12 @@ The method returns nothing. A result of the operation may be obtained via the [*
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *[onRequest](#callback-onrequestversion-props)* | Function  | Yes | [Callback](#callback-onrequestversion-props) called every time a new request with desired Device Twin properties is received. `null` disables the feature. |
+| *[onRequest](#callback-onrequestversion-props)* | Function  | Yes | [Callback](#callback-onrequestversion-props) called every time a new request with desired Device Twin properties is received from Azure IoT Hub. `null` disables the feature. |
 | *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the operation is completed or an error happens. |
 
 #### Callback: onRequest(*version, props*) ####
 
-This callback is called every time a new [request with desired Device Twin properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#receiving-desired-properties-update-notifications) is received.
+This callback is called every time a new [request with desired Device Twin properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#receiving-desired-properties-update-notifications) is received from Azure IoT Hub.
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
@@ -469,8 +469,6 @@ This callback is called every time a new [request with desired Device Twin prope
 
 #### Example ####
 
-TODO - maybe cover updateTwinProperties() as well ?
-
 ```squirrel
 function onRequest(version, props) {
     server.log("Desired properties received. Version = " + version);
@@ -478,9 +476,9 @@ function onRequest(version, props) {
 
 client.enableTwin(onRequest, function(err) {
     if (err != 0) {
-        server.error("AzureIoTHub enableTwin failed: " + err);
+        server.error("Enabling Twins functionality failed: " + err);
     } else {
-        server.log("Twin enabled successfully");
+        server.log("Twins functionality enabled successfully");
     }
 });
 ```
@@ -490,6 +488,10 @@ client.enableTwin(onRequest, function(err) {
 This method [retrieves Device Twin properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#retrieving-a-device-twins-properties).
 
 The method returns nothing. The retrieved properties may be obtained via the [*onRetrieve*](#callback-onretrieveerror-version-reportedprops-desiredprops) callback specified in this method.
+
+The method may be called only if Twins functionality is enabled.
+
+It is NOT allowed to call this method while the previous retrieve operation is not completed yet. 
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
@@ -507,12 +509,10 @@ This callback is called when [Device Twin properties are retrieved](https://docs
 
 #### Example ####
 
-TODO
-
 ```squirrel
 function onRetrieve(err, repProps, desProps) {
     if (err != 0) {
-        server.error("AzureIoTHub retrieveTwinProperties failed: " + err);
+        server.error("Retrieving Twin properties failed: " + err);
         return;
     }
     server.log("Twin properties retrieved successfully");
@@ -528,6 +528,11 @@ This method [updates Device Twin reported properties](https://docs.microsoft.com
 
 The method returns nothing. A result of the operation may be obtained via the [*onUpdate*](#callback-onupdateprops-error) callback, if specified in this method.
 
+The method may be called only if Twins functionality is enabled.
+
+It is allowed to call this method while the previous update operation is not completed yet. 
+Maximum amount of pending operations is defined by the [client settings](#optional-settings).
+
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *props* | Table | Yes | Key-value table with the reported properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
@@ -539,12 +544,12 @@ This callback is called when the message is considered as sent or an error happe
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *props* | Table | The original *props* passed to updateTwinProperties. |
+| *props* | Table | The original properties passed to the [updateTwinProperties()](#updatetwinpropertiesprops-onupdate) method. |
 | *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
 
 #### Example ####
 
-TODO - not needed if already in the example for enableTwin()
+TODO - use "global" callback, resend porperties (?)
 
 ```squirrel
 props <- {"exampleProp": "val"};
@@ -552,9 +557,9 @@ props <- {"exampleProp": "val"};
 // It is assumed that Twins functionality is enabled
 client.updateTwinProperties(props, function(props, err) {
     if (err != 0) {
-        server.error("AzureIoTHub updateTwinProperties failed: " + err);
+        server.error("Twin properties update failed: " + err);
     } else {
-        server.log("Twin's reported properties updated successfully");
+        server.log("Twin properties updated successfully");
     }
 });
 ```
@@ -571,12 +576,12 @@ The method returns nothing. A result of the operation may be obtained via the [*
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *[onMethod](#callback-onmethodname-params)* | Function  | Yes | [Callback](#callback-onmethodname-params) called every time a direct method is called. `null` disables the feature. |
+| *[onMethod](#callback-onmethodname-params)* | Function  | Yes | [Callback](#callback-onmethodname-params) called every time a direct method is called by Azure IoT Hub. `null` disables the feature. |
 | *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the operation is completed or an error happens. |
 
 #### Callback: onMethod(*name, params*) ####
 
-This callback is called every time a [Direct Method is called](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method).
+This callback is called every time a [Direct Method](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method) is called by Azure IoT Hub.
 
 The callback **must** return an instance of the [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse).
 
@@ -599,7 +604,7 @@ function onMethod(name, params) {
 
 client.enableDirectMethods(onMethod, function(err) {
     if (err != 0) {
-        server.error("AzureIoTHub enableDirectMethods failed: " + err);
+        server.error("Enabling Direct Methods failed: " + err);
     } else {
         server.log("Direct Methods enabled successfully");
     }
