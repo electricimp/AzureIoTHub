@@ -314,7 +314,7 @@ These settings affect the client's behavior and the operations. Every setting is
 TODO - update - full example for constructor, connect, disconnect - a recommended practice
 
 ```squirrel
-const DEVICE_CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;DeviceId=<DEVICE_ID>;SharedAccessKey=<DEVICE_KEY_HASH>";
+const AZURE_DEVICE_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;DeviceId=<DEVICE_ID>;SharedAccessKey=<DEVICE_KEY_HASH>";
 
 function onConnect(err) {
     if (err != 0) {
@@ -336,7 +336,7 @@ function onDisconnect(err) {
 }
 
 // Instantiate a client
-client <- AzureIoTHub.Client(DEVICE_CONNECT_STRING, onConnect, onDisconnect);
+client <- AzureIoTHub.Client(AZURE_DEVICE_CONN_STRING, onConnect, onDisconnect);
 client.connect();
 ```
 
@@ -438,7 +438,7 @@ client.enableMessageReceiving(onReceive, function(err) {
     if (err != 0) {
         server.error("AzureIoTHub enableMessageReceiving failed: " + err);
     } else {
-        server.log("MessageReceiving enabled successfully");
+        server.log("Message Receiving enabled successfully");
     }
 });
 ```
