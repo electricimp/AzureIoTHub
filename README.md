@@ -303,7 +303,7 @@ These settings affect the client's behavior and the operations. Every setting is
 | Key (String) | Value Type | Default | Description |
 | --- | --- | --- | --- |
 | "qos" | Integer | 0 | MQTT QoS. Azure IoT Hub supports QoS `0` and `1` only. |
-| "timeout" | Integer | 10 | Timeout for Retrieve/Update Twin operations. |
+| "timeout" | Integer | 10 | Timeout (seconds) for Retrieve/Update Twin operations. |
 | "maxPendingTwinRequests" | Integer | 3 | Maximum amount of pending Update Twin requests. |
 | "maxPendingSendRequests" | Integer | 3 | Maximum amount of pending Send Message requests. |
 | "will-topic" | String | not specified | TODO |
@@ -323,14 +323,14 @@ function onConnect(err) {
         return;
     }
     server.log("Connected");
-    // Here is a good place to enable some features, like Twins or Direct Methods
+    // Here is a good place to enable required features, like Twins or Direct Methods
 }
 
 function onDisconnect(err) {
     if (err != 0) {
         server.error("AzureIoTHub client disconnected with code: " + err);
         // Reconnect if disconnection is not initiated by user
-        _azureClient.connect();
+        client.connect();
     }
     server.log("Disconnected");
 }
