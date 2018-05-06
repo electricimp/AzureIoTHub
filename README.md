@@ -254,7 +254,7 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | Error Code | Description |
 | --- | --- |
 | 0 | No error. |
-| 1000 | The client is disconnected. |
+| 1000 | The client is not connected. |
 | 1001 | The client is already connected. |
 | 1002 | The feature is not enabled. |
 | 1003 | The feature is already enabled. |
