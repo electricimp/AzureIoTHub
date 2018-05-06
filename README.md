@@ -258,8 +258,9 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | 1001 | The client is already connected. |
 | 1002 | The feature is not enabled. |
 | 1003 | The feature is already enabled. |
-| 1004 | General error. |
-| 1005 | The operation is not allowed now. |
+| 1004 | The operation is not allowed now. |
+| 1005 | The operation is timed out. |
+| 1010 | General error. |
 | 429 | Too many requests (throttled), as per [Azure IoT Hub throttling](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-quotas-throttling) |
 | 5** | Azure IoT Hub server errors |
 | TODO | codes returned by EI MQTT lib... |
@@ -302,6 +303,9 @@ These settings affect the client's behavior and the operations. Every setting is
 | Key (String) | Value Type | Default | Description |
 | --- | --- | --- | --- |
 | "qos" | Integer | 0 | MQTT QoS. Azure IoT Hub supports QoS `0` and `1` only. |
+| "timeout" | Integer | 10 | Timeout for Retrieve/Update Twin operations. |
+| "maxPendingTwinRequests" | Integer | 3 | Maximum amount of pending Update Twin requests. |
+| "maxPendingSendRequests" | Integer | 3 | Maximum amount of pending Send Message requests. |
 | "will-topic" | String | not specified | TODO |
 | "will-message" | String | not specified | TODO |
 | TODO |  |  |  |
@@ -313,8 +317,27 @@ TODO - update - full example for constructor, connect, disconnect - a recommende
 ```squirrel
 const DEVICE_CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;DeviceId=<DEVICE_ID>;SharedAccessKey=<DEVICE_KEY_HASH>";
 
+function onConnect(err) {
+    if (err != 0) {
+        server.error("AzureIoTHub connect failed: " + err);
+        return;
+    }
+    server.log("Connected");
+    // Here is a good place to enable some features, like Twins or Direct Methods
+}
+
+function onDisconnect(err) {
+    if (err != 0) {
+        server.error("AzureIoTHub client disconnected with code: " + err);
+        // Reconnect if disconnection is not initiated by user
+        _azureClient.connect();
+    }
+    server.log("Disconnected");
+}
+
 // Instantiate a client
-client <- AzureIoTHub.Client(DEVICE_CONNECT_STRING);
+client <- AzureIoTHub.Client(DEVICE_CONNECT_STRING, onConnect, onDisconnect);
+client.connect();
 ```
 
 ### connect() ###
@@ -339,16 +362,25 @@ This method checks if the client is connected to Azure IoT Hub.
 
 The method returns *Boolean*: `true` if the client is connected, `false` otherwise.
 
-### sendMessage(*message[, onDone]*) ###
+### sendMessage(*message[, onSent]*) ###
 
 This method [sends a message to Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#sending-device-to-cloud-messages).
 
-The method returns nothing. A result of the sending may be obtained via the [*onDone*](#callback-ondoneerror) callback, if specified in this method.
+The method returns nothing. A result of the sending may be obtained via the [*onSent*](#callback-onsentmessageerror) callback, if specified in this method.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *message* | [AzureIoTHub.Message](#azureiothubmessage) | Yes | Message to send. |
-| *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the message is considered as sent or an error happens. |
+| *[onSent](#callback-onsentmessageerror)* | Function  | Optional | [Callback](#callback-onsentmessageerror) called when the message is considered as sent or an error happens. |
+
+#### Callback: onSent(*message*, *error*) ####
+
+This callback is called when the message is considered as sent or an error happens.
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *message* | [AzureIoTHub.Message](#azureiothubmessage) | The original message passed to sendMessage. |
+| *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
 
 #### Example ####
 
@@ -356,16 +388,16 @@ TODO - update
 
 ```squirrel
 // Send a string with no callback
-local message1 = AzureIoTHub.Message("This is an event");
-client.sendEvent(message1);
+local message1 = AzureIoTHub.Message("This is a string");
+client.sendMessage(message1);
 
-// Send a table with a callback
-local message2 = AzureIoTHub.Message({ "id": 1, "text": "Hello, world." });
-client.sendEvent(message2, function(err) {
+// Send a string with a callback
+local message2 = AzureIoTHub.Message("This is another string");
+client.sendMessage(message2, function(msg, err) {
     if (err) {
         server.error(err);
     } else {
-        server.log("Event transmitted at " + time());
+        server.log("Message sent at " + time());
     }
 });
 ```
