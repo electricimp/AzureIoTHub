@@ -331,8 +331,9 @@ function onDisconnect(err) {
         server.error("AzureIoTHub client disconnected with code: " + err);
         // Reconnect if disconnection is not initiated by user
         client.connect();
+    } else {
+        server.log("Disconnected by application");
     }
-    server.log("Disconnected");
 }
 
 // Instantiate a client
