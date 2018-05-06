@@ -261,8 +261,7 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | 1004 | The operation is not allowed now. |
 | 1005 | The operation is timed out. |
 | 1010 | General error. |
-| 429 | Too many requests (throttled), as per [Azure IoT Hub throttling](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-quotas-throttling) |
-| 5** | Azure IoT Hub server errors |
+| 100-999 | Azure IoT Hub errors. See [Azure IoT Hub documentation](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support). |
 | TODO | codes returned by EI MQTT lib... |
 
 ### Constructor: AzureIoTHub.Client(*deviceConnectionString, onConnect[, onDisconnect[, options]]*) ###
