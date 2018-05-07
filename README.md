@@ -388,18 +388,21 @@ TODO - update - use "global" callback and resend the message (?)
 
 ```squirrel
 // Send a string with no callback
-local message1 = AzureIoTHub.Message("This is a string");
+message1 <- AzureIoTHub.Message("This is a string");
 client.sendMessage(message1);
 
 // Send a string with a callback
-local message2 = AzureIoTHub.Message("This is another string");
-client.sendMessage(message2, function(msg, err) {
+message2 <- AzureIoTHub.Message("This is another string");
+
+function onSend(msg, err) {
     if (err != 0) {
         server.error("Message sending failed: " + err);
     } else {
         server.log("Message sent at " + time());
     }
-});
+}
+
+client.sendMessage(message2, onSend);
 ```
 
 ### enableMessageReceiving(*onReceive[, onDone]*) ###
@@ -431,16 +434,18 @@ TODO - update after Message class is changed (?)
 
 ```squirrel
 function onReceive(msg) {
-    server.log("Message received: " + msg.getBody());
+    server.log("Message received: " + msg.getBody());
 }
 
-client.enableMessageReceiving(onReceive, function(err) {
+function onDone(err) {
     if (err != 0) {
         server.error("Enabling message receiving failed: " + err);
     } else {
         server.log("Message receiving enabled successfully");
     }
-});
+}
+
+client.enableMessageReceiving(onReceive, onDone);
 ```
 
 ### enableTwin(*onRequest[, onDone]*) ###
@@ -471,16 +476,18 @@ This callback is called every time a new [request with desired Device Twin prope
 
 ```squirrel
 function onRequest(version, props) {
-    server.log("Desired properties received. Version = " + version);
+    server.log("Desired properties received. Version = " + version);
 }
 
-client.enableTwin(onRequest, function(err) {
+function onDone(err) {
     if (err != 0) {
         server.error("Enabling Twins functionality failed: " + err);
     } else {
         server.log("Twins functionality enabled successfully");
     }
-});
+}
+
+client.enableTwin(onRequest, onDone);
 ```
 
 ### retrieveTwinProperties(*onRetrieve*) ###
@@ -515,7 +522,7 @@ function onRetrieve(err, repProps, desProps) {
         server.error("Retrieving Twin properties failed: " + err);
         return;
     }
-    server.log("Twin properties retrieved successfully");
+    server.log("Twin properties retrieved successfully");
 }
 
 // It is assumed that Twins functionality is enabled
@@ -554,14 +561,16 @@ TODO - use "global" callback, resend porperties (?)
 ```squirrel
 props <- {"exampleProp": "val"};
 
-// It is assumed that Twins functionality is enabled
-client.updateTwinProperties(props, function(props, err) {
+function onUpdate(props, err) {
     if (err != 0) {
         server.error("Twin properties update failed: " + err);
     } else {
         server.log("Twin properties updated successfully");
     }
-});
+}
+
+// It is assumed that Twins functionality is enabled
+client.updateTwinProperties(props, onUpdate);
 ```
 
 ### enableDirectMethods(*onMethod[, onDone]*) ###
@@ -596,19 +605,21 @@ TODO
 
 ```squirrel
 function onMethod(name, params) {
-    server.log("Direct Method called. Name = " + name);
+    server.log("Direct Method called. Name = " + name);
     local responseStatusCode = 200;
     local responseBody = {"example" : "val"};
     return AzureIoTHub.DirectMethodResponse(responseStatusCode, responseBody);
 }
 
-client.enableDirectMethods(onMethod, function(err) {
+function onDone(err) {
     if (err != 0) {
         server.error("Enabling Direct Methods failed: " + err);
     } else {
         server.log("Direct Methods enabled successfully");
     }
-});
+}
+
+client.enableDirectMethods(onMethod, onDone);
 ```
 
 ## Examples ##
