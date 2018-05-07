@@ -463,20 +463,19 @@ The method returns nothing. A result of the operation may be obtained via the [*
 | *[onRequest](#callback-onrequestversion-props)* | Function  | Yes | [Callback](#callback-onrequestversion-props) called every time a new request with desired Device Twin properties is received from Azure IoT Hub. `null` disables the feature. |
 | *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the operation is completed or an error happens. |
 
-#### Callback: onRequest(*version, props*) ####
+#### Callback: onRequest(*props*) ####
 
 This callback is called every time a new [request with desired Device Twin properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#receiving-desired-properties-update-notifications) is received from Azure IoT Hub.
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *version* | Integer | Version of the Device Twin document which corresponds to the desired properties. The version is always incremented by Azure IoT Hub when the document is updated. |
-| *props* | Table | Key-value table with the desired properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
+| *props* | Table | Key-value table with the desired properties and their version. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
 
 #### Example ####
 
 ```squirrel
-function onRequest(version, props) {
-    server.log("Desired properties received. Version = " + version);
+function onRequest(props) {
+    server.log("Desired properties received");
 }
 
 function onDone(err) {
