@@ -4,6 +4,7 @@ node_js:
   - "node"
 
 before_script:
+  - npm i -g iothub-explorer@latest
   - npm i -g imp-central-impt@latest
   - impt auth login --local --lk ${EI_LOGIN_KEY} -q
 
