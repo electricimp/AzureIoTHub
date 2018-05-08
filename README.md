@@ -264,6 +264,10 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | 1005 | The operation is timed out. |
 | 1010 | General error. |
 
+#### Exceptions ####
+
+In case of wrong parameter type, the [sendMessage()](#sendmessagemessage-onsend) and [updateTwinProperties()](#updatetwinpropertiesprops-onupdate) methods may throw exceptions.
+
 ### Constructor: AzureIoTHub.Client(*deviceConnectionString, onConnect[, onDisconnect[, options]]*) ###
 
 This method returns a new AzureIoTHub.Client instance.
@@ -452,7 +456,7 @@ client.enableMessageReceiving(onReceive, onDone);
 
 This method enables or disables [Azure IoT Hub Device Twins functionality](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins).
 
-To enable the feature, specify the [*onRequest*](#callback-onrequestversion-props) callback. To disable the feature, specify `null` as that callback.
+To enable the feature, specify the [*onRequest*](#callback-onrequestprops) callback. To disable the feature, specify `null` as that callback.
 
 The feature is automatically disabled every time the client is disconnected. It should be re-enabled after every new connection, if needed.
 
@@ -460,7 +464,7 @@ The method returns nothing. A result of the operation may be obtained via the [*
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *[onRequest](#callback-onrequestversion-props)* | Function  | Yes | [Callback](#callback-onrequestversion-props) called every time a new request with desired Device Twin properties is received from Azure IoT Hub. `null` disables the feature. |
+| *[onRequest](#callback-onrequestprops)* | Function  | Yes | [Callback](#callback-onrequestversion-props) called every time a new request with desired Device Twin properties is received from Azure IoT Hub. `null` disables the feature. |
 | *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the operation is completed or an error happens. |
 
 #### Callback: onRequest(*props*) ####
