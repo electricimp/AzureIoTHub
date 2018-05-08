@@ -464,7 +464,7 @@ The method returns nothing. A result of the operation may be obtained via the [*
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *[onRequest](#callback-onrequestprops)* | Function  | Yes | [Callback](#callback-onrequestversion-props) called every time a new request with desired Device Twin properties is received from Azure IoT Hub. `null` disables the feature. |
+| *[onRequest](#callback-onrequestprops)* | Function  | Yes | [Callback](#callback-onrequestprops) called every time a new request with desired Device Twin properties is received from Azure IoT Hub. `null` disables the feature. |
 | *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the operation is completed or an error happens. |
 
 #### Callback: onRequest(*props*) ####
