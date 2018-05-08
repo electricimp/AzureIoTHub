@@ -30,7 +30,7 @@
 // - enables Twin functionality
 // - retrieves and logs Twin's properties (both Desired and Reported)
 // - receives and logs notifications when Desired properties are updated, reads value of a property "test"
-// - puts that value to Reported properties, sends updated Reported properties to Azure IoT Hub
+// - puts that value to Reported properties, sends updated Reported properties to Azure IoT Hub and resends in case of timeout error
 
 const PROPERTY_NAME = "test";
 
@@ -45,7 +45,7 @@ class TwinsExample {
     }
 
     function start() {
-        registerDevice(function (err) {
+        _registerDevice(function (err) {
             if (err == null) {
                 _azureClient = AzureIoTHub.Client(_deviceConnString,
                     _onConnected.bindenv(this), _onDisconnected.bindenv(this));
@@ -54,7 +54,7 @@ class TwinsExample {
         }.bindenv(this));
     }
 
-    function registerDevice(onCompleted) {
+    function _registerDevice(onCompleted) {
         local deviceID = imp.configparams.deviceid;
         local hostName = AzureIoTHub.ConnectionString.Parse(_connectionString).HostName;
         local registry = AzureIoTHub.Registry(_connectionString);
@@ -62,25 +62,29 @@ class TwinsExample {
         registry.get(deviceID, function(err, iotHubDev) {
             if (err) {
                 if (err.response.statuscode == 404) {
-                    // No such device, let's create it, connect & open receiver
-                    registry.create({"deviceId" : deviceID}, function(error, iotHubDevice) {
-                        if (error) {
-                            server.error(error.message);
-                            onCompleted(error);
-                        } else {
-                            _deviceConnString = iotHubDevice.connectionString(hostName);
-                            server.log("Device created: " + iotHubDevice.getBody().deviceId);
-                            onCompleted(null);
-                        }
-                    }.bindenv(this));
+                    // No such device, let's create it
+                    _createDevice(deviceID, hostName, registry, iotHubDev, onCompleted);
                 } else {
                     server.error(err.message);
                     onCompleted(err);
                 }
             } else {
                 _deviceConnString = iotHubDev.connectionString(hostName);
-                // Found device, let's connect & open receiver
+                // Found device
                 server.log("Device already registered as " + iotHubDev.getBody().deviceId);
+                onCompleted(null);
+            }
+        }.bindenv(this));
+    }
+
+    function _createDevice(deviceID, hostName, registry, iotHubDev, onCompleted) {
+        registry.create({"deviceId" : deviceID}, function(error, iotHubDevice) {
+            if (error) {
+                server.error(error.message);
+                onCompleted(error);
+            } else {
+                _deviceConnString = iotHubDevice.connectionString(hostName);
+                server.log("Device created: " + iotHubDevice.getBody().deviceId);
                 onCompleted(null);
             }
         }.bindenv(this));
@@ -119,9 +123,8 @@ class TwinsExample {
         _printTable(desiredProps);
     }
 
-    function _onRequest(version, props) {
+    function _onRequest(props) {
         server.log("Desired props received:");
-        server.log("version = " + version);
         server.log("props:");
         _printTable(props);
         if (PROPERTY_NAME in props) {
@@ -129,15 +132,24 @@ class TwinsExample {
             local propUpd = {};
             propUpd[PROPERTY_NAME] <- props[PROPERTY_NAME];
 
-            _azureClient.updateTwinProperties(propUpd, function (props, err) {
-                if (err != 0) {
-                    server.error("AzureIoTHub updateTwinProperties failed: " + err);
-                } else {
-                    server.log("Reported properties successfully updated");
-                }
-            });
+            _azureClient.updateTwinProperties(propUpd, _onUpdated.bindenv(this));
         } else {
             server.log(format("No property \"%s\" in desired properties", PROPERTY_NAME));
+        }
+    }
+
+    function _onUpdated(props, err) {
+        if (err != 0) {
+            server.error("AzureIoTHub updateTwinProperties failed: " + err);
+            // Try to update again if the operation is timed out
+            // Timeout error is just an example. Of course, you should analyze all the error codes
+            // required for your application and take appropriate actions
+            if (err == AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT) {
+                server.error("Trying to update the properties again...");
+                _azureClient.updateTwinProperties(props, _onUpdated.bindenv(this));
+            }
+        } else {
+            server.log("Reported properties successfully updated");
         }
     }
 

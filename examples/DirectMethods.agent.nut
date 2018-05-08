@@ -41,7 +41,7 @@ class DirectMethodsExample {
     }
 
     function start() {
-        registerDevice(function (err) {
+        _registerDevice(function (err) {
             if (err == null) {
                 _azureClient = AzureIoTHub.Client(_deviceConnString,
                     _onConnected.bindenv(this), _onDisconnected.bindenv(this));
@@ -50,7 +50,7 @@ class DirectMethodsExample {
         }.bindenv(this));
     }
 
-    function registerDevice(onCompleted) {
+    function _registerDevice(onCompleted) {
         local deviceID = imp.configparams.deviceid;
         local hostName = AzureIoTHub.ConnectionString.Parse(_connectionString).HostName;
         local registry = AzureIoTHub.Registry(_connectionString);
@@ -58,25 +58,29 @@ class DirectMethodsExample {
         registry.get(deviceID, function(err, iotHubDev) {
             if (err) {
                 if (err.response.statuscode == 404) {
-                    // No such device, let's create it, connect & open receiver
-                    registry.create({"deviceId" : deviceID}, function(error, iotHubDevice) {
-                        if (error) {
-                            server.error(error.message);
-                            onCompleted(error);
-                        } else {
-                            _deviceConnString = iotHubDevice.connectionString(hostName);
-                            server.log("Device created: " + iotHubDevice.getBody().deviceId);
-                            onCompleted(null);
-                        }
-                    }.bindenv(this));
+                    // No such device, let's create it
+                    _createDevice(deviceID, hostName, registry, iotHubDev, onCompleted);
                 } else {
                     server.error(err.message);
                     onCompleted(err);
                 }
             } else {
                 _deviceConnString = iotHubDev.connectionString(hostName);
-                // Found device, let's connect & open receiver
+                // Found device
                 server.log("Device already registered as " + iotHubDev.getBody().deviceId);
+                onCompleted(null);
+            }
+        }.bindenv(this));
+    }
+
+    function _createDevice(deviceID, hostName, registry, iotHubDev, onCompleted) {
+        registry.create({"deviceId" : deviceID}, function(error, iotHubDevice) {
+            if (error) {
+                server.error(error.message);
+                onCompleted(error);
+            } else {
+                _deviceConnString = iotHubDevice.connectionString(hostName);
+                server.log("Device created: " + iotHubDevice.getBody().deviceId);
                 onCompleted(null);
             }
         }.bindenv(this));

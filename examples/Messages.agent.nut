@@ -49,18 +49,18 @@ class MessagesExample {
         local msgBody = format("Counter=%i Timestamp=%i", _counter, time());
         local message = AzureIoTHub.Message(msgBody);
         _counter++;
+        _azureClient.sendMessage(message, _onMessageSent.bindenv(this));
+    }
 
-        local onMessageSent = function (msg, err) {
-            if (err != 0) {
-                server.error("AzureIoTHub sendMessage failed: " + err);
-            } else {
-                server.log("Message successfully sent: " + msgBody);
-            }
-            imp.wakeup(SEND_MESSAGE_PERIOD, function () {
-                sendMessage();
-            }.bindenv(this));
+    function _onMessageSent(msg, err) {
+        if (err != 0) {
+            server.error("AzureIoTHub sendMessage failed: " + err);
+        } else {
+            server.log("Message successfully sent: " + msg.getBody());
         }
-        _azureClient.sendMessage(message, onMessageSent.bindenv(this));
+        imp.wakeup(SEND_MESSAGE_PERIOD, function () {
+            sendMessage();
+        }.bindenv(this));
     }
 
     function _onConnected(err) {

@@ -159,7 +159,7 @@ class TwinsTestCase extends ImpTestCase {
     }
 
     function _enableTwin() {
-        local onReq = function (version, props) {};
+        local onReq = function (props) {};
         return Promise(function (resolve, reject) {
             _azureMqttClient.enableTwin(onReq, function (err) {
                 if (err != 0) {
