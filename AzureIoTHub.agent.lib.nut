@@ -22,20 +22,8 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-// TODO: Update the following comment
-/* Notes
- *
- * This class implements some of the device-side functionality of the Azure IoT Hub.
- * Useful developer overview of IoT Hub: https://azure.microsoft.com/en-us/documentation/articles/iot-hub-devguide/
- *
- *  Code based on: https://github.com/Azure/azure-iot-sdks/blob/master/node/
- *  HTTP documentation of REST interface: https://msdn.microsoft.com/en-us/library/mt548492.aspx
- *  AMQP implementation for messaging differs from Node SDK
- *  Classes that do not conform to Node SDK are noted
- *
- */
 
-/// Azure AzureIoTHub library
+// AzureIoTHub is an Electric Imp agent-side library for interfacing with Azure IoT Hub version “2016-11-14”
 
 const AZURE_API_VERSION = "2016-11-14";
 const AZURE_CLAIM_BASED_SECURITY_PATH = "$cbs";
