@@ -100,7 +100,7 @@ class TwinsExample {
             if (err != 0) {
                 server.error("AzureIoTHub enableTwin failed: " + err);
             } else {
-                _azureClient.retrieveTwinProperties(_onRetrieve.bindenv(this));
+                _azureClient.retrieveTwinProperties(_onRetrieved.bindenv(this));
             }
         }.bindenv(this));
     }
@@ -111,7 +111,7 @@ class TwinsExample {
         _azureClient.connect();
     }
 
-    function _onRetrieve(err, reportedProps, desiredProps) {
+    function _onRetrieved(err, reportedProps, desiredProps) {
         if (err != 0) {
             server.error("AzureIoTHub retrieveTwinProperties failed: " + err);
             return;

@@ -69,9 +69,9 @@ class MessagesExample {
             return;
         }
         server.log("Connected!");
-        _azureClient.enableMessageReceiving(_onMessage.bindenv(this), function (err) {
+        _azureClient.enableIncomingMessages(_onMessage.bindenv(this), function (err) {
             if (err != 0) {
-                server.error("AzureIoTHub enableMessageReceiving failed: " + err);
+                server.error("AzureIoTHub enableIncomingMessages failed: " + err);
             }
         });
         sendMessage();

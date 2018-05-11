@@ -36,9 +36,9 @@ class MessagesTestCase extends ImpTestCase {
     }
 
     function testEnableDisableMessages() {
-        return _enableMessageReceiving()
+        return _enableIncomingMessages()
             .then(function (value) {
-                return _disableMessageReceiving();
+                return _disableIncomingMessages();
             }.bindenv(this))
             .fail(function (reason) {
                 return Promise.reject(reason);
@@ -46,12 +46,12 @@ class MessagesTestCase extends ImpTestCase {
     }
 
     function testEnableSendDisableMessages() {
-        return _enableMessageReceiving()
+        return _enableIncomingMessages()
             .then(function (value) {
                 return _sendMessage();
             }.bindenv(this))
             .then(function (value) {
-                return _disableMessageReceiving();
+                return _disableIncomingMessages();
             }.bindenv(this))
             .fail(function (reason) {
                 return Promise.reject(reason);
@@ -59,12 +59,12 @@ class MessagesTestCase extends ImpTestCase {
     }
 
     function testEnableDisableDisableMessages() {
-        return _enableMessageReceiving()
+        return _enableIncomingMessages()
             .then(function (value) {
-                return _disableMessageReceiving();
+                return _disableIncomingMessages();
             }.bindenv(this))
             .then(function (reason) {
-                return _disableMessageReceiving();
+                return _disableIncomingMessages();
             }.bindenv(this))
             .then(function (value) {
                 return Promise.reject("Should have returned NOT_ENABLED error");
@@ -77,9 +77,9 @@ class MessagesTestCase extends ImpTestCase {
     }
 
     function testEnableEnableDisableMessages() {
-        return _enableMessageReceiving()
+        return _enableIncomingMessages()
             .then(function (value) {
-                return _enableMessageReceiving();
+                return _enableIncomingMessages();
             }.bindenv(this))
             .then(function (value) {
                 return Promise.reject("Should have returned ALREADY_ENABLED error");
@@ -87,7 +87,7 @@ class MessagesTestCase extends ImpTestCase {
                 if (reason != AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED) {
                     return Promise.reject("Should have returned ALREADY_ENABLED error");
                 }
-                return _disableMessageReceiving();
+                return _disableIncomingMessages();
             }.bindenv(this))
             .fail(function (reason) {
                 return Promise.reject(reason);
@@ -99,7 +99,7 @@ class MessagesTestCase extends ImpTestCase {
     }
 
     function testDisableMessages() {
-        return _disableMessageReceiving()
+        return _disableIncomingMessages()
             .then(function (value) {
                 return Promise.reject("Should have returned NOT_ENABLED error");
             }.bindenv(this),
@@ -135,10 +135,10 @@ class MessagesTestCase extends ImpTestCase {
         }.bindenv(this));
     }
 
-    function _enableMessageReceiving() {
+    function _enableIncomingMessages() {
         local onMsg = function (msg) {};
         return Promise(function (resolve, reject) {
-            _azureMqttClient.enableMessageReceiving(onMsg, function (err) {
+            _azureMqttClient.enableIncomingMessages(onMsg, function (err) {
                 if (err != 0) {
                     return reject(err);
                 }
@@ -147,9 +147,9 @@ class MessagesTestCase extends ImpTestCase {
         }.bindenv(this));
     }
 
-    function _disableMessageReceiving() {
+    function _disableIncomingMessages() {
         return Promise(function (resolve, reject) {
-            _azureMqttClient.enableMessageReceiving(null, function (err) {
+            _azureMqttClient.enableIncomingMessages(null, function (err) {
                 if (err != 0) {
                     return reject(err);
                 }

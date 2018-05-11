@@ -47,8 +47,8 @@ class DummyTestCase extends ImpTestCase {
         _azureMqttClient.sendMessage(AzureIoTHub.Message(""));
     }
 
-    function testEnableMessageReceiving() {
-        _azureMqttClient.enableMessageReceiving(function (msg) {}.bindenv(this));
+    function testEnableIncomingMessages() {
+        _azureMqttClient.enableIncomingMessages(function (msg) {}.bindenv(this));
     }
 
     function testEnableTwin() {
