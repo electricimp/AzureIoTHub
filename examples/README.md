@@ -115,14 +115,24 @@ Here we will register the device via the Azure portal. Please note that devices 
 ## Messages Example Setup and Run
 
 1. Set up your Imp device. See [Electric Imp's documentation](https://developer.electricimp.com/gettingstarted).
+
 2. In the [Electric Imp's IDE](https://ide.electricimp.com) create new Product and Development Device Group.
+
 3. Assign device to the newly created Device Group.
+
 4. Copy the [Messages example source code](./Messages.agent.nut) and paste it into the IDE as the agent code.
+
 5. Set *AZURE_DEVICE_CONN_STRING* constant in the agent example code to the **Device connection string** you retrieved and saved in the step 6 of manual device registration.\
 The value should look like `HostName=<Host Name>;DeviceId=<Device Name>;SharedAccessKey=<Device Key>`.
+
 ![SetAzureConst](./example_imgs/SetAzureConst.png)
+
 6. Click **Build and Force Restart**.
+
 7. Check from the logs in the IDE that messages sendings are successful.
+
 ![SendMessagesLogs](./example_imgs/SendMessagesLogs.png)
+
 8. [Send some message to the device](TODO) and check it in the logs.
+
 ![ReceiveMessagesLogs](./example_imgs/ReceiveMessagesLogs.png)
