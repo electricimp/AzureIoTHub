@@ -132,10 +132,10 @@ The value should look like `HostName=<Host Name>;DeviceId=<Device Name>;SharedAc
 
 7. Click **Build and Force Restart**.
 
-8. Check from the logs in the IDE that messages sendings are successful.
+8. Check from the logs in the IDE that messages sendings are successful:
 
 ![SendMessagesLogs](./example_imgs/SendMessagesLogs.png)
 
-9. [Send some message to the device](TODO) and check it in the logs.
+9. [Send some message to the device](TODO) and check it in the logs:
 
 ![ReceiveMessagesLogs](./example_imgs/ReceiveMessagesLogs.png)
