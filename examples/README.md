@@ -2,9 +2,9 @@
 
 This document describes the example application provided with the [AzureIoTHub library](../README.md). 
 
-There are three examples for all the features available with Azure IoT Hub: Messages(TODO), Twins(TODO), Direct Methods(TODO).
+There are three examples for all the features available with Azure IoT Hub: [Messages](TODO), [Twins](TODO), [Direct Methods](TODO).
 
-The first example (Messages(TODO)) means manual device registration, while the others mean programmatical registration.
+The first example ([Messages](TODO)) means manual device registration, while the others mean programmatical registration.
 
 
 ## Azure IoT Hub how to's
@@ -33,11 +33,9 @@ The first example (Messages(TODO)) means manual device registration, while the o
 
 ![Notifications](./example_imgs/IoTHubNotifications.png)
 
-4. Once your IoT hub is created, click it from the dashboard. Click on **Overview**. Make a note of the **Hostname**, and then click **Shared access policies**:
+4. Once your IoT hub is created, click it from the dashboard. Then click **Shared access policies**.
 
-![Policies](./example_imgs/IoTHubOverview.png)
-
-5. In the **Shared access policies** pane, click the **iothubowner** policy, and then copy and make a note of the **Connection string--primary key** of your IoT hub. You will need to enter this value in the code later:
+5. In the **Shared access policies** pane, click the **iothubowner** policy, and then copy and make a note of the **Connection string--primary key** of your IoT hub (let's call it **Registry connection string**). You will need to enter this value in the code later:
 
 ![Connection String](./example_imgs/IoTHubConnectionString.png)
 
@@ -51,7 +49,7 @@ Here we will register the device via the Azure portal. Please note that devices 
 
 3. Click **Add** to add a device to your IoT hub. Enter:
 
- - **Device ID** The ID of the new device. For this example we will use the Agent ID (see step 5 of the Electric Imp IDE / Code section)
+ - **Device ID** The ID of the new device. You can type here some arbitrary name.
  - **Authentication Type** Select **Symmetric Key**.
  - **Auto Generate Keys** Check this field.
  - **Connect device to IoT Hub** Click **Enable**.
@@ -62,7 +60,7 @@ Here we will register the device via the Azure portal. Please note that devices 
 
 5. After the device is created, open the device in the **IoT Devices** pane.
 
-6. Make a note of the **Connection string--primary key**. We will use this when running our sample applications:
+6. Make a note of the **Connection string--primary key** (let's call it **Device connection string**). We will use this when running our sample applications:
 
 ![Device connection string](./example_imgs/IoTHubDeviceConnectionString.png)
 
@@ -110,10 +108,15 @@ Here we will register the device via the Azure portal. Please note that devices 
 
 3. Click **Invoke Method**.
 
-## Example 1: Messages
+## Messages Example Setup and Run
 
-
-## Example 2: Twins
-
-
-## Example 3: Direct Methods
+1. In the [Electric Imp's IDE](https://ide.electricimp.com) create new Product and Development Device Group.
+2. Assign device to the newly created Device Group.
+3. Copy the [Messages example source code](./Messages.agent.nut) and paste it into the IDE as the agent code.
+4. Set *AZURE_DEVICE_CONN_STRING* constant in the agent example code to the **Device connection string** you retrieved and saved in the step 6 of manual device registration. The value should look like `HostName=<Host Name>;DeviceId=<Device Name>;SharedAccessKey=<Device Key>`.
+![SetAzureConst](./example_imgs/SetAzureConst.png)
+5. Click **Build and Force Restart**.
+6. Check from the logs in the IDE that messages sendings are successful.
+![SendMessagesLogs](./example_imgs/SendMessagesLogs.png)
+7. [Send some message to the device](TODO) and check it in the logs.
+![ReceiveMessagesLogs](./example_imgs/ReceiveMessagesLogs.png)
