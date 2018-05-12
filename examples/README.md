@@ -9,7 +9,7 @@ The first example ([Messages](TODO)) means manual device registration, while the
 
 ## Azure IoT Hub how to's
 
-### Register On Azure Portal
+### Sign Up For Azure Portal
 
 Visit [Azure portal](https://portal.azure.com/) and create an account with subscription (free subscription is enough for testing purposes).
 
