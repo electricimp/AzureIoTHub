@@ -236,7 +236,6 @@ class AzureIoTHub {
     Message = class {
 
         _body = null;
-        // these are application set properties, not the message properties set by azure
         _properties = null;
 
         constructor(body, properties = null) {
@@ -1200,7 +1199,7 @@ class AzureIoTHub {
                     props = http.urldecode(splittedTopic[splittedTopic.len() - 1]);
                 }
             } catch (e) {
-                _logError("Exception at parsing the message: " + e);
+                _logError("Exception at parsing the topic of the message: " + e);
                 _logMsg(message, topic);
                 return;
             }
@@ -1208,6 +1207,8 @@ class AzureIoTHub {
         }
 
         function _handleDesPropsMsg(message, topic) {
+            // TODO: Check the EI's spec on message receiving
+            message = message.tostring();
             local parsedMsg = null;
             try {
                 parsedMsg = http.jsondecode(message);
@@ -1220,6 +1221,8 @@ class AzureIoTHub {
         }
 
         function _handleTwinResponse(message, topic) {
+            // TODO: Check the EI's spec on message receiving
+            message = message.tostring();
             local status = null;
             local reqId = null;
             local parsedMsg = null;
@@ -1289,6 +1292,8 @@ class AzureIoTHub {
         }
 
         function _handleDirMethodMsg(message, topic) {
+            // TODO: Check the EI's spec on message receiving
+            message = message.tostring();
             local methodName = null;
             local reqId = null;
             local params = null;

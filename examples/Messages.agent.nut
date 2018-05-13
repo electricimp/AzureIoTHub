@@ -26,9 +26,9 @@
 
 // AzureIoTHub library example.
 // - connects using a manually obtained Device Connection String
-// - enables Message Receiving functionality
-// - logs all comming messages
-// - sends messages with current value of a counter and timestamp every 10 seconds, increments the counter
+// - enables cloud-to-device messages functionality
+// - logs all incoming messages
+// - sends messages with the current value of a counter and timestamp every 10 seconds, increments the counter
 
 const SEND_MESSAGE_PERIOD = 10.0;
 
