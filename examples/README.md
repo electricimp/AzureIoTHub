@@ -112,7 +112,16 @@ Here we will register the device via the Azure portal. Please note that devices 
 
 3. Click **Invoke Method**.
 
-## Messages Example Setup and Run
+## Messages Example 
+
+This example:
+- connects the device to Azure IoT Hub using a manually obtained Device Connection String
+- enables cloud-to-device messages functionality
+- logs all incoming messages
+- sends messages with the current value of a counter and timestamp every 10 seconds
+- increments the counter
+
+### Setup and Run
 
 1. Set up your Imp device. See [Electric Imp's documentation](https://developer.electricimp.com/gettingstarted).
 
@@ -139,3 +148,21 @@ The value should look like `HostName=<Host Name>;DeviceId=<Device Name>;SharedAc
 9. [Send some message to the device](TODO) and check it in the logs:
 
 ![ReceiveMessagesLogs](./example_imgs/ReceiveMessagesLogs.png)
+
+## Twins Example
+
+This example:
+- automatically registers the device (if not registered yet) using the provided Registry Connection String
+- connects using an automatically obtained Device Connection String
+- enables Twin functionality
+- retrieves and logs Twin's properties (both Desired and Reported)
+- receives and logs notifications when Desired properties are updated, reads the value of a property "test"
+- puts that value to Reported properties, sends updated Reported properties to Azure IoT Hub and resends in case of timeout error
+
+## Direct Methods Example
+
+This example:
+- automatically registers the device (if not registered yet) using the provided Registry Connection String
+- connects using an automatically obtained Device Connection String
+- enables Direct Methods functionality
+- logs all incoming Direct Method calls, always responds success
