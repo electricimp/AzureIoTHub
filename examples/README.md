@@ -1,19 +1,120 @@
-# Azure IoT Hub Examples
+# Azure IoT Hub Examples #
 
-This document describes the example applications provided with the [AzureIoTHub library](../README.md). 
+This document describes the example applications provided with the [AzureIoTHub library](../README.md).
 
-There are three examples for all the features available with Azure IoT Hub: [Messages](TODO), [Twins](TODO), [Direct Methods](TODO).
+## Messages example ##
 
-The first example ([Messages](TODO)) means manual device registration, while the others mean programmatical registration.
+The example:
+- connects the device to Azure IoT Hub using the provided Device Connection String
+- enables cloud-to-device messages functionality
+- logs all messages received from the cloud
+- periodically (every 10 seconds) sends a message to the cloud. The message contains an integer value and the current timestamp. The value increases by 1 with every sending, it restarts from 1 every time when the example is restarted.
+
+Source code: [Messages.agent.nut](./Messages.agent.nut)
+
+See [Messages Example Setup and Run](#messages-example-setup-and-run).
+
+## Twins Example ##
+
+This example:
+- automatically registers the device (if not registered yet) using the provided Registry Connection String
+- connects the device to Azure IoT Hub using an automatically obtained Device Connection String
+- enables Twin functionality
+- retrieves the Twin's properties (both - Desired and Reported) from the cloud and logs them
+- logs all Desired properties received from the cloud, reads the value of the Desired property "test" and sends it back to the cloud as a Reported property
+
+Source code: [Twins.agent.nut](./Twins.agent.nut)
+
+See [Twins Example Setup and Run](#twins-example-setup-and-run).
+
+## Direct Methods Example ##
+
+This example:
+- automatically registers the device (if not registered yet) using the provided Registry Connection String
+- connects the device to Azure IoT Hub using an automatically obtained Device Connection String
+- enables Direct Methods functionality
+- logs all Direct Method calls received from the cloud, always responds success
+
+Source code: [DirectMethods.agent.nut](./DirectMethods.agent.nut)
+
+See [Direct Methods Example Setup and Run](#direct-methods-example-setup-and-run).
+
+## Example Setup and Run ##
+
+### Messages Example Setup and Run ###
+
+1. [Login To Azure Portal](#login-to-azure-portal)
+
+2. [Create IoT Hub Resource](#create-iot-hub-resource) (if not created yet)
+
+3. [Manually Register Device And Obtain Device Connection String](#manually-register-device-and-obtain-device-connection-string)
+
+4. [Set up your Imp device](https://developer.electricimp.com/gettingstarted)
+
+5. In the [Electric Imp's IDE](https://ide.electricimp.com) create new Product and Development Device Group.
+
+6. Assign a device to the newly created Device Group.
+
+7. Copy the [Messages example source code](./Messages.agent.nut) and paste it into the IDE as the agent code.
+
+8. Set *AZURE_DEVICE_CONN_STRING* constant in the agent example code to the **Device Connection String** you obtained and saved early.
+The value should look like `HostName=<Host Name>;DeviceId=<Device Name>;SharedAccessKey=<Device Key>`.
+
+![SetAzureConst](./example_imgs/SetAzureConst.png)
+
+9. Click **Build and Force Restart**.
+
+10. Check from the logs in the IDE that messages are successfully sent from the device (periodically)
+
+![SendMessagesLogs](./example_imgs/SendMessagesLogs.png)
+
+11. [Send Message To Device](#send-message-to-device) from the Azure Portal and check from the logs in the IDE that the message is received successfully
+
+![ReceiveMessagesLogs](./example_imgs/ReceiveMessagesLogs.png)
 
 
-## Azure IoT Hub how to's
+### Twins Example Setup and Run ###
 
-### Sign Up For Azure Portal
+1. [Login To Azure Portal](#login-to-azure-portal)
 
-Visit [Azure portal](https://portal.azure.com/) and create an account with subscription (free subscription is enough for testing purposes).
+2. [Create IoT Hub Resource](#create-iot-hub-resource) (if not created yet)
 
-### Create An IoT Hub Resource
+3. [Obtain Registry Connection String](#obtain-registry-connection-string)
+
+4. [Set up your Imp device](https://developer.electricimp.com/gettingstarted)
+
+5. In the [Electric Imp's IDE](https://ide.electricimp.com) create new Product and Development Device Group.
+
+6. Assign a device to the newly created Device Group.
+
+7. TODO...
+
+
+### Direct Methods Example Setup and Run ###
+
+1. [Login To Azure Portal](#login-to-azure-portal)
+
+2. [Create IoT Hub Resource](#create-iot-hub-resource) (if not created yet)
+
+3. [Obtain Registry Connection String](#obtain-registry-connection-string)
+
+4. [Set up your Imp device](https://developer.electricimp.com/gettingstarted)
+
+5. In the [Electric Imp's IDE](https://ide.electricimp.com) create new Product and Development Device Group.
+
+6. Assign a device to the newly created Device Group.
+
+7. TODO...
+
+
+## Azure IoT Hub How To ##
+
+### Login To Azure Portal ###
+
+Login to [Azure portal](https://portal.azure.com/).
+If you are not registered, create an account with subscription (free subscription is enough for testing purposes).
+
+### Create IoT Hub Resource ###
 
 1. In the [Azure portal](https://portal.azure.com/), click **New > Internet of Things > IoT Hub**:
 
@@ -37,15 +138,17 @@ Visit [Azure portal](https://portal.azure.com/) and create an account with subsc
 
 ![Notifications](./example_imgs/IoTHubNotifications.png)
 
-4. Once your IoT hub is created, click it from the dashboard. Then click **Shared access policies**.
+### Obtain Registry Connection String ###
 
-5. In the **Shared access policies** pane, click the **iothubowner** policy, and then copy and make a note of the **Connection string--primary key** of your IoT hub (let's call it **Registry connection string**). You will need to enter this value in the code later:
+1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
+
+2. Click **Shared access policies**.
+
+3. In the **Shared access policies** pane, click the **iothubowner** policy, and then make a note of the **Connection string--primary key** of your IoT hub - this is the **Registry connection string** which may be needed to setup and run your application.
 
 ![Connection String](./example_imgs/IoTHubConnectionString.png)
 
-### Manually Register A Device In IoT Hub
-
-Here we will register the device via the Azure portal. Please note that devices can also be registered programmatically by using the Electric Imp AzureIoTHub library’s *AzureIoTHub.Registry* class methods.
+### Manually Register Device And Obtain Device Connection String ###
 
 1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
 
@@ -64,105 +167,57 @@ Here we will register the device via the Azure portal. Please note that devices 
 
 5. After the device is created, open the device in the **IoT Devices** pane.
 
-6. Make a note of the **Connection string--primary key** (let's call it **Device connection string**). We will use this when running our sample applications:
+6. Make a note of the **Connection string--primary key** - this is the **Device connection string**) which may be needed to setup and run your application.
 
 ![Device connection string](./example_imgs/IoTHubDeviceConnectionString.png)
 
-### Send A Message To The Device
+### Send Message To Device ###
 
-1. In your IoT hub, open the device you want to send a message to.
+1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
 
-2. Click **Message To Device**.
+2. In the IoT hub, open the device you want to send a message to.
+
+3. Click **Message To Device**.
 
  ![Device Message](./example_imgs/IoTHubSendMessageToDevice1.png)
 
-3. Type some message in the **Message Body** field. Add some properties, if needed.
+4. Type some message in the **Message Body** field. Add some properties, if needed.
 
  ![Device Explorer](./example_imgs/IoTHubSendMessageToDevice2.png)
 
-3. Click **Send Message** to send the message.
+5. Click **Send Message** to send the message.
 
-### Retrieve/Update Twin's Document
+### Retrieve/Update Twin Document ###
 
-1. In your IoT hub, open the device you want to get the twin's document of.
+1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
 
-2. Click **Device Twin**.
+2. In the IoT hub, open the device you want to get the twin's document of.
+
+3. Click **Device Twin**.
 
  ![Device Twin](./example_imgs/IoTHubDeviceTwin1.png)
 
-3. Here you can see and update the twin's document.
+4. Here you can see and update the twin's document.
 
  ![Device Twin Retrieve](./example_imgs/IoTHubDeviceTwinRetrieve.png)
 
-3. If you want to update desired properties, make changes and click **Save**. For example:
+5. If you want to update the desired properties, make changes and click **Save**. For example:
 
  ![Device Twin Update](./example_imgs/IoTHubDeviceTwinUpdate.png)
 
 **Note**: Use **Refresh** button to refresh the document and get the latest changes.
 
-### Call A Direct Method
+### Call Direct Method ###
 
-1. In your IoT hub, open the device you want to call a direct method of.
+1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
+
+2. In the IoT hub, open the device you want to call a direct method of.
 
  ![Device Message](./example_imgs/IoTHubDirectMethod.png)
 
-2. Click **Direct Method**. Input some Method Name. Add some payload, if needed. Payload is always a valid JSON or nothing.
+3. Click **Direct Method**. Input some Method Name. Add some payload, if needed. Payload should be a valid JSON or nothing.
 
  ![Device Explorer](./example_imgs/IoTHubDirectMethodInvoke.png)
 
-3. Click **Invoke Method**.
+4. Click **Invoke Method**.
 
-## Messages Example 
-
-This example:
-- connects the device to Azure IoT Hub using a manually obtained Device Connection String
-- enables cloud-to-device messages functionality
-- logs all incoming messages
-- sends messages with the current value of a counter and timestamp every 10 seconds
-- increments the counter
-
-### Setup and Run
-
-1. Set up your Imp device. See [Electric Imp's documentation](https://developer.electricimp.com/gettingstarted).
-
-2. In the [Electric Imp's IDE](https://ide.electricimp.com) create new Product and Development Device Group.
-
-3. Assign device to the newly created Device Group.
-
-4. [Register the device in IoT Hub](TODO).\
-**Note**: This step is not required for [Twins](TODO) and [Direct Methods](TODO) examples.
-
-5. Copy the [Messages example source code](./Messages.agent.nut) and paste it into the IDE as the agent code.
-
-6. Set *AZURE_DEVICE_CONN_STRING* constant in the agent example code to the **Device connection string** you retrieved and saved in the step 6 of [manual device registration](TODO).\
-The value should look like `HostName=<Host Name>;DeviceId=<Device Name>;SharedAccessKey=<Device Key>`.
-
-![SetAzureConst](./example_imgs/SetAzureConst.png)
-
-7. Click **Build and Force Restart**.
-
-8. Check from the logs in the IDE that messages sendings are successful:
-
-![SendMessagesLogs](./example_imgs/SendMessagesLogs.png)
-
-9. [Send some message to the device](TODO) and check it in the logs:
-
-![ReceiveMessagesLogs](./example_imgs/ReceiveMessagesLogs.png)
-
-## Twins Example
-
-This example:
-- automatically registers the device (if not registered yet) using the provided Registry Connection String
-- connects using an automatically obtained Device Connection String
-- enables Twin functionality
-- retrieves and logs Twin's properties (both Desired and Reported)
-- receives and logs notifications when Desired properties are updated, reads the value of a property "test"
-- puts that value to Reported properties, sends updated Reported properties to Azure IoT Hub and resends in case of timeout error
-
-## Direct Methods Example
-
-This example:
-- automatically registers the device (if not registered yet) using the provided Registry Connection String
-- connects using an automatically obtained Device Connection String
-- enables Direct Methods functionality
-- logs all incoming Direct Method calls, always responds success
