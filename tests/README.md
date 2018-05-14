@@ -27,4 +27,4 @@ The value should look like `HostName=<Host Name>;DeviceId=<Device Name>;SharedAc
 ## Run Tests
 
 - See [impt Testing Guide](https://github.com/electricimp/imp-central-impt/blob/master/TestingGuide.md) for the details of how to configure and run the tests.
-- Run [impt](https://github.com/electricimp/imp-central-impt) commands from the [root directory of the lib](../). It contains a default test configuration file which should be updated by *impt* commands for your testing environment (at least the Device Group must be updated).
+- Run [impt](https://github.com/electricimp/imp-central-impt) commands from the root directory of the lib. It contains a default test configuration file which should be updated by *impt* commands for your testing environment (at least the Device Group must be updated).
