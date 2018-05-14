@@ -18,9 +18,9 @@ The tests for AzureIoTHub library require pre-setup described below.
 
 ## Set Environment Variables
 
-- Set *AZURE_REGISTRY_CONN_STRING* environment variable to the value of **Registry Connection String** obtained early.\
+- Set *AZURE_REGISTRY_CONN_STRING* environment variable to the value of **Registry Connection String** obtained earlier.\
 The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;SharedAccessKey=<SAS Key>`.
-- Set *AZURE_DEVICE_CONN_STRING* environment variable to the value of **Device Connection String** obtained early.\
+- Set *AZURE_DEVICE_CONN_STRING* environment variable to the value of **Device Connection String** obtained earlier.\
 The value should look like `HostName=<Host Name>;DeviceId=<Device Name>;SharedAccessKey=<Device Key>`.
 - For integration with [Travis](https://travis-ci.org) set *EI_LOGIN_KEY* environment variable to the valid impCentral login key.
 
