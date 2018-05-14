@@ -1285,7 +1285,6 @@ class AzureIoTHub {
                 desProps = parsedMsg["desired"];
             } catch (e) {
                 _logError("Exception at parsing the message: " + e);
-                _logMsg(message, topic);
                 return;
             }
             cb(0, repProps, desProps);
@@ -1459,7 +1458,7 @@ class AzureIoTHub {
         }
 
         function _logMsg(message, topic) {
-            local text = format("===BEGIN MQTT MESSAGE===\nTopic: %s\nMessage: %s\n===END MQTT MESSAGE===");
+            local text = format("===BEGIN MQTT MESSAGE===\nTopic: %s\nMessage: %s\n===END MQTT MESSAGE===", topic, message);
             _log(text);
         }
 
