@@ -199,7 +199,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 5. After the device is created, open the device in the **IoT Devices** pane.
 
-6. Make a note of the **Connection string--primary key** - this is the **Device connection string**) which may be needed to setup and run your application.
+6. Make a note of the **Connection string--primary key** - this is the **Device connection string** which may be needed to setup and run your application.
 
 ![Device connection string](./example_imgs/IoTHubDeviceConnectionString.png)
 
