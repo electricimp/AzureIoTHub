@@ -57,10 +57,10 @@ See [Direct Methods Example Setup and Run](#direct-methods-example-setup-and-run
 
 7. Copy the [Messages example source code](./Messages.agent.nut) and paste it into the IDE as the agent code.
 
-8. Set *AZURE_DEVICE_CONN_STRING* constant in the agent example code to the **Device Connection String** you obtained and saved early.
+8. Set *AZURE_DEVICE_CONN_STRING* constant in the agent example code to the **Device Connection String** you obtained and saved earlier.
 The value should look like `HostName=<Host Name>;DeviceId=<Device Name>;SharedAccessKey=<Device Key>`.
 
-![SetAzureConst](./example_imgs/SetAzureConst.png)
+![MessagesSetConst](./example_imgs/MessagesSetConst.png)
 
 9. Click **Build and Force Restart**.
 
@@ -87,8 +87,24 @@ The value should look like `HostName=<Host Name>;DeviceId=<Device Name>;SharedAc
 
 6. Assign a device to the newly created Device Group.
 
-7. TODO...
+7. Copy the [Twins example source code](./Twins.agent.nut) and paste it into the IDE as the agent code.
 
+8. Set *AZURE_REGISTRY_CONN_STRING* constant in the agent example code to the **Registry Connection String** you obtained and saved earlier.
+The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;SharedAccessKey=<SAS Key>`.
+
+![TwinsSetConst](./example_imgs/TwinsSetConst.png)
+
+9. Click **Build and Force Restart**.
+
+10. Check from the logs in the IDE that the device is registered, connected, and twin's properties are retrieved
+
+![RetrieveTwinLogs](./example_imgs/RetrieveTwinLogs.png)
+
+11. [Update Twin Document](#retrieveupdate-twin-document) from the Azure Portal: add or change, if already exists, the desired property "test". Then check from the logs in the IDE that the desired properties are received and the reported properties are updated.
+
+![UpdateTwinLogs](./example_imgs/UpdateTwinLogs.png)
+
+12. In the Azure Portal, refresh the twin's document and check that the reported properties now contain the "test" property you set in the previous step.
 
 ### Direct Methods Example Setup and Run ###
 
@@ -104,8 +120,24 @@ The value should look like `HostName=<Host Name>;DeviceId=<Device Name>;SharedAc
 
 6. Assign a device to the newly created Device Group.
 
-7. TODO...
+7. Copy the [Direct Methods example source code](./DirectMethods.agent.nut) and paste it into the IDE as the agent code.
 
+8. Set *AZURE_REGISTRY_CONN_STRING* constant in the agent example code to the **Registry Connection String** you obtained and saved earlier.
+The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;SharedAccessKey=<SAS Key>`.
+
+![DirectMethodsSetConst](./example_imgs/DirectMethodsSetConst.png)
+
+9. Click **Build and Force Restart**.
+
+10. Check from the logs in the IDE that the device is registered and connected
+
+![StartDirectMethodsLogs](./example_imgs/StartDirectMethodsLogs.png)
+
+11. [Call Direct Method](#call-direct-method) from the Azure Portal and check from the logs in the IDE that the call is received
+
+![CallDirectMethodsLogs](./example_imgs/CallDirectMethodsLogs.png)
+
+12. In the Azure Portal, check that the result of the call is received.
 
 ## Azure IoT Hub How To ##
 
