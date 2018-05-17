@@ -19,7 +19,7 @@ TODO - check
 - [AzureIoTHub.Client](#azureiothubclient) &mdash; Used to open MQTT connection to Azure IoT Hub, and to use Messages, Twins, Direct Methods functionality.
   - [connect()](#connect) &mdash; Opens a connection to Azure IoT Hub.
   - [disconnect()](#disconnect) &mdash; Closes the connection to Azure IoT Hub.
-  - [isConnected()](#isconnected) &mdash; Checks if the client is connected to Azure IoT Hub. 
+  - [isConnected()](#isconnected) &mdash; Checks if the client is connected to Azure IoT Hub.
   - [sendMessage()](#sendmessagemessage-onsent) &mdash; Sends a message to Azure IoT Hub.
   - [enableIncomingMessages()](#enableincomingmessagesonreceive-ondone) &mdash; Enables or disables message receiving from Azure IoT Hub.
   - [enableTwin()](#enabletwinonrequest-ondone) &mdash; Enables or disables Azure IoT Hub Device Twins functionality.

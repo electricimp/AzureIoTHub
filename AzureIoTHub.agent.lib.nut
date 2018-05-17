@@ -1471,7 +1471,9 @@ class AzureIoTHub {
 
         // Error level logger
         function _logError(txt) {
-            server.error("[" + (typeof this) + "] " + txt);
+            if (_debugEnabled) {
+                server.error("[" + (typeof this) + "] " + txt);
+            }
         }
     }
 
