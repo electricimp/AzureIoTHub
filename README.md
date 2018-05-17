@@ -2,7 +2,7 @@
 
 Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub version “2016-11-14”. The library consists of the following classes:
 
-TODO - update
+TODO - check
 - [AzureIoTHub.Registry](#azureiothubregistry) &mdash; Device management class, all requests use HTTP to connect to Azure IoT Hub.
   - [create()](#createdeviceinfo-callback) &mdash; Creates a a new device identity in Azure IoT Hub.
   - [update()](#updatedeviceinfo-callback) &mdash; Updates an existing device identity in Azure IoT Hub.
@@ -12,10 +12,21 @@ TODO - update
 - [AzureIoTHub.Device](#azureiothubdevice) &mdash; A device object used to manage registry device identities.
   - [conectionstring()](#connectionstringhostname) &mdash; Returns the device connection string.
   - [getbody()](#getbody) &mdash; Returns the device identity properties.
-- [AzureIoTHub.Message](#azureiothubmessage) &mdash; A message object used to create events that are sent to Azure IoT Hub.
-  - [getProperties()](#getproperties) &mdash; Returns a message’s application properties.
+- [AzureIoTHub.Message](#azureiothubmessage) &mdash; Used as a wrapper for messages to/from Azure IoT Hub.
+  - [getProperties()](#getproperties) &mdash; Returns a message’s properties.
   - [getBody()](#getbody) &mdash; Returns the message's content.
-- [AzureIoTHub.Client](#azureiothubclient) &mdash; 
+- [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse) &mdash; Used as a wrapper for Direct Methods responses.
+- [AzureIoTHub.Client](#azureiothubclient) &mdash; Used to open MQTT connection to Azure IoT Hub, and to use Messages, Twins, Direct Methods functionality.
+  - [connect()](#connect) &mdash; Opens a connection to Azure IoT Hub.
+  - [disconnect()](#disconnect) &mdash; Closes the connection to Azure IoT Hub.
+  - [isConnected()](#isconnected) &mdash; Checks if the client is connected to Azure IoT Hub. 
+  - [sendMessage()](#sendmessagemessage-onsent) &mdash; Sends a message to Azure IoT Hub.
+  - [enableIncomingMessages()](#enableincomingmessagesonreceive-ondone) &mdash; Enables or disables message receiving from Azure IoT Hub.
+  - [enableTwin()](#enabletwinonrequest-ondone) &mdash; Enables or disables Azure IoT Hub Device Twins functionality.
+  - [retrieveTwinProperties()](#retrievetwinpropertiesonretrieved) &mdash; Retrieves Device Twin properties.
+  - [updateTwinProperties()](#updatetwinpropertiesprops-onupdated) &mdash; Updates Device Twin reported properties.
+  - [enableDirectMethods()](#enabledirectmethodsonmethod-ondone) &mdash; Enables or disables Azure IoT Hub Direct Methods.
+  - [setDebug()](#setdebugvalue) &mdash; Enables or disables the library debug output.
 
 **To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:3.0.0"` **to the top of your agent code.**
 
@@ -61,8 +72,8 @@ This constructs a *Registry* object which exposes the Device Registry functions.
 #require "AzureIoTHub.agent.lib.nut:3.0.0"
 
 // Instantiate a client using your connection string
-const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=<KEY_NAME>;SharedAccessKey=<KEY_HASH>";
-registry <- AzureIoTHub.Registry(CONNECT_STRING);
+const AZURE_REGISTRY_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=<KEY_NAME>;SharedAccessKey=<KEY_HASH>";
+registry <- AzureIoTHub.Registry(AZURE_REGISTRY_CONN_STRING);
 ```
 
 ### AzureIoTHub.Registry Class Methods ###
@@ -136,33 +147,44 @@ The *getBody()* method returns the stored device properties. See the [Device Inf
 
 This example code will create an IoT Hub device using an imp’s agent ID if one isn’t found in the IoT Hub device registry. It will then instantiate the *AzureIoTHub.Client* class for later use.
 
-TODO - update
+TODO - check
 
 ```squirrel
 #require "AzureIoTHub.agent.lib.nut:3.0.0"
 
-const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
+const AZURE_REGISTRY_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 
 client <- null;
 local agentId = split(http.agenturl(), "/").pop();
 
-local registry = AzureIoTHub.Registry(CONNECT_STRING);
-local hostname = AzureIoTHub.ConnectionString.Parse(CONNECT_STRING).HostName;
+local registry = AzureIoTHub.Registry(AZURE_REGISTRY_CONN_STRING);
+local hostname = AzureIoTHub.ConnectionString.Parse(AZURE_REGISTRY_CONN_STRING).HostName;
+
+function onConnected(err) {
+    if (err != 0) {
+        server.error("Connect failed: " + err);
+        return;
+    }
+}
+
+function createDevice() {
+    registry.create({"deviceId" : agentId}, function(error, iotHubDevice) {
+        if (error) {
+            server.error(error.message);
+        } else {
+            server.log("Created " + iotHubDevice.getBody().deviceId);
+            // Create a client with the device authentication provided from the registry response
+            ::client <- AzureIoTHub.Client(iotHubDevice.connectionString(hostname), onConnected);
+        }
+    }.bindenv(this));
+}
 
 // Find this device in the registry
 registry.get(agentId, function(err, iothubDevice) {
     if (err) {
         if (err.response.statuscode == 404) {
             // No such device, let's create one with default parameters
-            registry.create(function(error, hubDevice) {
-                if (error) {
-                    server.error(error.message);
-                } else {
-                    server.log("Created " + hubDevice.getBody().deviceId);
-                    // Create a client with the device authentication provided from the registry response
-                    ::client <- AzureIoTHub.Client(hubDevice.connectionString(hostName));
-                }
-            }.bindenv(this));
+            createDevice();
         } else {
             server.error(err.message);
         }
@@ -170,41 +192,41 @@ registry.get(agentId, function(err, iothubDevice) {
         // Found the device 
         server.log("Device registered as " + iothubDevice.getBody().deviceId);
         // Create a client with the device authentication provided from the registry response
-        ::client <- AzureIoTHub.Client(iothubDevice.connectionString(hostname));
+        ::client <- AzureIoTHub.Client(iothubDevice.connectionString(hostname), onConnected);
     }
 }.bindenv(this));
 ```
 
 ## AzureIoTHub.Message ##
 
-TODO - update description.
+TODO - check.
 
-This class is used to create a message to send to Azure IoT Hub.
+This class is used as a wrapper for messages to/from Azure IoT Hub.
 
 ### Constructor: AzureIoTHub.Message(*message[, props]*) ###
 
-The constructor takes one required parameter, *message*, which can be created from a string or any object that can be converted to JSON. It may also take an optional parameter: a table of message properties.
+This method returns a new AzureIoTHub.Client instance.
+
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *message* | [Any supported by MQTT API](TODO-link) | Yes | Message body. |
+| *props* | Table | Optional | Key-value table with the message properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. For outcoming messages keys and values are fully application specific. Incoming messages contain properties set by Azure IoT Hub as well. |
+
+#### Example ####
 
 ```squirrel
-local message1 = AzureIoTHub.Message("This is an event");
-local message2 = AzureIoTHub.Message({ "id": 1, "text": "Hello, world." });
+local message1 = AzureIoTHub.Message("This is a message");
+local message2 = AzureIoTHub.Message(blob(256));
+local message3 = AzureIoTHub.Message("This is a message with properties", {"property": "value"});
 ```
 
 ### getProperties() ###
 
-Use this method to retrieve an event’s application properties. This method returns a table.
-
-```squirrel
-local props = message2.getProperties();
-```
+This method returns a table with the properties of message.
 
 ### getBody() ###
 
-Use this method to retrieve an event’s message content. Messages that have been created locally will be of the same type as they were when created, but messages from *AzureIoTHub.Delivery* objects are blobs.
-
-```squirrel
-local body = message1.getBody();
-```
+This method returns the message's body. Messages that have been created locally will be of the same type as they were when created, but messages came from Azure IoT Hub are of one of the types specified [here](TODO-link).
 
 ## AzureIoTHub.DirectMethodResponse ##
 
@@ -232,10 +254,10 @@ This class is used to transfer data to and from Azure IoT Hub. To use this class
 
 ### AzureIoTHub.Client Class Usage ###
 
-TODO - add some general explanation here ? eg.
-- need to re-enable optional features after disconnection.
-- https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins#device-reconnection-flow
-- 
+TODO - this information is written below in the methods description. Remove this?
+- Application needs to re-enable optional features after disconnection.
+- https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins#device-reconnection-flow.
+- TODO anything else?
 
 Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. A typical [*onDone*](#callback-ondoneerror) callback provides an [error code](#error-code) which specifies a concrete error (if any) happened during the operation. Specific callbacks are described within every method.
 
@@ -305,8 +327,6 @@ These settings affect the client's behavior and the operations. Every setting is
 | "timeout" | Integer | 10 | Timeout (in seconds) for [Retrieve Twin](#retrievetwinpropertiesonretrieved) and [Update Twin](#updatetwinpropertiesprops-onupdated) operations. |
 | "maxPendingTwinRequests" | Integer | 3 | Maximum amount of pending [Update Twin](#updatetwinpropertiesprops-onupdated) operations. |
 | "maxPendingSendRequests" | Integer | 3 | Maximum amount of pending [Send Message](#sendmessagemessage-onsent) operations. |
-| "will-topic" | String | not specified | TODO - remove? |
-| "will-message" | String | not specified | TODO - remove? |
 
 #### Example ####
 
@@ -345,7 +365,7 @@ The method returns nothing. A result of the connection opening may be obtained v
 
 Azure IoT Hub supports only one connection per device.
 
-All other methods of the client should be called when the client is connected.
+All other methods (except [isConnected()](#isconnected)) of the client should be called when the client is connected.
 
 ### disconnect() ###
 
@@ -386,8 +406,6 @@ This callback is called when the message is considered as sent or an error happe
 
 #### Example ####
 
-TODO - update - use "global" callback and resend the message (?)
-
 ```squirrel
 // Send a string with no callback
 message1 <- AzureIoTHub.Message("This is a string");
@@ -399,6 +417,9 @@ message2 <- AzureIoTHub.Message("This is another string");
 function onSent(msg, err) {
     if (err != 0) {
         server.error("Message sending failed: " + err);
+        server.log("Trying to send again...");
+        // For example simplicity trying to resend the message in case of any error
+        client.sendMessage(message2, onSent);
     } else {
         server.log("Message sent at " + time());
     }
@@ -431,8 +452,6 @@ This callback is called every time a new message is received from Azure IoT Hub.
 | *message* | [AzureIoTHub.Message](#azureiothubmessage) | Received message. |
 
 #### Example ####
-
-TODO - update after Message class is changed (?)
 
 ```squirrel
 function onReceive(msg) {
@@ -559,8 +578,6 @@ This callback is called when the message is considered as sent or an error happe
 
 #### Example ####
 
-TODO - use "global" callback, resend porperties (?)
-
 ```squirrel
 props <- {"exampleProp": "val"};
 
@@ -604,8 +621,6 @@ The callback **must** return an instance of the [AzureIoTHub.DirectMethodRespons
 
 #### Example ####
 
-TODO 
-
 ```squirrel
 function onMethod(name, params) {
     server.log("Direct Method called. Name = " + name);
@@ -625,9 +640,13 @@ function onDone(err) {
 client.enableDirectMethods(onMethod, onDone);
 ```
 
+### setDebug(*value*) ###
+
+This method enables (*value* is `true`) or disables (*value* is `false`) the library debug output (including error logging). It is disabled by default. The method returns nothing.
+
 ## Examples ##
 
-Full working examples are provided in the [examples](./examples) directory and described [here](./Examples/README.md).
+Full working examples are provided in the [examples](./examples) directory and described [here](./examples/README.md).
 
 ## Testing ##
 
