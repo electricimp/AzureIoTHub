@@ -1,8 +1,7 @@
-# Azure IoT Hub 3.0.0 (Draft) #
+# Azure IoT Hub 3.0.0 #
 
 Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub version “2016-11-14”. The library consists of the following classes:
 
-TODO - check
 - [AzureIoTHub.Registry](#azureiothubregistry) &mdash; Device management class, all requests use HTTP to connect to Azure IoT Hub.
   - [create()](#createdeviceinfo-callback) &mdash; Creates a a new device identity in Azure IoT Hub.
   - [update()](#updatedeviceinfo-callback) &mdash; Updates an existing device identity in Azure IoT Hub.
@@ -199,18 +198,16 @@ registry.get(agentId, function(err, iothubDevice) {
 
 ## AzureIoTHub.Message ##
 
-TODO - check.
-
 This class is used as a wrapper for messages to/from Azure IoT Hub.
 
 ### Constructor: AzureIoTHub.Message(*message[, props]*) ###
 
-This method returns a new AzureIoTHub.Client instance.
+This method returns a new AzureIoTHub.Message instance.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *message* | [Any supported by MQTT API](TODO-link) | Yes | Message body. |
-| *props* | Table | Optional | Key-value table with the message properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. For outcoming messages keys and values are fully application specific. Incoming messages contain properties set by Azure IoT Hub as well. |
+| *message* | [Any supported by the MQTT API](TODO-link) | Yes | Message body. |
+| *props* | Table | Optional | Key-value table with the message properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
 
 #### Example ####
 
@@ -222,11 +219,11 @@ local message3 = AzureIoTHub.Message("This is a message with properties", {"prop
 
 ### getProperties() ###
 
-This method returns a table with the properties of message.
+This method returns a key-value table with the properties of the message. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Incoming messages contain properties set by Azure IoT Hub.
 
 ### getBody() ###
 
-This method returns the message's body. Messages that have been created locally will be of the same type as they were when created, but messages came from Azure IoT Hub are of one of the types specified [here](TODO-link).
+This method returns the message's body. Messages that have been created locally will be of the same type as they were when created, but messages came from Azure IoT Hub are of one of the [types supported by the MQTT API](TODO-link).
 
 ## AzureIoTHub.DirectMethodResponse ##
 
@@ -248,43 +245,14 @@ This class is used to transfer data to and from Azure IoT Hub. To use this class
 *AzureIoTHub.Client* works over MQTT v3.1.1 protocol. It supports the following functionality:
 - connecting and disconnecting to/from Azure IoT Hub. Azure IoT Hub supports only one connection per device.
 - sending messages to Azure IoT Hub
-- receiving messages from Azure IoT Hub (optionally enabled)
-- device twin operations (optionally enabled)
-- direct methods processing (optionally enabled)
+- receiving messages from Azure IoT Hub (optional functionality)
+- device twin operations (optional functionality)
+- direct methods processing (optional functionality)
 
-### AzureIoTHub.Client Class Usage ###
+All optional functionalities are disabled after a client instantiation. If an optional functionality is needed it should be enabled after the client is successfully connected. And it should be explicitly re-enabled after every re-connection of the client.
+The client provides individual methods to enable every optional feature.
 
-TODO - this information is written below in the methods description. Remove this?
-- Application needs to re-enable optional features after disconnection.
-- https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins#device-reconnection-flow.
-- TODO anything else?
-
-Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. A typical [*onDone*](#callback-ondoneerror) callback provides an [error code](#error-code) which specifies a concrete error (if any) happened during the operation. Specific callbacks are described within every method.
-
-#### Callback: onDone(*error*) #####
-
-This callback is called when an operation is completed.
-
-| Parameter | Data Type | Description |
-| --- | --- | --- |
-| *[error](#error-code)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
-
-#### Error Code ####
-
-An *Integer* error code which specifies a concrete error (if any) happened during an operation.
-
-| Error Code | Description |
-| --- | --- |
-| 0 | No error. |
-| 1-99 TODO | codes returned by EI MQTT API... |
-| 100-999 | Azure IoT Hub errors. See [Azure IoT Hub documentation](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support). |
-| 1000 | The client is not connected. |
-| 1001 | The client is already connected. |
-| 1002 | The feature is not enabled. |
-| 1003 | The feature is already enabled. |
-| 1004 | The operation is not allowed now. Eg. the same operation is already in process. |
-| 1005 | The operation is timed out. |
-| 1010 | General error. |
+Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. Specific callbacks are described within every method. Many callbacks provide an [error code](#error-code) which specifies a concrete error (if any) happened during the operation. 
 
 ### Constructor: AzureIoTHub.Client(*deviceConnectionString, onConnected[, onDisconnected[, options]]*) ###
 
@@ -643,6 +611,33 @@ client.enableDirectMethods(onMethod, onDone);
 ### setDebug(*value*) ###
 
 This method enables (*value* is `true`) or disables (*value* is `false`) the library debug output (including error logging). It is disabled by default. The method returns nothing.
+
+### Additional Info ###
+
+#### Callback: onDone(*error*) #####
+
+This callback is called when a method is completed. This is just a common description of the similar callbacks specified as an argument in several methods. An application may use different callbacks with the described signature for different methods. Or define one callback and pass it to different methods.
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *[error](#error-code)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
+
+#### Error Code ####
+
+An *Integer* error code which specifies a concrete error (if any) happened during an operation.
+
+| Error Code | Description |
+| --- | --- |
+| 0 | No error. |
+| 1-99 | [Codes returned by the MQTT API](TODO-link) |
+| 100-999 | [Azure IoT Hub errors](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support). |
+| 1000 | The client is not connected. |
+| 1001 | The client is already connected. |
+| 1002 | The feature is not enabled. |
+| 1003 | The feature is already enabled. |
+| 1004 | The operation is not allowed now. Eg. the same operation is already in process. |
+| 1005 | The operation is timed out. |
+| 1010 | General error. |
 
 ## Examples ##
 
