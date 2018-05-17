@@ -59,7 +59,7 @@ class DirectMethodsExample {
             if (err) {
                 if (err.response.statuscode == 404) {
                     // No such device, let's create it
-                    _createDevice(deviceID, hostName, registry, iotHubDev, onCompleted);
+                    _createDevice(deviceID, hostName, registry, onCompleted);
                 } else {
                     server.error(err.message);
                     onCompleted(err);
@@ -73,7 +73,7 @@ class DirectMethodsExample {
         }.bindenv(this));
     }
 
-    function _createDevice(deviceID, hostName, registry, iotHubDev, onCompleted) {
+    function _createDevice(deviceID, hostName, registry, onCompleted) {
         registry.create({"deviceId" : deviceID}, function(error, iotHubDevice) {
             if (error) {
                 server.error(error.message);
