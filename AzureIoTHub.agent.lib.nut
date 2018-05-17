@@ -1169,7 +1169,9 @@ class AzureIoTHub {
             try {
                 message = msg["message"];
                 topic = msg["topic"];
-                _log(format("_onMessage: topic=%s | body=%s", topic, message));
+                if (_debugEnabled) {
+                    _log(format("_onMessage: topic=%s | body=%s", topic, message.tostring()));
+                }
             } catch (e) {
                 _logError("Could not read message: " + e);
                 return;
@@ -1200,7 +1202,7 @@ class AzureIoTHub {
                 }
             } catch (e) {
                 _logError("Exception at parsing the topic of the message: " + e);
-                _logMsg(message, topic);
+                _logMsg(message.tostring(), topic);
                 return;
             }
             _onMessageCb(AzureIoTHub.Message(message, props));

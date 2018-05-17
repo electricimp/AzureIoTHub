@@ -94,8 +94,22 @@ class MessagesTestCase extends ImpTestCase {
             }.bindenv(this));
     }
 
-    function testSendMessage() {
+    function testSendStringMessage() {
         return _sendMessage();
+    }
+
+    function testSendBlobMessage() {
+        local msgBody = blob();
+        msgBody.writestring("test blob message");
+        local msg = AzureIoTHub.Message(msgBody, {"prop1" : "val1"});
+        return Promise(function (resolve, reject) {
+            _azureMqttClient.sendMessage(msg, function (msg, err) {
+                if (err != 0) {
+                    return reject(err);
+                }
+                return resolve();
+            }.bindenv(this));
+        }.bindenv(this));
     }
 
     function testDisableMessages() {
