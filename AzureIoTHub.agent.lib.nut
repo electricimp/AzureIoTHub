@@ -36,12 +36,13 @@ const AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW     = 1004;
 const AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT           = 1005;
 const AZURE_IOT_CLIENT_ERROR_GENERAL                = 1010;
 
+// MQTT QoS. Azure IoT Hub supports QoS 0 and 1 only
 const AZURE_IOT_CLIENT_DEFAULT_QOS                  = 0;
-// Timeout for RetrieveTwin and UpdateTwin requests (sec)
+// Timeout (in seconds) for Retrieve Twin and Update Twin operations
 const AZURE_IOT_CLIENT_DEFAULT_TIMEOUT              = 10;
-// Maximum amount of parallel UpdateTwin requests
+// Maximum amount of pending Update Twin operations
 const AZURE_IOT_CLIENT_DEFAULT_TWIN_UPD_PARAL_REQS  = 3;
-// Maximum amount of parallel SendMessage requests
+// Maximum amount of pending Send Message operations
 const AZURE_IOT_CLIENT_DEFAULT_MSG_SEND_PARAL_REQS  = 3;
 
 
@@ -232,21 +233,43 @@ class AzureIoTHub {
         }
     }
 
-    // This class is used to create a message to send to Azure IoT Hub or on receiving from Azure IoT Hub.
+    // This class is used as a wrapper for messages to/from Azure IoT Hub.
     Message = class {
 
         _body = null;
-        _properties = null;
+        _props = null;
 
-        constructor(body, properties = null) {
+        // Message class constructor.
+        //
+        // Parameters:
+        //     body :                       Message body.
+        //          Any supported by the MQTT API
+        //     props : Table                Key-value table with the message properties.
+        //          (optional)              Every key is always a String with the name of the property.
+        //                                  The value is the corresponding value of the property.
+        //                                  Keys and values are fully application specific.
+        //
+        // Returns:                         AzureIoTHub.Message instance created.
+        constructor(body, props = null) {
             _body = body;
-            _properties = properties;
+            _props = props;
         }
 
+        // Returns a key-value table with the properties of the message.
+        // Every key is always a String with the name of the property.
+        // The value is the corresponding value of the property.
+        // Incoming messages contain properties set by Azure IoT Hub.
+        //
+        // Returns:                         A key-value table with the properties of the message.
         function getProperties() {
-            return _properties;
+            return _props;
         }
 
+        // Returns the message's body.
+        // Messages that have been created locally will be of the same type as they were when created,
+        // but messages came from Azure IoT Hub are of one of the types supported by the MQTT API.
+        //
+        // Returns:                         The message's body.
         function getBody() {
             return _body;
         }
@@ -265,7 +288,7 @@ class AzureIoTHub {
         //
         // Parameters:
         //     status : Integer             Status of the Direct Method execution. Fully application specific.
-        //     options : Table              Key-value table with the returned data.
+        //     body : Table                 Key-value table with the returned data.
         //          (optional)              Every key is always a String with the name of the data field.
         //                                  The value is the corresponding value of the data field.
         //                                  Keys and values are fully application specific.
@@ -606,9 +629,9 @@ class AzureIoTHub {
     // AzureIoTHub.Client works over MQTT v3.1.1 protocol. It supports the following functionality:
     // - connecting and disconnecting to/from Azure IoT Hub. Azure IoT Hub supports only one connection per device.
     // - sending messages to Azure IoT Hub
-    // - receiving messages from Azure IoT Hub (optionally enabled)
-    // - device twin operations (optionally enabled)
-    // - direct methods processing (optionally enabled)
+    // - receiving messages from Azure IoT Hub (optional functionality)
+    // - device twin operations (optional functionality)
+    // - direct methods processing (optional functionality)
     Client = class {
 
         _debugEnabled           = false;
@@ -756,7 +779,7 @@ class AzureIoTHub {
         //     onSent : Function            Callback called when the operation is completed or an error happens.
         //          (optional)              The callback signature:
         //                                  onSent(msg, error), where
-        //                                      msg :               The original message passed to the sendMessage() method.
+        //                                      msg :               The original message passed to sendMessage() method.
         //                                          AzureIoTHub.Message
         //                                      error : Integer     0 if the operation is completed successfully, an error code otherwise.
         //
@@ -862,8 +885,8 @@ class AzureIoTHub {
         // Parameters:
         //     onRequest : Function         Callback called every time a new request with desired Device Twin properties is received. null disables the feature.
         //                                  The callback signature:
-        //                                  onRequest(version, props), where
-        //                                      props : Table       Key-value table with the desired properties.
+        //                                  onRequest(props), where
+        //                                      props : Table       Key-value table with the desired properties and their version.
         //                                                          Every key is always a String with the name of the property.
         //                                                          The value is the corresponding value of the property.
         //                                                          Keys and values are fully application specific.
@@ -1001,7 +1024,7 @@ class AzureIoTHub {
         // Updates Device Twin reported properties (https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#update-device-twins-reported-properties).
         //
         // Parameters:
-        //     props : Table                Key-value table with the desired properties.
+        //     props : Table                Key-value table with the reported properties.
         //                                  Every key is always a String with the name of the property.
         //                                  The value is the corresponding value of the property.
         //                                  Keys and values are fully application specific.
@@ -1123,7 +1146,7 @@ class AzureIoTHub {
             }
         }
 
-        // Enables or disables the library debug output. Disabled by default.
+        // Enables or disables the class debug output. Disabled by default.
         //
         // Parameters:
         //     value : Boolean              true to enable, false to disable

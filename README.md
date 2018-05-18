@@ -610,7 +610,7 @@ client.enableDirectMethods(onMethod, onDone);
 
 ### setDebug(*value*) ###
 
-This method enables (*value* is `true`) or disables (*value* is `false`) the library debug output (including error logging). It is disabled by default. The method returns nothing.
+This method enables (*value* is `true`) or disables (*value* is `false`) the class debug output (including error logging). It is disabled by default. The method returns nothing.
 
 ### Additional Info ###
 
