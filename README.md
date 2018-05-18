@@ -25,7 +25,7 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
   - [retrieveTwinProperties()](#retrievetwinpropertiesonretrieved) &mdash; Retrieves Device Twin properties.
   - [updateTwinProperties()](#updatetwinpropertiesprops-onupdated) &mdash; Updates Device Twin reported properties.
   - [enableDirectMethods()](#enabledirectmethodsonmethod-ondone) &mdash; Enables or disables Azure IoT Hub Direct Methods.
-  - [setDebug()](#setdebugvalue) &mdash; Enables or disables the library debug output.
+  - [setDebug()](#setdebugvalue) &mdash; Enables or disables the client debug output.
 
 **To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:3.0.0"` **to the top of your agent code.**
 
@@ -146,8 +146,6 @@ The *getBody()* method returns the stored device properties. See the [Device Inf
 
 This example code will create an IoT Hub device using an imp’s agent ID if one isn’t found in the IoT Hub device registry. It will then instantiate the *AzureIoTHub.Client* class for later use.
 
-TODO - check
-
 ```squirrel
 #require "AzureIoTHub.agent.lib.nut:3.0.0"
 
@@ -206,7 +204,7 @@ This method returns a new AzureIoTHub.Message instance.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *message* | [Any supported by the MQTT API](TODO-link) | Yes | Message body. |
+| *message* | [Any supported by the MQTT API](TODO-link) TODO - update link | Yes | Message body. |
 | *props* | Table | Optional | Key-value table with the message properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
 
 #### Example ####
@@ -223,7 +221,7 @@ This method returns a key-value table with the properties of the message. Every 
 
 ### getBody() ###
 
-This method returns the message's body. Messages that have been created locally will be of the same type as they were when created, but messages came from Azure IoT Hub are of one of the [types supported by the MQTT API](TODO-link).
+This method returns the message's body. Messages that have been created locally will be of the same type as they were when created, but messages came from Azure IoT Hub are of one of the [types supported by the MQTT API](TODO-link) TODO - update link.
 
 ## AzureIoTHub.DirectMethodResponse ##
 
@@ -610,7 +608,7 @@ client.enableDirectMethods(onMethod, onDone);
 
 ### setDebug(*value*) ###
 
-This method enables (*value* is `true`) or disables (*value* is `false`) the class debug output (including error logging). It is disabled by default. The method returns nothing.
+This method enables (*value* is `true`) or disables (*value* is `false`) the client debug output (including error logging). It is disabled by default. The method returns nothing.
 
 ### Additional Info ###
 
@@ -629,7 +627,7 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | Error Code | Description |
 | --- | --- |
 | 0 | No error. |
-| 1-99 | [Codes returned by the MQTT API](TODO-link) |
+| 1-99 | [Codes returned by the MQTT API](TODO-link) TODO - update link |
 | 100-999 | [Azure IoT Hub errors](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support). |
 | 1000 | The client is not connected. |
 | 1001 | The client is already connected. |
