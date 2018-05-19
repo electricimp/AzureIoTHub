@@ -1146,7 +1146,7 @@ class AzureIoTHub {
             }
         }
 
-        // Enables or disables the class debug output. Disabled by default.
+        // Enables or disables the client debug output. Disabled by default.
         //
         // Parameters:
         //     value : Boolean              true to enable, false to disable

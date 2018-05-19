@@ -66,4 +66,9 @@ class DummyTestCase extends ImpTestCase {
     function testEnableDirectMethods() {
         _azureMqttClient.enableDirectMethods(function (name, params) {}.bindenv(this));
     }
+
+    function testSetDebug() {
+        _azureMqttClient.setDebug(true);
+        _azureMqttClient.setDebug(false);
+    }
 }
