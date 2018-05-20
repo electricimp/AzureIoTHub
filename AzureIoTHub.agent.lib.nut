@@ -1172,6 +1172,7 @@ class AzureIoTHub {
 
         function _onConnected(err) {
             if (err == 0) {
+                _log("Connected!");
                 _isConnected = true;
                 _isDisconnected = false;
             }
