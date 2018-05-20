@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright 2015-2017 Electric Imp
+// Copyright 2015-2018 Electric Imp
 //
 // SPDX-License-Identifier: MIT
 //
@@ -14,7 +14,7 @@
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND,
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
 // EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
@@ -22,13 +22,7 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-/**
- * Test case to test AzureIoTHub.Registry
- */
-
-const HUB_NAME = "@{AZURE_IOTHUB_HUB_NAME}";
-const ACCESS_KEY = "@{AZURE_IOTHUB_SHARED_ACCESS_KEY}";
-const ACCESS_KEY_NAME = "@{AZURE_IOTHUB_SHARED_ACCESS_KEY_NAME}";
+const AZURE_REGISTRY_CONN_STRING = "@{AZURE_REGISTRY_CONN_STRING}";
 
 class RegistryTestCase extends ImpTestCase {
 
@@ -53,10 +47,7 @@ class RegistryTestCase extends ImpTestCase {
 
     function createRegistry() {
         return Promise(function (resolve, reject) {
-            local connectionString = "HostName=" + HUB_NAME
-                + ".azure-devices.net;SharedAccessKeyName=" + ACCESS_KEY_NAME
-                + ";SharedAccessKey=" + ACCESS_KEY;
-            this._registry = AzureIoTHub.Registry(connectionString);
+            this._registry = AzureIoTHub.Registry(AZURE_REGISTRY_CONN_STRING);
             (typeof _registry == "instance") ? resolve("Registry created") : reject("Error creating registry");
         }.bindenv(this));
     }
