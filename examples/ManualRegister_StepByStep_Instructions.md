@@ -1,6 +1,6 @@
 # Connect Electric Imp to Azure IoT Hub
 
-In this tutorial, you begin by learning the basics of working with Electric Imp. We will use Electric Imp Libraries to seamlessly connect an [impExplorer&trade; Kit](https://store.electricimp.com/collections/featured-products/products/impexplorer-developer-kit?variant=31118866130) or an [impAccelerator™ Fieldbus Gateway](https://store.electricimp.com/products/impaccelerator-fieldbus-gateway?variant=31118564754) with a MikroBUS Thermocouple to the cloud by using [Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-what-is-iot-hub). This tutorial implements manual device registration through the IoT Hub UI. For automatic device registration, please see this [tutorial](./AutoRegister_StepByStep_Instructions.md). 
+In this tutorial, you begin by learning the basics of working with Electric Imp. We will use Electric Imp Libraries to seamlessly connect an [impExplorer&trade; Kit](https://store.electricimp.com/collections/featured-products/products/impexplorer-developer-kit?variant=31118866130) or an [impAccelerator™ Fieldbus Gateway](https://store.electricimp.com/products/impaccelerator-fieldbus-gateway?variant=31118564754) with a MikroBUS Thermocouple to the cloud by using [Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-what-is-iot-hub). This tutorial implements manual device registration through the IoT Hub UI. For automatic device registration, please see this [tutorial](./AutoRegister_StepByStep_Instructions.md).
 
 ## What You Do
 
@@ -23,13 +23,13 @@ In this tutorial, you begin by learning the basics of working with Electric Imp.
 1. Your 2.4GHz 802.11bgn WiFi network *name* (SSID) and *password*.
 2. A computer with a web browser.
 3. A smartphone with the Electric Imp app ([iOS](https://itunes.apple.com/us/app/electric-imp/id547133856) or [Android](https://play.google.com/store/apps/details?id=com.electricimp.electricimp)).
-4. A free [Electric Imp Account](https://ide.electricimp.com/login).
+4. A free [Electric Imp Account](https://impcentral.electricimp.com/login).
 5. A [Microsoft Azure Account](https://azure.microsoft.com/en-us/resources/videos/sign-up-for-microsoft-azure/).
 6. Electric Imp supported hardware with a temperature sensor. We have complete step by step instructions for the harware listed below.
     - An [Electric Imp impExplorer Kit](https://store.electricimp.com/collections/featured-products/products/impexplorer-developer-kit?variant=31118866130)
         - The impExplorer Kit has an onbard Temperature sensor, so no extra hardware is required.
     - [impAccelerator™ Fieldbus Gateway](https://store.electricimp.com/products/impaccelerator-fieldbus-gateway?variant=31118564754)
-        - [MikroBUS board](https://shop.mikroe.com/thermo-click) 
+        - [MikroBUS board](https://shop.mikroe.com/thermo-click)
         - [Thermocouple](https://shop.mikroe.com/thermocouple-type-k-glass-braid-insulated)
 7. USB power source or if you are using the impExplorer Kit you may use three AA batteries.
 
@@ -50,20 +50,20 @@ The impExplorer Kit provides a set of sensors and peripherals which are ready to
 - Plug the imp001 card into the breakout board slot.
 - Power up your Imp with the USB cable or three AA batteries.
 - The imp001 should now have power and be blinking amber.
-- Move on to [Electric Imp BlinkUp](#electric-imp-blinkup) section 
+- Move on to [Electric Imp BlinkUp](#electric-imp-blinkup) section
 
 Assembled, the Kit it should look like this:
 ![impExplorer Kit](./example_imgs/impExplorerKit.png)
 
 ### impAccelerator™ Fieldbus Gateway
 
-The Fieldbus gateway doesn't come with any onboard sensors, so you will need to have a MikroBUS click and Thermocouple. 
+The Fieldbus gateway doesn't come with any onboard sensors, so you will need to have a MikroBUS click and Thermocouple.
 
 - Take the Fielbus Gateway board out of the enclosure.
 - Plug the THERMO click into the MikroBUS headers.
 - Plug the Thermocouple into the THERMO click board
 - Power up your Fielbus Gateway with the USB cable
-- Move on to [Electric Imp BlinkUp](#electric-imp-blinkup) section 
+- Move on to [Electric Imp BlinkUp](#electric-imp-blinkup) section
 
 Assembled, the Kit it should look like this:
 ![impAccelerator™ Fieldbus Gateway](./example_imgs/FieldbusGatewayWithThermocouple.jpg)
@@ -93,16 +93,19 @@ If you’d like a quick overview of the IDE features please visit the Electric I
 
 ### Working With The Electric Imp IDE
 
-1. Open your web browser and log in to the [Electric Imp IDE](https://ide.electricimp.com/login).
-2. Click the large + button to create a new ‘model’ &mdash; an Electric Imp application:
-
-![Create Model](./example_imgs/IDECreateModel.png)
-
-3. In the pop-up panel, name your model, select your device and click **Create Model**.
-4. Find the logging window (near the bottom of the IDE) and locate agent URL. It will look something like this: https://agent.electricimp.com/szPc0sLfAqlu
-5. Make a note of the agent ID &mdash; the last part of the agent URL (ie. "szPc0sLfAqlu" in the above example). We will use this in the next steps as a unique identifier when registering our device in IoT Hub:
-
-![IDE Model agent URL](./example_imgs/IDEEmptyAgentURL.png)
+1. In your favorite web browser log into [impCentral](https://impcentral.electricimp.com/login).
+1. Click **Create a Product**.
+![Click on the Create a Product button in impCentral](./example_imgs/CreateNewProduct.png "Click on the Create a Product button in impCentral")
+1. In the popup, enter a Product name (e.g., **AzureIoTHub**), a Device Group name (e.g., **TempExample**), and then click **Create**.<br>
+![Enter a Product name and the name of Device Group in the Create Product popup](./example_imgs/CreateProductPopUp.png "Enter a Product name and the name of an Application Workspace in the Create Product popup")<br>A Product defines a new connected product in the Electric Imp impCloud. A Device Group is the place where you develop and test your application software, both the device code and the agent code.
+1. Click **Assign devices**.<br>
+![Click on the Assign Devices link in impCentral's logging pane](./example_imgs/LabeledCodeWindows.png "Click on the Assign Devices link in impCentral's logging pane")
+1. In the **Assign Devices** popup, choose your device by locating its device ID, and click **Assign**.
+![Select your impExplorer and click Assign in the Assign Devices popup](./example_imgs/AssignDevicePopUpLg.png "Select your device and click Assign in the Assign Devices popup")
+1. At the top of the logs pane you can find the agent URL of your device. It will look something like this: **https://agent.electricimp.com/tgqsQukvcfyb**
+1. Make a note of the agent ID &mdash; the last part of the agent URL (ie. "tgqsQukvcfyb" in the above example). We will use this in the next steps as a unique identifier when registering our device in IoT Hub:
+![Make a note of the agent URL that is now listed at the head of the logging pane](./example_imgs/AgentURL.png "Make a note of the agent URL that is now listed at the head of the logging pane")
+1. Leave impCentral open in your browser &mdash; you will be returning to it later.
 
 ## Create an IoT Hub resource
 
@@ -132,9 +135,9 @@ If you’d like a quick overview of the IDE features please visit the Electric I
 
 ![Policies](./example_imgs/IoTHubOverview.png)
 
-5. In the **Shared access policies** pane, click the **iothubowner** policy, and then copy and make a note of the **Connection string--primary key** of your IoT hub. You will need to enter this value in the code later:
+5. In the **Shared access policies** pane, click the **registryReadWrite** policy, and then copy and make a note of the **Connection string--primary key** of your IoT hub. You will need to enter this value in the code later:
 
-![Connection String](./example_imgs/IoTHubConnectionString.png)
+![Connection String](./example_imgs/IoTHubAccessPolicy.png)
 
 ## Register A Device In IoT Hub
 
@@ -163,21 +166,17 @@ In this example we will register the device via the Azure portal. Please note th
 
 ## Run A Sample Electric Imp Application
 
-1. Reopen the [Electric Imp IDE](https://ide.electricimp.com/login) and navigate to the model you created.
-2. Copy and Paste the [agent code](./IoTHubEnvExample_ManualRegister.agent.nut) from GitHub into the IDE’s agent pane (the left-hand side).
-3. The device code is specific to your hardware. Copy and Paste the device code for your hardware from GitHub into the IDE’s device pane (the right-hand side). 
+1. Reopen [impCentral](https://impcentral.electricimp.com).
+1. Copy and Paste the [agent code](./IoTHubEnvExample_ManualRegister.agent.nut) from GitHub into the IDE’s agent pane (the left-hand side).
+1. The device code is specific to your hardware. Copy and Paste the device code for your hardware from GitHub into the IDE’s device pane (the right-hand side).
     - [impExplorer Kit device code](./IoTHubEnvExample_ExplorerKit.device.nut)
     - [impAccelerator™ Fieldbus Gateway](./IoTHubEnvExample_FieldbusGateway.device.nut)
-
-![IDE Model agent URL](./example_imgs/IDEEmptyAgentURL.png)
-
-4. In the agent code look for the **IOTHUB_CONNECTION_STRING** and **DEVICE_CONNECTION_STRING** variables. Copy and paste your connection string from **Create an IoT Hub resource** step 5 in to the **IOTHUB_CONNECTION_STRING** variable. Copy and paste your device connection string from **Register a device in IoT hub** step 6 in to the **DEVICE_CONNECTION_STRING** variable.
-5. Hit **Build and Run** to save and launch the code:
-
-![IDE Build and Run](./example_imgs/IDE_BuildandRun.png)
-
-6. As the application runs you will begin to see logs from your device:
-
+![IDE Model agent URL](./example_imgs/LabeledCodeWindows.png)
+1. In the agent code look for the **IOTHUB_CONNECTION_STRING** and **DEVICE_CONNECTION_STRING** variables. Copy and paste your connection string from **Create an IoT Hub resource** step 5 in to the **IOTHUB_CONNECTION_STRING** variable. Copy and paste your device connection string from **Register a device in IoT hub** step 6 in to the **DEVICE_CONNECTION_STRING** variable.
+![Connection string variables](./example_imgs/ConnectionStringVars.png)
+1. Hit **Build and Force Restart** to save and launch the code.
+![IDE Build and Force Restart](./example_imgs/BuildAndRestart.png)
+1. As the application runs you will begin to see logs from your device:
 ![IDE Logs](./example_imgs/IDE_LoggingWindow.png)
 
 ## Next Steps

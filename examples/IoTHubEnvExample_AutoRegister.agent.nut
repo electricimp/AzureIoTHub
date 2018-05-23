@@ -22,7 +22,7 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-#require "AzureIoTHub.agent.lib.nut:2.0.0"
+#require "AzureIoTHub.agent.lib.nut:2.1.0"
 
 class Application {
 
@@ -63,7 +63,7 @@ class Application {
 
         event.agentid <- agentID;
         event.time <- formatDate();
-        
+
         local message = AzureIoTHub.Message(event, properties);
 
         // make sure device is connected, then send event
