@@ -23,7 +23,7 @@ In this tutorial, you begin by learning the basics of working with Electric Imp.
 1. Your 2.4GHz 802.11bgn WiFi network *name* (SSID) and *password*.
 2. A computer with a web browser.
 3. A smartphone with the Electric Imp app ([iOS](https://itunes.apple.com/us/app/electric-imp/id547133856) or [Android](https://play.google.com/store/apps/details?id=com.electricimp.electricimp)).
-4. A free [Electric Imp Account](https://preview-impcentral.electricimp.com/login).
+4. A free [Electric Imp Account](https://impcentral.electricimp.com/login).
 5. A [Microsoft Azure Account](https://azure.microsoft.com/en-us/resources/videos/sign-up-for-microsoft-azure/).
 6. Electric Imp supported hardware with a temperature sensor. We have complete step by step instructions for the harware listed below.
     - An [Electric Imp impExplorer Kit](https://store.electricimp.com/collections/featured-products/products/impexplorer-developer-kit?variant=31118866130)
@@ -93,7 +93,7 @@ If you’d like a quick overview of the IDE features please visit the Electric I
 
 ### Working With The Electric Imp IDE
 
-1. In your favorite web browser log into [impCentral](https://preview-impcentral.electricimp.com/login).
+1. In your favorite web browser log into [impCentral](https://impcentral.electricimp.com/login).
 1. Click **Create a Product**.
 ![Click on the Create a Product button in impCentral](./example_imgs/CreateNewProduct.png "Click on the Create a Product button in impCentral")
 1. In the popup, enter a Product name (e.g., **AzureIoTHub**), a Device Group name (e.g., **TempExample**), and then click **Create**.<br>
@@ -166,7 +166,7 @@ In this example we will register the device via the Azure portal. Please note th
 
 ## Run A Sample Electric Imp Application
 
-1. Reopen [impCentral](https://preview-impcentral.electricimp.com).
+1. Reopen [impCentral](https://impcentral.electricimp.com).
 1. Copy and Paste the [agent code](./IoTHubEnvExample_ManualRegister.agent.nut) from GitHub into the IDE’s agent pane (the left-hand side).
 1. The device code is specific to your hardware. Copy and Paste the device code for your hardware from GitHub into the IDE’s device pane (the right-hand side).
     - [impExplorer Kit device code](./IoTHubEnvExample_ExplorerKit.device.nut)
