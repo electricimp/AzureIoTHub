@@ -134,9 +134,9 @@ If you’d like a quick overview of the IDE features please visit the Electric I
 
 ![Policies](./example_imgs/IoTHubOverview.png)
 
-5. In the **Shared access policies** pane, click the **iothubowner** policy, and then copy and make a note of the **Connection string--primary key** of your IoT hub. You will need to enter this value in the code later:
+5. In the **Shared access policies** pane, click the **registryReadWrite** policy, and then copy and make a note of the **Connection string--primary key** of your IoT hub. You will need to enter this value in the code later:
 
-![Connection String](./example_imgs/IoTHubConnectionString.png)
+![Connection String](./example_imgs/IoTHubAccessPolicy.png)
 
 ## Register A Device In IoT Hub
 
