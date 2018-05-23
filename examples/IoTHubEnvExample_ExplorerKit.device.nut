@@ -22,10 +22,10 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-// All library require stametments must be at the beginning of the device code 
+// All library require stametments must be at the beginning of the device code
 
 // Temperature Humidity Sensor driver
-#require "HTS221.device.lib.nut:2.0.0"
+#require "HTS221.device.lib.nut:2.0.1"
 // RGB LED driver
 #require "WS2812.class.nut:3.0.0"
 
@@ -41,7 +41,7 @@ ExplorerKit_001 <- {
     "AD_GROVE2_DATA1" : hardware.pin5
 }
 
-// Our Application Code 
+// Our Application Code
 class Application {
 
     static RED = 0x00;
@@ -99,9 +99,9 @@ class Application {
             case YELLOW :
                 colorArr = [50, 45, 0];
                 break;
-            case GREEN : 
+            case GREEN :
                 colorArr = [0, 50, 0];
-                break; 
+                break;
         }
 
         // Turn the LED on
