@@ -95,10 +95,10 @@ If you’d like a quick overview of the IDE features please visit the Electric I
 1. In your favorite web browser log into [impCentral](https://preview-impcentral.electricimp.com/login).
 1. Click **Create a Product**.
 ![Click on the Create a Product button in impCentral](./example_imgs/CreateNewProduct.png "Click on the Create a Product button in impCentral")
-1. In the popup, enter a Product name (e.g., **AzureIoTHub**), a Device Group name (e.g., **TempExample**), and then click **Create**.
+1. In the popup, enter a Product name (e.g., **AzureIoTHub**), a Device Group name (e.g., **TempExample**), and then click **Create**.<br>
 ![Enter a Product name and the name of Device Group in the Create Product popup](./example_imgs/CreateProductPopUp.png "Enter a Product name and the name of an Application Workspace in the Create Product popup")<br>A Product defines a new connected product in the Electric Imp impCloud. A Device Group is the place where you develop and test your application software, both the device code and the agent code.
-1. Click **Assign devices**.
-![Click on the Assign Devices link in impCentral's logging pane](./example_imgs/LabeledCodeWindows.png.png "Click on the Assign Devices link in impCentral's logging pane")
+1. Click **Assign devices**.<br>
+![Click on the Assign Devices link in impCentral's logging pane](./example_imgs/LabeledCodeWindows.png "Click on the Assign Devices link in impCentral's logging pane")
 1. In the **Assign Devices** popup, choose your device by locating its device ID, and click **Assign**.
 ![Select your impExplorer and click Assign in the Assign Devices popup](./example_imgs/AssignDevicePopUpLg.png "Select your device and click Assign in the Assign Devices popup")
 1. At the top of the logs pane you can find the agent URL of your device. It will look something like this: **https://agent.electricimp.com/tgqsQukvcfyb**
@@ -151,6 +151,7 @@ In this example we will register the device programmatically by using the Electr
     - [impAccelerator™ Fieldbus Gateway](./IoTHubEnvExample_FieldbusGateway.device.nut)
 ![IDE Model agent URL](./example_imgs/LabeledCodeWindows.png)
 1. In the agent code look for the **IOTHUB_CONNECTION_STRING** variable. Copy and paste your connection string from **Create an IoT Hub resource** step 5.
+![Connection string variables](./example_imgs/ConnectionString.png)
 1. Hit **Build and Force Restart** to save and launch the code.
 ![IDE Build and Force Restart](./example_imgs/BuildAndRestart.png)
 1. As the application runs you will begin to see logs from your device:
