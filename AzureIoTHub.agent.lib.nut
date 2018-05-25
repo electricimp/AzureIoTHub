@@ -682,7 +682,7 @@ class AzureIoTHub {
         //                                  to the AzureIoTHub.Registry.get() or AzureIoTHub.Registry.create() method callbacks.
         //                                  For more guidance, please see the AzureIoTHub.registry example (README.md).
         //     onConnected : Function       Callback called every time the device is connected.
-        //                                  The callback signature:
+        //          (optional)              The callback signature:
         //                                  onConnected(error), where
         //                                      error : Integer     0 if the connection is successful, an error code otherwise.
         //     onDisconnected : Function    Callback called every time the device is disconnected
@@ -694,7 +694,7 @@ class AzureIoTHub {
         //          (optional)
         //
         // Returns:                         AzureIoTHub.Client instance created.
-        constructor(deviceConnStr, onConnected, onDisconnected = null, options = {}) {
+        constructor(deviceConnStr, onConnected = null, onDisconnected = null, options = {}) {
             const MESSAGE_INDEX = 0;
             const REQ_ID_INDEX = 0;
             const TWIN_PROPERTIES_INDEX = 0;
@@ -731,7 +731,7 @@ class AzureIoTHub {
         // Returns:                         Nothing.
         function connect() {
             if (_isConnected || _isConnecting) {
-                _onConnectedCb(_isConnected ? AZURE_IOT_CLIENT_ERROR_ALREADY_CONNECTED : AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
+                _onConnectedCb && _onConnectedCb(_isConnected ? AZURE_IOT_CLIENT_ERROR_ALREADY_CONNECTED : AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
                 return;
             }
             _log("Connecting...");
@@ -1177,7 +1177,7 @@ class AzureIoTHub {
                 _isDisconnected = false;
             }
             _isConnecting = false;
-            _onConnectedCb(err);
+            _onConnectedCb && _onConnectedCb(err);
         }
 
         function _onDisconnected() {

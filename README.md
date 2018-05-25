@@ -254,14 +254,14 @@ The client provides individual methods to enable every optional feature.
 
 Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. Specific callbacks are described within every method. Many callbacks provide an [error code](#error-code) which specifies a concrete error (if any) happened during the operation. 
 
-### Constructor: AzureIoTHub.Client(*deviceConnectionString, onConnected[, onDisconnected[, options]]*) ###
+### Constructor: AzureIoTHub.Client(*deviceConnectionString[, onConnected[, onDisconnected[, options]]]*) ###
 
 This method returns a new AzureIoTHub.Client instance.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *deviceConnectionString* | String | Yes | Device connection string: includes the host name to connect, the device Id and the shared access string. It can be obtained from the Azure Portal [*(see above)*](#authentication). However, if the device was registered using the *AzureIoTHub.Registry* class, the *deviceConnectionString* parameter can be retrieved from the [*AzureIoTHub.Device*](#azureiothubdevice) instance passed to the *AzureIoTHub.Registry.get()* or *AzureIoTHub.Registry.create()* method callbacks. For more guidance, please see the [AzureIoTHub.registry example](#azureiothubregistry-example). |
-| *[onConnected](#callback-onconnectederror)* | Function  | Yes | [Callback](#callback-onconnectederror) called every time the device is connected. |
+| *[onConnected](#callback-onconnectederror)* | Function  | Optional | [Callback](#callback-onconnectederror) called every time the device is connected. |
 | *[onDisconnected](#callback-ondisconnectederror)* | Function  | Optional | [Callback](#callback-ondisconnectederror) called every time the device is disconnected. |
 | *[options](#optional-settings)* | Table  | Optional | [Key-value table](#optional-settings) with optional settings. |
 
