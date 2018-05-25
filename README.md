@@ -44,7 +44,7 @@ To get a Registry Connection String you will require owner-level permissions. Pl
 1. Open the [Azure Portal](https://portal.azure.com/).
 2. Select or create your Azure IoT Hub resource.
 3. Under the ‘Settings’ heading click on ‘Shared Access Policies’.
-4. Select a policy which has all permissions (such as the *iothubowner*) or create a new policy then click on it
+4. Select a policy which has read/write permissions (such as the *registryReadWrite*) or create a new policy then click on it
 5. Copy the ‘Connection string--primary key’ to the clipboard and paste it into the *AzureIoTHub.Registry* constructor.
 
 ### Device Connection String ###
@@ -239,6 +239,8 @@ This method returns a new AzureIoTHub.DirectMethodResponse instance.
 ## AzureIoTHub.Client ##
 
 This class is used to transfer data to and from Azure IoT Hub. To use this class, the device must be registered as an IoT Hub device in an Azure account.
+
+Only one instance of this class is allowed.
 
 *AzureIoTHub.Client* works over MQTT v3.1.1 protocol. It supports the following functionality:
 - connecting and disconnecting to/from Azure IoT Hub. Azure IoT Hub supports only one connection per device.

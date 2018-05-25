@@ -176,7 +176,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 2. Click **Shared access policies**.
 
-3. In the **Shared access policies** pane, click the **iothubowner** policy, and then make a note of the **Connection string--primary key** of your IoT hub - this is the **Registry connection string** which may be needed to setup and run your application.
+3. In the **Shared access policies** pane, click the **registryReadWrite** policy, and then make a note of the **Connection string--primary key** of your IoT hub - this is the **Registry connection string** which may be needed to setup and run your application.
 
 ![Connection String](./example_imgs/IoTHubConnectionString.png)
 
