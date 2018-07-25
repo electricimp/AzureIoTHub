@@ -9,8 +9,8 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
   - [get()](#getdeviceid-callback) &mdash; Returns the properties of an existing device identity in Azure IoT Hub.
   - [list()](#listcallback) &mdash; Returns a list of up to 1000 device identities in Azure IoT Hub.
 - [AzureIoTHub.Device](#azureiothubdevice) &mdash; A device object used to manage registry device identities.
-  - [connectionstring()](#connectionstringhostname) &mdash; Returns the device connection string.
-  - [getbody()](#getbody) &mdash; Returns the device identity properties.
+  - [connectionString()](#connectionstringhostname) &mdash; Returns the device connection string.
+  - [getBody()](#getbody) &mdash; Returns the device identity properties.
 - [AzureIoTHub.Client](#azureiothubclient) &mdash; Used to open AMQP connection to Azure IoT Hub, and to send & receive events.
   - [connect()](#connectcallback) &mdash; Opens an AMQP connection to Azure IoT Hub.
   - [disconnect()](#disconnect) &mdash; Disconnects from Azure IoT Hub.
