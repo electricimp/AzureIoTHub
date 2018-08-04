@@ -356,6 +356,8 @@ The method returns nothing. A result of the sending may be obtained via the [*on
 It is allowed to send a new message while the previous send operation is not completed yet. 
 Maximum amount of pending operations is defined by the [client settings](#optional-settings).
 
+Due to limited support of the `retain` MQTT flag by Azure IoT Hub (described [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#sending-device-to-cloud-messages)) this library doesn't currently support it.
+
 If *message* parameter is `null` or has incompatible type, the method will throw an exception.
 
 | Parameter | Data Type | Required? | Description |
