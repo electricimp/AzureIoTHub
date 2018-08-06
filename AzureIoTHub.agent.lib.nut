@@ -646,6 +646,7 @@ class AzureIoTHub {
 
         _connStrParsed          = null;
         _options                = null;
+        _msgOptions             = null;
         _mqttclient             = null;
         _topics                 = null;
 
@@ -722,6 +723,10 @@ class AzureIoTHub {
             foreach (optName, optVal in options) {
                 _options[optName] <- optVal;
             }
+
+            _msgOptions = {
+                "qos" : _options.qos
+            };
 
             _initTopics(_connStrParsed.DeviceId);
         }
@@ -813,7 +818,7 @@ class AzureIoTHub {
             local topic = _topics.msgSend + props;
             local reqId = _reqNum++;
 
-            local mqttMsg = _mqttclient.createmessage(topic, msg.getBody(), _options.qos);
+            local mqttMsg = _mqttclient.createmessage(topic, msg.getBody(), _msgOptions);
 
             local msgSentCb = function (err) {
                 if (reqId in _msgPendingQueue) {
@@ -1000,7 +1005,7 @@ class AzureIoTHub {
             local topic = _topics.twinGet + "?$rid=" + reqId;
             _reqNum++;
 
-            local mqttMsg = _mqttclient.createmessage(topic, "", _options.qos);
+            local mqttMsg = _mqttclient.createmessage(topic, "", _msgOptions);
 
             local msgSentCb = function (err) {
                 if (_twinRetrievedCb != null) {
@@ -1069,7 +1074,7 @@ class AzureIoTHub {
                 onUpdated && onUpdated(props, AZURE_IOT_CLIENT_ERROR_GENERAL);
                 return;
             }
-            local mqttMsg = _mqttclient.createmessage(topic, jsonProps, _options.qos);
+            local mqttMsg = _mqttclient.createmessage(topic, jsonProps, _msgOptions);
 
             local msgSentCb = function (err) {
                 if (reqId in _twinPendingRequests) {
@@ -1345,7 +1350,7 @@ class AzureIoTHub {
                 _logError("Exception at parsing the response body for Direct Method: " + e);
                 return;
             }
-            local mqttMsg = _mqttclient.createmessage(topic, respJson, _options.qos);
+            local mqttMsg = _mqttclient.createmessage(topic, respJson, _msgOptions);
 
             local msgSentCb = function (err) {
                 if (err != 0) {
