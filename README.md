@@ -249,6 +249,8 @@ Only one instance of this class is allowed.
 - device twin operations (optional functionality)
 - direct methods processing (optional functionality)
 
+Please keep in mind [Azure IoT Hub limitations](https://github.com/MicrosoftDocs/azure-docs/blob/master/includes/iot-hub-limits.md).
+
 All optional functionalities are disabled after a client instantiation. If an optional functionality is needed it should be enabled after the client is successfully connected. And it should be explicitly re-enabled after every re-connection of the client.
 The client provides individual methods to enable every optional feature.
 
