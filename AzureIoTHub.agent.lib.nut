@@ -264,7 +264,7 @@ class AzureIoTHub {
         // NOTE: This method differs from the original Node.js SDK
         function createAMQPMessage(encoding = "binary") {
             // encode message body
-            if (typeof _body == "table" || typeof _body == "array") _body = _encoder(body);
+            if (typeof _body == "table" || typeof _body == "array") _body = _encoder(_body);
             // set properties to empty table, if no application properties set
             if (_properties == null ) _properties = {};
             if (encoding == DATA) {
