@@ -310,9 +310,29 @@ There are also two optional parameters in the following order:
 - encoder: a custom JSON encoder function for encoding the provided data (e.g. [JSONEncoder.encode](https://github.com/electricimp/JSONEncoder))
 
 ```squirrel
+
+//This class can be used to hold numbers larger than Squirrel can natively support (i.e. anything larger than 32-bit)
+//and then be encoded as a number (rather than a string) when encoded with `JSONEncoder.encode`.
+class JSONLiteralString {
+  _string = null;
+
+  constructor (string) {
+    _string = string.tostring();
+  }
+
+  function _serializeRaw() {
+    return _string;
+  }
+
+  function toString() {
+    return _string;
+  }
+}
+
+
 local message1 = AzureIoTHub.Message("This is an event");
 local message2 = AzureIoTHub.Message({ "id": 1, "text": "Hello, world." });
-local message3 = AzureIoTHub.Message({ "a": JSONLiteralString("1234567890") }, null, JSONEncoder.encode.bindenv(JSONEncoder))
+local message3 = AzureIoTHub.Message({ "a": JSONLiteralString("123456789123456789") }, null, JSONEncoder.encode.bindenv(JSONEncoder))
 ```
 
 ### AzureIoTHub.Message Class Methods ###
