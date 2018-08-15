@@ -22,7 +22,7 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-#require "AzureIoTHub.agent.lib.nut:2.1.0"
+#require "AzureIoTHub.agent.lib.nut:2.2.0"
 
 class Application {
 

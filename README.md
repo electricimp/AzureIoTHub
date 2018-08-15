@@ -1,4 +1,4 @@
-# Azure IoT Hub 2.1.0 #
+# Azure IoT Hub 2.2.0 #
 
 Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub version “2016-11-14”. The library consists of the following classes:
 
@@ -25,7 +25,7 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
   - [abandon()](#abandon) &mdash; A feedback function used to re-queue an IoT Hub delivery.
   - [reject()](#reject) &mdash; A feedback function used to reject an IoT Hub delivery.
 
-**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:2.1.0"` **to the top of your agent code.**
+**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:2.2.0"` **to the top of your agent code.**
 
 [![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=master)](https://travis-ci.org/electricimp/AzureIoTHub)
 
@@ -72,7 +72,7 @@ The *AzureIoTHub.Registry* class is used to manage IoT Hub devices. This class a
 This constructs a *Registry* object which exposes the Device Registry functions. The *connectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication).
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:2.1.0"
+#require "AzureIoTHub.agent.lib.nut:2.2.0"
 
 // Instantiate a client using your connection string
 const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=<KEY_NAME>;SharedAccessKey=<KEY_HASH>";
@@ -151,7 +151,7 @@ The *getBody()* method returns the stored device properties. See the [Device Inf
 This example code will create an IoT Hub device using an imp’s agent ID if one isn’t found in the IoT Hub device registry. It will then instantiate the *AzureIoTHub.Client* class for later use.
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:2.1.0"
+#require "AzureIoTHub.agent.lib.nut:2.2.0"
 
 const CONNECT_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 
@@ -300,13 +300,19 @@ The *AzureIoTHub.Message* class is used to create an event object to send to IoT
 
 ### AzureIoTHub.Message Class Usage ###
 
-#### Constructor: AzureIoTHub.Message(*message[, properties]*) ####
+#### Constructor: AzureIoTHub.Message(*message[, properties][, encoder]*) ####
 
-The constructor takes one required parameter, *message*, which can be created from a string or any object that can be converted to JSON. It may also take an optional parameter: a table of message properties.
+The constructor takes one required parameter, *message*, which can be created from a string or any object that can be converted to JSON. 
+
+There are also two optional parameters in the following order:
+
+- properties: a table of message properties
+- encoder: a custom JSON encoder function for encoding the provided data (e.g. [JSONEncoder.encode](https://github.com/electricimp/JSONEncoder))
 
 ```squirrel
 local message1 = AzureIoTHub.Message("This is an event");
 local message2 = AzureIoTHub.Message({ "id": 1, "text": "Hello, world." });
+local message3 = AzureIoTHub.Message({ "a": JSONLiteralString("1234567890") }, null, JSONEncoder.encode.bindenv(JSONEncoder))
 ```
 
 ### AzureIoTHub.Message Class Methods ###
@@ -390,7 +396,7 @@ This example also shows how to send device-to-cloud messages. A listener will be
 ### Agent Code ###
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:2.1.0"
+#require "AzureIoTHub.agent.lib.nut:2.2.0"
 
 ////////// Application Variables //////////
 
