@@ -41,7 +41,7 @@ const AZURE_CLAIM_BASED_SECURITY_PATH = "$cbs";
 
 class AzureIoTHub {
 
-    static VERSION = "2.1.0";
+    static VERSION = "2.2.0";
 
     // Helper Classes modeled after JS/Node SDK
     //------------------------------------------------------------------------------
@@ -244,9 +244,13 @@ class AzureIoTHub {
         // these are application set properties, not the message properties set by azure
         _properties = null;
 
-        constructor(body, properties = null) {
+        //data encoder
+        _encoder = null;
+
+        constructor(body, properties = null, encoder = null) {
             _body = body;
             _properties = properties;
+            _encoder = encoder == null ? http.jsonencode.bindenv(http) : encoder;
         }
 
         function getProperties() {
@@ -260,7 +264,7 @@ class AzureIoTHub {
         // NOTE: This method differs from the original Node.js SDK
         function createAMQPMessage(encoding = "binary") {
             // encode message body
-            if (typeof _body == "table" || typeof _body == "array") _body = http.jsonencode(_body);
+            if (typeof _body == "table" || typeof _body == "array") _body = _encoder(_body);
             // set properties to empty table, if no application properties set
             if (_properties == null ) _properties = {};
             if (encoding == DATA) {
