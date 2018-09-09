@@ -204,7 +204,7 @@ This method returns a new AzureIoTHub.Message instance.
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *message* | [Any supported by the MQTT API](TODO-link) TODO - update link | Yes | Message body. |
+| *message* | [Any supported by the MQTT API](https://developer.electricimp.com/api/mqtt/mqttclient/createmessage). | Yes | Message body. |
 | *props* | Table | Optional | Key-value table with the message properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
 
 #### Example ####
@@ -221,7 +221,7 @@ This method returns a key-value table with the properties of the message. Every 
 
 ### getBody() ###
 
-This method returns the message's body. Messages that have been created locally will be of the same type as they were when created, but messages came from Azure IoT Hub are of one of the [types supported by the MQTT API](TODO-link) TODO - update link.
+This method returns the message's body. Messages that have been created locally will be of the same type as they were when created, but messages came from Azure IoT Hub are of one of the [types supported by the MQTT API](https://developer.electricimp.com/api/mqtt/mqttclient/onmessage).
 
 ## AzureIoTHub.DirectMethodResponse ##
 
@@ -294,6 +294,7 @@ These settings affect the client's behavior and the operations. Every setting is
 | Key (String) | Value Type | Default | Description |
 | --- | --- | --- | --- |
 | "qos" | Integer | 0 | MQTT QoS. Azure IoT Hub supports QoS `0` and `1` only. |
+| "keepAlive" | Integer | 60 | Keep-alive MQTT parameter, in seconds. For more information, see [here](https://developer.electricimp.com/api/mqtt/mqttclient/connect). |
 | "timeout" | Integer | 10 | Timeout (in seconds) for [Retrieve Twin](#retrievetwinpropertiesonretrieved) and [Update Twin](#updatetwinpropertiesprops-onupdated) operations. |
 | "maxPendingTwinRequests" | Integer | 3 | Maximum amount of pending [Update Twin](#updatetwinpropertiesprops-onupdated) operations. |
 | "maxPendingSendRequests" | Integer | 3 | Maximum amount of pending [Send Message](#sendmessagemessage-onsent) operations. |
@@ -633,8 +634,8 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | Error Code | Description |
 | --- | --- |
 | 0 | No error. |
-| 1-99 | [Codes returned by the MQTT API](TODO-link) TODO - update link |
-| 100-999 | [Azure IoT Hub errors](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support). |
+| -99..-1 and 128 | [Codes returned by the MQTT API](https://developer.electricimp.com/api/mqtt) |
+| 100-999 except 128 | [Azure IoT Hub errors](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support). |
 | 1000 | The client is not connected. |
 | 1001 | The client is already connected. |
 | 1002 | The feature is not enabled. |
