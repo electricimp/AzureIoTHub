@@ -1240,7 +1240,6 @@ class AzureIoTHub {
         }
 
         function _handleDesPropsMsg(message, topic) {
-            // TODO: Check the EI's spec on message receiving
             message = message.tostring();
             local parsedMsg = null;
             try {
@@ -1254,7 +1253,6 @@ class AzureIoTHub {
         }
 
         function _handleTwinResponse(message, topic) {
-            // TODO: Check the EI's spec on message receiving
             message = message.tostring();
             local status = null;
             local reqId = null;
@@ -1324,7 +1322,6 @@ class AzureIoTHub {
         }
 
         function _handleDirMethodMsg(message, topic) {
-            // TODO: Check the EI's spec on message receiving
             message = message.tostring();
             local methodName = null;
             local reqId = null;
