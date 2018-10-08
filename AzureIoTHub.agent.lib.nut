@@ -38,6 +38,8 @@ const AZURE_IOT_CLIENT_ERROR_GENERAL                = 1010;
 
 // MQTT QoS. Azure IoT Hub supports QoS 0 and 1 only
 const AZURE_IOT_CLIENT_DEFAULT_QOS                  = 0;
+// MQTT Keep-alive (in seconds)
+const AZURE_IOT_CLIENT_DEFAULT_KEEP_ALIVE           = 60;
 // Timeout (in seconds) for Retrieve Twin and Update Twin operations
 const AZURE_IOT_CLIENT_DEFAULT_TIMEOUT              = 10;
 // Maximum amount of pending Update Twin operations
@@ -706,6 +708,7 @@ class AzureIoTHub {
             _twinPendingRequests = {};
             _options = {
                 "qos" : AZURE_IOT_CLIENT_DEFAULT_QOS,
+                "keepAlive" : AZURE_IOT_CLIENT_DEFAULT_KEEP_ALIVE,
                 "timeout" : AZURE_IOT_CLIENT_DEFAULT_TIMEOUT,
                 "maxPendingTwinRequests" : AZURE_IOT_CLIENT_DEFAULT_TWIN_UPD_PARAL_REQS,
                 "maxPendingSendRequests" : AZURE_IOT_CLIENT_DEFAULT_MSG_SEND_PARAL_REQS
@@ -750,7 +753,8 @@ class AzureIoTHub {
 
             local options = {
                 "username" : username,
-                "password" : sas
+                "password" : sas,
+                "keepalive" : _options.keepAlive
             };
 
             local url = "ssl://" + _connStrParsed.HostName;
@@ -854,7 +858,7 @@ class AzureIoTHub {
             }
 
             local doneCb = function (err) {
-                if (_msgEnabledCb != null) {
+                if (_isEnablingMsg) {
                     _msgEnabledCb = null;
                     _isEnablingMsg = false;
                     if (err == 0) {
@@ -872,7 +876,6 @@ class AzureIoTHub {
 
             if (disable) {
                 // Should unsubscribe
-                // TODO: Check EI's spec on unsubscribe callback
                 _mqttclient.unsubscribe(topic, doneCb);
             } else {
                 // Should send subscribe packet
@@ -910,7 +913,7 @@ class AzureIoTHub {
             }
 
             local doneTwinRecvCb = function (err) {
-                if (_twinEnabledCb =! null) {
+                if (_isEnablingTwin) {
                     _twinEnabledCb = null;
                     _isEnablingTwin = false;
                     if (err == 0) {
@@ -927,7 +930,7 @@ class AzureIoTHub {
             }.bindenv(this);
 
             local doneTwinNotifCb = function (err) {
-                if (_twinEnabledCb != null) {
+                if (_isEnablingTwin) {
                     if (err == 0) {
                         local topic = _topics.twinRecv + "#";
                         if (disable) {
@@ -949,7 +952,6 @@ class AzureIoTHub {
 
             if (disable) {
                 // Should unsubscribe
-                // TODO: Check EI's spec on unsubscribe callback
                 _mqttclient.unsubscribe(topic, doneTwinNotifCb);
             } else {
                 // Should send subscribe packet for notifications and GET
@@ -1121,7 +1123,7 @@ class AzureIoTHub {
             }
 
             local doneCb = function (err) {
-                if (_dMethodEnabledCb != null) {
+                if (_isEnablingDMethod) {
                     _dMethodEnabledCb = null;
                     _isEnablingDMethod = false;
                     if (err == 0) {
@@ -1238,7 +1240,6 @@ class AzureIoTHub {
         }
 
         function _handleDesPropsMsg(message, topic) {
-            // TODO: Check the EI's spec on message receiving
             message = message.tostring();
             local parsedMsg = null;
             try {
@@ -1252,7 +1253,6 @@ class AzureIoTHub {
         }
 
         function _handleTwinResponse(message, topic) {
-            // TODO: Check the EI's spec on message receiving
             message = message.tostring();
             local status = null;
             local reqId = null;
@@ -1322,7 +1322,6 @@ class AzureIoTHub {
         }
 
         function _handleDirMethodMsg(message, topic) {
-            // TODO: Check the EI's spec on message receiving
             message = message.tostring();
             local methodName = null;
             local reqId = null;
