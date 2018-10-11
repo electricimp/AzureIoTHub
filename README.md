@@ -1,6 +1,6 @@
 # Azure IoT Hub 3.0.0 #
 
-Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub. Starting with version 3 the library integrates with Azure IoT Hub using the MQTT protocol (rather than AMQP previously) as there is certain functionality such as Device Twins and Direct Methods that IoT Hub only supports via MQTT.
+Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub API version "2016-11-14". Starting with version 3 the library integrates with Azure IoT Hub using the MQTT protocol (rather than AMQP previously) as there is certain functionality such as Device Twins and Direct Methods that IoT Hub only supports via MQTT.
 
 **Note:** The Azure IoT Hub MQTT integration is currently in public Beta. Before proceeding, please sign up for access to the Azure IoT Hub MQTT integration using [this link](https://connect.electricimp.com/azure-mqtt-integration-signup).
 
