@@ -289,7 +289,7 @@ This is a good place to call the [connect()](#connect) method again, if it was a
 
 Note: 
 
-IoT Hub expires authentication tokens (currently, the library is configured to request tokens with a 1 hour life). When the token expires the client connection disconnects and the `onDisconnected(*error*)` handler is called. To request a new token and reconnect you can execute the connect flow again (call [connect()](#connect) and enable optional functionalities).
+IoT Hub expires authentication tokens (currently, the library is configured to request tokens with a 1 hour life). When the token expires the client connection disconnects and the `onDisconnected(*error*)` handler is called. To reconnect with a new token you can simply execute the connect flow again (call [connect()](#connect).
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
