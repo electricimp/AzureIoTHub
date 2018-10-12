@@ -287,6 +287,10 @@ This callback is called every time the device is disconnected.
 
 This is a good place to call the [connect()](#connect) method again, if it was an unexpected disconnection.
 
+Note: 
+
+IoT Hub expires authentication tokens (currently, the library is configured to request tokens with a 1 hour life). When the token expires the client connection disconnects and the `onDisconnected(*error*)` handler is called. To request a new token and reconnect you can execute the connect flow again (call [connect()](#connect) and enable optional functionalities).
+
 | Parameter | Data Type | Description |
 | --- | --- | --- |
 | *[error](#error-code)* | Integer | `0` if the disconnection was caused by the [disconnect()](#disconnect) method, an [error code](#error-code) which explains a reason of the disconnection otherwise. |
