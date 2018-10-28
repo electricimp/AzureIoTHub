@@ -131,7 +131,7 @@ class TwinsTestCase extends ImpTestCase {
                 }
                 return Promise.resolve(0);
             }.bindenv(this));
-    }        
+    }
 
     function testDisableTwin() {
         return _disableTwin()
@@ -195,7 +195,7 @@ class TwinsTestCase extends ImpTestCase {
     function _updateTwin() {
         local props = {"testProp" : "testVal"};
         return Promise(function (resolve, reject) {
-            _azureMqttClient.updateTwinProperties(props, function (props, err) {
+            _azureMqttClient.updateTwinProperties(props, function (err, props) {
                 if (err != 0) {
                     return reject(err);
                 }

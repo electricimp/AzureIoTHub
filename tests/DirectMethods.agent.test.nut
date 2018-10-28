@@ -107,7 +107,7 @@ class DirectMethodsTestCase extends ImpTestCase {
     }
 
     function _enableMethods() {
-        local onMethod = function (name, params) {};
+        local onMethod = function (name, params, reply) {};
         return Promise(function (resolve, reject) {
             _azureMqttClient.enableDirectMethods(onMethod, function (err) {
                 if (err != 0) {
