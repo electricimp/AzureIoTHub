@@ -4,6 +4,8 @@ Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure I
 
 **Note:** The Azure IoT Hub MQTT integration is currently in public Beta. Before proceeding, please sign up for access to the Azure IoT Hub MQTT integration using [this link](https://connect.electricimp.com/azure-mqtt-integration-signup).
 
+**IMPORTANT:** All Electric Imp devices can connect to Azure IoT Hub, regardless of which impCloud (AWS or Azure) they are on. For devices on impCloud on AWS, the connection to IoT Hub will occur cloud-to-cloud from AWS to Azure. For devices on impCloud on Azure, the connection to IoT Hub will occur within Azure. Functionality-wise there is no difference between the scenarios.
+
 The library consists of the following classes:
 
 - [AzureIoTHub.Registry](#azureiothubregistry) &mdash; Device management class, all requests use HTTP to connect to Azure IoT Hub.
