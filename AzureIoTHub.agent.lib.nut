@@ -480,7 +480,7 @@ class AzureIoTHub {
 
             local error = null;
 
-            // make sure we have a valid deviceInfo table 
+            // make sure we have a valid deviceInfo table
             switch (typeof deviceInfo) {
                 case "function" :
                     done = deviceInfo;
@@ -494,14 +494,14 @@ class AzureIoTHub {
                 case "device":
                     deviceInfo = deviceInfo.getBody();
                     break;
-                default : 
+                default :
                     error = {"response" : null, "message" : ERROR_MISSING_DEVICE_INFO};
             }
-            
+
             if (error) {
                 done(error, null);
                 return this;
-            } 
+            }
 
             local path = AzureIoTHub.Endpoint.devicePath(deviceInfo.deviceId) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.updateDevice(path, deviceInfo, function (err, body) {
@@ -520,11 +520,11 @@ class AzureIoTHub {
         function get(deviceId, done) {
 
             if (typeof done != "function") throw ERROR_MISSING_CALLBACK;
-            
+
             local devID = null;
             local error = null;
 
-            // make sure we have a valid deviceId even if user 
+            // make sure we have a valid deviceId even if user
             // passed in deviceInfo table or Device object
             switch (typeof deviceId) {
                 case "string":
@@ -536,7 +536,7 @@ class AzureIoTHub {
                     } else {
                         error = {"response" : null, "message" : ERROR_MISSING_DEVICE_ID};
                     }
-                    break;     
+                    break;
                 case "device":
                     devID = deviceId.getBody().deviceId;
                     break;
@@ -547,7 +547,7 @@ class AzureIoTHub {
             if (error) {
                 done(error, null);
                 return this;
-            } 
+            }
 
             local path = AzureIoTHub.Endpoint.devicePath(devID) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.getDevice(path, function (err, body) {
@@ -588,7 +588,7 @@ class AzureIoTHub {
             local devID = null;
             local error = null;
 
-            // make sure we have a valid deviceId even if user 
+            // make sure we have a valid deviceId even if user
             // passed in deviceInfo table or Device object
             switch (typeof deviceId) {
                 case "function" :
@@ -608,14 +608,14 @@ class AzureIoTHub {
                 case "device":
                     devID = deviceId.getBody().deviceId;
                     break;
-                default : 
+                default :
                     error = {"response" : null, "message" : ERROR_MISSING_DEVICE_ID};
             }
-            
+
             if (error) {
                 done(error, null);
                 return this;
-            } 
+            }
 
             local path = AzureIoTHub.Endpoint.devicePath(devID) + AzureIoTHub.Endpoint.versionQueryString();
             _transport.deleteDevice(path, done);
@@ -787,22 +787,22 @@ class AzureIoTHub {
         //     msg : AzureIoTHub.Message    Message to send.
         //     onSent : Function            Callback called when the operation is completed or an error happens.
         //          (optional)              The callback signature:
-        //                                  onSent(msg, error), where
+        //                                  onSent(error, msg), where
+        //                                      error : Integer     0 if the operation is completed successfully, an error code otherwise.
         //                                      msg :               The original message passed to sendMessage() method.
         //                                          AzureIoTHub.Message
-        //                                      error : Integer     0 if the operation is completed successfully, an error code otherwise.
         //
         // Returns:                         Nothing.
         function sendMessage(msg, onSent = null) {
             if (!_isConnected || _isDisconnecting) {
-                onSent && onSent(msg, _isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                onSent && onSent(_isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, msg);
                 return;
             }
 
             local tooManyRequests = _msgPendingQueue.len() >= _options.maxPendingSendRequests;
 
             if (tooManyRequests) {
-                onSent && onSent(msg, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
+                onSent && onSent(AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW, msg);
                 return;
             }
 
@@ -815,7 +815,7 @@ class AzureIoTHub {
                     props = http.urlencode(msg.getProperties());
                 } catch (e) {
                     _logError("Exception at parsing the properties: " + e);
-                    onSent && onSent(msg, AZURE_IOT_CLIENT_ERROR_GENERAL);
+                    onSent && onSent(AZURE_IOT_CLIENT_ERROR_GENERAL, msg);
                     return;
                 }
             }
@@ -827,7 +827,7 @@ class AzureIoTHub {
             local msgSentCb = function (err) {
                 if (reqId in _msgPendingQueue) {
                     delete _msgPendingQueue[reqId];
-                    onSent && onSent(msg, err);
+                    onSent && onSent(err, msg);
                 }
             }.bindenv(this);
 
@@ -1037,9 +1037,9 @@ class AzureIoTHub {
         //                                  Keys and values are fully application specific.
         //     onUpdated : Function         Callback called when the operation is completed or an error happens.
         //          (optional)              The callback signature:
-        //                                  onUpdated(props, error), where
-        //                                      props : Table       The original properties passed to the updateTwinProperties() method.
+        //                                  onUpdated(error, props), where
         //                                      error : Integer     0 if the operation is completed successfully, an error code otherwise.
+        //                                      props : Table       The original properties passed to the updateTwinProperties() method.
         //
         // Returns:                         Nothing.
         function updateTwinProperties(props, onUpdated = null) {
@@ -1047,17 +1047,17 @@ class AzureIoTHub {
             local tooManyRequests = _twinPendingRequests.len() >= _options.maxPendingTwinRequests;
 
             if (!_isConnected || _isDisconnecting) {
-                onUpdated && onUpdated(props, _isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                onUpdated && onUpdated(_isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, props);
                 return;
             }
 
             if (!enabled) {
-                onUpdated && onUpdated(props, AZURE_IOT_CLIENT_ERROR_NOT_ENABLED);
+                onUpdated && onUpdated(AZURE_IOT_CLIENT_ERROR_NOT_ENABLED, props);
                 return;
             }
 
             if (tooManyRequests) {
-                onUpdated && onUpdated(props, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
+                onUpdated && onUpdated(AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW, props);
                 return;
             }
 
@@ -1073,7 +1073,7 @@ class AzureIoTHub {
                 jsonProps = http.jsonencode(props);
             } catch (e) {
                 _logError("Exception at parsing the properties: " + e);
-                onUpdated && onUpdated(props, AZURE_IOT_CLIENT_ERROR_GENERAL);
+                onUpdated && onUpdated(AZURE_IOT_CLIENT_ERROR_GENERAL, props);
                 return;
             }
             local mqttMsg = _mqttclient.createmessage(topic, jsonProps, _msgOptions);
@@ -1087,7 +1087,7 @@ class AzureIoTHub {
                         }
                     } else {
                         delete _twinPendingRequests[reqId];
-                       onUpdated && onUpdated(props, err);
+                        onUpdated && onUpdated(err, props);
                     }
                 }
             }.bindenv(this);
@@ -1101,14 +1101,26 @@ class AzureIoTHub {
         // Parameters:
         //     onMethod : Function          Callback called every time a direct method is called. null disables the feature.
         //                                  The callback signature:
-        //                                  onMethod(name, params), where
+        //                                  onMethod(name, params, reply), where
         //                                      name : String       Name of the called Direct Method.
         //                                      params : Table      Key-value table with the input parameters of the called Direct Method.
         //                                                          Every key is always a String with the name of the property.
         //                                                          The value is the corresponding value of the property.
         //                                                          Keys and values are fully application specific.
+        //                                      reply : Function    Function which should be called to reply to the call of Direct Method.
+        //                                                          The function signature:
+        //                                                          reply(data, onReplySent), where
+        //                                                              data :          An instance of the AzureIoTHub.DirectMethodResponse.
+        //                                                                  AzureIoTHub.DirectMethodResponse
+        //                                                              onReplySent :   Callback called when the operation is completed or
+        //                                                                  Function    an error happens.
+        //                                                                  (optional)  The callback signature:
+        //                                                                              onReplySent(error, data), where
+        //                                                                                  error : Integer     0 if the operation is completed
+        //                                                                                                      successfully, an error code otherwise.
+        //                                                                                  data :              The original data passed to reply().
+        //                                                                                      AzureIoTHub.DirectMethodResponse
         //     onDone : Function            Callback called when the operation is completed or an error happens.
-        //                                  The callback must return an instance of the AzureIoTHub.DirectMethodResponse.
         //          (optional)              The callback signature:
         //                                  onDone(error), where
         //                                      error : Integer     0 if the operation is completed successfully, an error code otherwise.
@@ -1291,9 +1303,9 @@ class AzureIoTHub {
             local props = arr[TWIN_PROPERTIES_INDEX];
             local cb = arr[CALLBACK_INDEX];
             if (_statusIsOk(status)) {
-                cb && cb(props, 0);
+                cb && cb(0, props);
             } else {
-                cb && cb(props, status);
+                cb && cb(status, props);
             }
         }
 
@@ -1339,25 +1351,26 @@ class AzureIoTHub {
                 return;
             }
 
-            local resp = _onMethodCb(methodName, params);
-            local topic = _topics.dMethodResp + format("%i/?$rid=%s", resp._status, reqId);
+            local reply = function(resp, onReplySent = null) {
+                local topic = _topics.dMethodResp + format("%i/?$rid=%s", resp._status, reqId);
 
-            local respJson = null;
-            try {
-                respJson = http.jsonencode(resp._body);
-            } catch (e) {
-                _logError("Exception at parsing the response body for Direct Method: " + e);
-                return;
-            }
-            local mqttMsg = _mqttclient.createmessage(topic, respJson, _msgOptions);
-
-            local msgSentCb = function (err) {
-                if (err != 0) {
-                    _logError("Could not send Direct Method response. Return code = " + err);
+                local respJson = null;
+                try {
+                    respJson = http.jsonencode(resp._body);
+                } catch (e) {
+                    _log("Exception at parsing the response body for Direct Method: " + e);
+                    onReplySent && onReplySent(AZURE_IOT_CLIENT_ERROR_GENERAL, resp);
+                    return;
                 }
+                local mqttMsg = _mqttclient.createmessage(topic, respJson, _msgOptions);
+
+                local msgSentCb = function (err) {
+                    onReplySent && onReplySent(err, resp);
+                }.bindenv(this);
+                mqttMsg.sendasync(msgSentCb);
             }.bindenv(this);
 
-            mqttMsg.sendasync(msgSentCb);
+            _onMethodCb(methodName, params, reply);
         }
 
         function _processQueue() {
@@ -1384,7 +1397,7 @@ class AzureIoTHub {
                     (time() - timestamp >= _options.timeout)) {
                     // TODO: Make sure it works correctly
                     delete _twinPendingRequests[reqId];
-                    cb && cb(props, AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT);
+                    cb && cb(AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT, props);
                 }
             }
 
@@ -1448,7 +1461,7 @@ class AzureIoTHub {
             foreach (reqId, arr in _msgPendingQueue) {
                 local msg = arr[MESSAGE_INDEX];
                 local cb = arr[CALLBACK_INDEX];
-                cb && cb(msg, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                cb && cb(AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, msg);
             }
             _msgPendingQueue = {};
 
@@ -1468,7 +1481,7 @@ class AzureIoTHub {
             foreach (reqId, arr in _twinPendingRequests) {
                 local props = arr[TWIN_PROPERTIES_INDEX];
                 local cb = arr[CALLBACK_INDEX];
-                cb && cb(props, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                cb && cb(AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, props);
             }
             _twinPendingRequests = {};
             if (_dMethodEnabledCb != null) {

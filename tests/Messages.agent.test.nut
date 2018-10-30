@@ -103,7 +103,7 @@ class MessagesTestCase extends ImpTestCase {
         msgBody.writestring("test blob message");
         local msg = AzureIoTHub.Message(msgBody, {"prop1" : "val1"});
         return Promise(function (resolve, reject) {
-            _azureMqttClient.sendMessage(msg, function (msg, err) {
+            _azureMqttClient.sendMessage(msg, function (err, msg) {
                 if (err != 0) {
                     return reject(err);
                 }
@@ -140,7 +140,7 @@ class MessagesTestCase extends ImpTestCase {
     function _sendMessage() {
         local msg = AzureIoTHub.Message("test message", {"prop1" : "val1"});
         return Promise(function (resolve, reject) {
-            _azureMqttClient.sendMessage(msg, function (msg, err) {
+            _azureMqttClient.sendMessage(msg, function (err, msg) {
                 if (err != 0) {
                     return reject(err);
                 }

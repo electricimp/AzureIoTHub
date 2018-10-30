@@ -1,6 +1,10 @@
 # Azure IoT Hub 3.0.0 #
 
-Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub version “2016-11-14”. The library consists of the following classes:
+Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub API version "2016-11-14". Starting with version 3 the library integrates with Azure IoT Hub using the MQTT protocol (rather than AMQP previously) as there is certain functionality such as Device Twins and Direct Methods that IoT Hub only supports via MQTT.
+
+**Note:** The Azure IoT Hub MQTT integration is currently in public Beta. Before proceeding, please sign up for access to the Azure IoT Hub MQTT integration using [this link](https://connect.electricimp.com/azure-mqtt-integration-signup).
+
+The library consists of the following classes:
 
 - [AzureIoTHub.Registry](#azureiothubregistry) &mdash; Device management class, all requests use HTTP to connect to Azure IoT Hub.
   - [create()](#createdeviceinfo-callback) &mdash; Creates a a new device identity in Azure IoT Hub.
@@ -282,6 +286,10 @@ This is a right place to enable optional functionalities, if needed.
 This callback is called every time the device is disconnected.
 
 This is a good place to call the [connect()](#connect) method again, if it was an unexpected disconnection.
+
+Note: 
+
+IoT Hub expires authentication tokens (currently, the library is configured to request tokens with a 1 hour life). When the token expires the client connection disconnects and the `onDisconnected(*error*)` handler is called. To reconnect with a new token you can simply execute the connect flow again (call [connect()](#connect).
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
