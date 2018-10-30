@@ -1,4 +1,4 @@
-# Azure IoT Hub 3.0.0 #
+# Azure IoT Hub 4.0.0 #
 
 Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub API version "2016-11-14". Starting with version 3 the library integrates with Azure IoT Hub using the MQTT protocol (rather than AMQP previously) as there is certain functionality such as Device Twins and Direct Methods that IoT Hub only supports via MQTT.
 
@@ -33,7 +33,7 @@ The library consists of the following classes:
   - [enableDirectMethods()](#enabledirectmethodsonmethod-ondone) &mdash; Enables or disables Azure IoT Hub Direct Methods.
   - [setDebug()](#setdebugvalue) &mdash; Enables or disables the client debug output.
 
-**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:3.0.0"` **to the top of your agent code.**
+**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:4.0.0"` **to the top of your agent code.**
 
 [![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=master)](https://travis-ci.org/electricimp/AzureIoTHub)
 
@@ -74,7 +74,7 @@ The *AzureIoTHub.Registry* class is used to manage IoT Hub devices. This class a
 This constructs a *Registry* object which exposes the Device Registry functions. The *connectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication).
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:3.0.0"
+#require "AzureIoTHub.agent.lib.nut:4.0.0"
 
 // Instantiate a client using your connection string
 const AZURE_REGISTRY_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=<KEY_NAME>;SharedAccessKey=<KEY_HASH>";
@@ -153,7 +153,7 @@ The *getBody()* method returns the stored device properties. See the [Device Inf
 This example code will create an IoT Hub device using an imp’s agent ID if one isn’t found in the IoT Hub device registry. It will then instantiate the *AzureIoTHub.Client* class for later use.
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:3.0.0"
+#require "AzureIoTHub.agent.lib.nut:4.0.0"
 
 const AZURE_REGISTRY_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 

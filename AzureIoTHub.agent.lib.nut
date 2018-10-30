@@ -50,7 +50,7 @@ const AZURE_IOT_CLIENT_DEFAULT_MSG_SEND_PARAL_REQS  = 3;
 
 class AzureIoTHub {
 
-    static VERSION = "3.0.0";
+    static VERSION = "4.0.0";
 
     // Helper Classes modeled after JS/Node SDK
     //------------------------------------------------------------------------------
