@@ -46,8 +46,6 @@ const AZURE_IOT_CLIENT_DEFAULT_TIMEOUT              = 10;
 const AZURE_IOT_CLIENT_DEFAULT_TWIN_UPD_PARAL_REQS  = 3;
 // Maximum amount of pending Send Message operations
 const AZURE_IOT_CLIENT_DEFAULT_MSG_SEND_PARAL_REQS  = 3;
-// SAS token's time-to-live
-const AZURE_IOT_CLIENT_DEFAULT_TOKEN_TTL            = 3600;
 
 
 class AzureIoTHub {
@@ -644,22 +642,14 @@ class AzureIoTHub {
         _isDisconnecting        = false;
         _isConnected            = false;
         _isConnecting           = false;
-        _isRefreshingToken      = false;
         _isEnablingMsg          = false;
         _isEnablingTwin         = false;
         _isEnablingDMethod      = false;
 
         _connStrParsed          = null;
-        _resourceUri            = null;
-        _url                    = null;
-        _tokenExpiresAt         = null;
-        // User-defined options (with defaults)
         _options                = null;
-        // Options (like QoS) for MQTT messages
         _msgOptions             = null;
         _mqttclient             = null;
-        // Options for MQTT connection
-        _mqttOptions            = null;
         _topics                 = null;
 
         // Long term user callbacks. Like onReceive, onRequest, onMethod
@@ -683,12 +673,6 @@ class AzureIoTHub {
         _processQueueTimer      = null;
 
         _reqNum                 = 0;
-
-        _refreshTokenTimer      = null;
-
-        // Array of calls made while refreshing token
-        _pendingCalls           = null;
-        _refreshingPaused       = false;
 
 
         // MQTT Client class constructor.
@@ -722,17 +706,12 @@ class AzureIoTHub {
 
             _msgPendingQueue = {};
             _twinPendingRequests = {};
-            _pendingCalls = [];
-
             _options = {
                 "qos" : AZURE_IOT_CLIENT_DEFAULT_QOS,
                 "keepAlive" : AZURE_IOT_CLIENT_DEFAULT_KEEP_ALIVE,
                 "timeout" : AZURE_IOT_CLIENT_DEFAULT_TIMEOUT,
                 "maxPendingTwinRequests" : AZURE_IOT_CLIENT_DEFAULT_TWIN_UPD_PARAL_REQS,
-                "maxPendingSendRequests" : AZURE_IOT_CLIENT_DEFAULT_MSG_SEND_PARAL_REQS,
-                "tokenTTL" : AZURE_IOT_CLIENT_DEFAULT_TOKEN_TTL,
-                // TODO: Make it true
-                "tokenAutoRefresh" : false
+                "maxPendingSendRequests" : AZURE_IOT_CLIENT_DEFAULT_MSG_SEND_PARAL_REQS
             };
 
             _onConnectedCb      = onConnected;
@@ -753,17 +732,6 @@ class AzureIoTHub {
             };
 
             _initTopics(_connStrParsed.DeviceId);
-
-            local devPath = "/" + _connStrParsed.DeviceId;
-            local username = format("%s%s/api-version=%s", _connStrParsed.HostName, devPath, AZURE_API_VERSION);
-            local resourcePath = format("/devices%s/api-version=%s", devPath, AZURE_API_VERSION);
-            _resourceUri = AzureIoTHub.Authorization.encodeUri(_connStrParsed.HostName + resourcePath);
-            _mqttOptions = {
-                "username" : username,
-                "password" : null,
-                "keepalive" : _options.keepAlive
-            };
-            _url = "ssl://" + _connStrParsed.HostName;
         }
 
         // Opens a connection to Azure IoT Hub.
@@ -774,12 +742,26 @@ class AzureIoTHub {
                 _onConnectedCb && _onConnectedCb(_isConnected ? AZURE_IOT_CLIENT_ERROR_ALREADY_CONNECTED : AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
                 return;
             }
-
             _log("Connecting...");
+
+            local devPath = "/" + _connStrParsed.DeviceId;
+            local username = format("%s%s/api-version=%s", _connStrParsed.HostName, devPath, AZURE_API_VERSION);
+            local resourcePath = format("/devices%s/api-version=%s", devPath, AZURE_API_VERSION);
+            local resourceUri = AzureIoTHub.Authorization.encodeUri(_connStrParsed.HostName + resourcePath);
+            local passwDeadTime = AzureIoTHub.Authorization.anHourFromNow();
+            local sas = AzureIoTHub.SharedAccessSignature(resourceUri, null, _connStrParsed.SharedAccessKey, passwDeadTime).toString();
+
+            local options = {
+                "username" : username,
+                "password" : sas,
+                "keepalive" : _options.keepAlive
+            };
+
+            local url = "ssl://" + _connStrParsed.HostName;
+
             _isConnecting = true;
 
-            _updatePasswd();
-            _mqttclient.connect(_url, _connStrParsed.DeviceId, _mqttOptions);
+            _mqttclient.connect(url, _connStrParsed.DeviceId, options);
         }
 
         // Closes the connection to Azure IoT Hub. Does nothing if the connection is already closed.
@@ -817,11 +799,6 @@ class AzureIoTHub {
                 return;
             }
 
-            if (_isRefreshingToken) {
-                _pendingCalls.append(@() sendMessage(msg, onSent));
-                return;
-            }
-
             local tooManyRequests = _msgPendingQueue.len() >= _options.maxPendingSendRequests;
 
             if (tooManyRequests) {
@@ -837,7 +814,7 @@ class AzureIoTHub {
                 try {
                     props = http.urlencode(msg.getProperties());
                 } catch (e) {
-                    _log("Exception at parsing the properties: " + e);
+                    _logError("Exception at parsing the properties: " + e);
                     onSent && onSent(AZURE_IOT_CLIENT_ERROR_GENERAL, msg);
                     return;
                 }
@@ -850,7 +827,6 @@ class AzureIoTHub {
             local msgSentCb = function (err) {
                 if (reqId in _msgPendingQueue) {
                     delete _msgPendingQueue[reqId];
-                    _refreshingPaused && _continueRefreshing();
                     onSent && onSent(err, msg);
                 }
             }.bindenv(this);
@@ -881,16 +857,10 @@ class AzureIoTHub {
                 return;
             }
 
-            if (_isRefreshingToken) {
-                _pendingCalls.append(@() enableIncomingMessages(onReceive, onDone));
-                return;
-            }
-
             local doneCb = function (err) {
                 if (_isEnablingMsg) {
                     _msgEnabledCb = null;
                     _isEnablingMsg = false;
-                    _refreshingPaused && _continueRefreshing();
                     if (err == 0) {
                         _onMessageCb = onReceive;
                         _ok(onDone);
@@ -942,16 +912,10 @@ class AzureIoTHub {
                 return;
             }
 
-            if (_isRefreshingToken) {
-                _pendingCalls.append(@() enableTwin(onRequest, onDone));
-                return;
-            }
-
             local doneTwinRecvCb = function (err) {
                 if (_isEnablingTwin) {
                     _twinEnabledCb = null;
                     _isEnablingTwin = false;
-                    _refreshingPaused && _continueRefreshing();
                     if (err == 0) {
                         _onTwinReqCb = onRequest;
                         _ok(onDone);
@@ -977,7 +941,6 @@ class AzureIoTHub {
                     } else {
                         _twinEnabledCb = null;
                         _isEnablingTwin = false;
-                        _refreshingPaused && _continueRefreshing();
                         _error(onDone, err);
                     }
                 }
@@ -1040,11 +1003,6 @@ class AzureIoTHub {
                 return;
             }
 
-            if (_isRefreshingToken) {
-                _pendingCalls.append(@() retrieveTwinProperties(onRetrieved));
-                return;
-            }
-
             local reqId = _reqNum.tostring();
             local topic = _topics.twinGet + "?$rid=" + reqId;
             _reqNum++;
@@ -1060,7 +1018,6 @@ class AzureIoTHub {
                         }
                     } else {
                         _twinRetrievedCb = null;
-                        _refreshingPaused && _continueRefreshing();
                         onRetrieved(err, null, null);
                     }
                 }
@@ -1104,11 +1061,6 @@ class AzureIoTHub {
                 return;
             }
 
-            if (_isRefreshingToken) {
-                _pendingCalls.append(@() updateTwinProperties(props, onUpdated));
-                return;
-            }
-
             local reqId = _reqNum.tostring();
             local topic = _topics.twinUpd + "?$rid=" + reqId;
             _reqNum++;
@@ -1120,7 +1072,7 @@ class AzureIoTHub {
             try {
                 jsonProps = http.jsonencode(props);
             } catch (e) {
-                _log("Exception at parsing the properties: " + e);
+                _logError("Exception at parsing the properties: " + e);
                 onUpdated && onUpdated(AZURE_IOT_CLIENT_ERROR_GENERAL, props);
                 return;
             }
@@ -1135,7 +1087,6 @@ class AzureIoTHub {
                         }
                     } else {
                         delete _twinPendingRequests[reqId];
-                        _refreshingPaused && _continueRefreshing();
                         onUpdated && onUpdated(err, props);
                     }
                 }
@@ -1150,14 +1101,26 @@ class AzureIoTHub {
         // Parameters:
         //     onMethod : Function          Callback called every time a direct method is called. null disables the feature.
         //                                  The callback signature:
-        //                                  onMethod(name, params), where
+        //                                  onMethod(name, params, reply), where
         //                                      name : String       Name of the called Direct Method.
         //                                      params : Table      Key-value table with the input parameters of the called Direct Method.
         //                                                          Every key is always a String with the name of the property.
         //                                                          The value is the corresponding value of the property.
         //                                                          Keys and values are fully application specific.
+        //                                      reply : Function    Function which should be called to reply to the call of Direct Method.
+        //                                                          The function signature:
+        //                                                          reply(data, onReplySent), where
+        //                                                              data :          An instance of the AzureIoTHub.DirectMethodResponse.
+        //                                                                  AzureIoTHub.DirectMethodResponse
+        //                                                              onReplySent :   Callback called when the operation is completed or
+        //                                                                  Function    an error happens.
+        //                                                                  (optional)  The callback signature:
+        //                                                                              onReplySent(error, data), where
+        //                                                                                  error : Integer     0 if the operation is completed
+        //                                                                                                      successfully, an error code otherwise.
+        //                                                                                  data :              The original data passed to reply().
+        //                                                                                      AzureIoTHub.DirectMethodResponse
         //     onDone : Function            Callback called when the operation is completed or an error happens.
-        //                                  The callback must return an instance of the AzureIoTHub.DirectMethodResponse.
         //          (optional)              The callback signature:
         //                                  onDone(error), where
         //                                      error : Integer     0 if the operation is completed successfully, an error code otherwise.
@@ -1171,16 +1134,10 @@ class AzureIoTHub {
                 return;
             }
 
-            if (_isRefreshingToken) {
-                _pendingCalls.append(@() enableDirectMethods(onMethod, onDone));
-                return;
-            }
-
             local doneCb = function (err) {
                 if (_isEnablingDMethod) {
                     _dMethodEnabledCb = null;
                     _isEnablingDMethod = false;
-                    _refreshingPaused && _continueRefreshing();
                     if (err == 0) {
                         _onMethodCb = onMethod;
                         _ok(onDone);
@@ -1232,45 +1189,11 @@ class AzureIoTHub {
             _topics.dMethodResp <- "$iothub/methods/res/";
         }
 
-        function _updatePasswd() {
-            local sasExpTime = time() + _options.tokenTTL;
-            local sas = AzureIoTHub.SharedAccessSignature(_resourceUri, null, _connStrParsed.SharedAccessKey, sasExpTime).toString();
-            _tokenExpiresAt = sasExpTime;
-            _mqttOptions.password = sas;
-        }
-
         function _onConnected(err) {
-            if (_isRefreshingToken) {
-                if (err == 0) {
-                    _log("Reconnected with new token!");
-                    local resubscribed = function(err) {
-                        _isRefreshingToken = false;
-                        if (err == 0) {
-                            _refreshTokenTimer = imp.wakeup(_timeBeforeRefreshing(), _refreshToken.bindenv(this));
-                            _runPendingCalls();
-                        } else {
-                            _log("Cannot resubscribe to the topics which was subscribed to before the reconnection: " + err);
-                            if (_isConnected && !_isDisconnecting) {
-                                _mqttclient.disconnect(_onDisconnected.bindenv(this));
-                            }
-                        }
-                    }.bindenv(this);
-                    _resubscribe(resubscribed);
-                } else {
-                    _isRefreshingToken = false;
-                    _log("Can't connect while refreshing token. Return code: " + err);
-                    _onDisconnected();
-                }
-                return
-            }
-
             if (err == 0) {
                 _log("Connected!");
                 _isConnected = true;
                 _isDisconnected = false;
-                if (_options.tokenAutoRefresh) {
-                    _refreshTokenTimer = imp.wakeup(_timeBeforeRefreshing(), _refreshToken.bindenv(this));
-                }
             }
             _isConnecting = false;
             _onConnectedCb && _onConnectedCb(err);
@@ -1281,80 +1204,6 @@ class AzureIoTHub {
             local reason = _isDisconnecting ? 0 : AZURE_IOT_CLIENT_ERROR_GENERAL;
             _cleanup();
             _onDisconnectedCb && _onDisconnectedCb(reason);
-        }
-
-        function _refreshToken() {
-            _refreshingPaused = false;
-            if (!_isConnected || _isDisconnecting) {
-                _refreshTokenTimer = null;
-                return;
-            }
-
-            if (_isBusy()) {
-                _refreshingPaused = true;
-                _log("MQTT Transport is busy now. Refresh token later.");
-                return;
-            }
-
-            _log("Refreshing token...");
-            _isRefreshingToken = true;
-
-            local disconnected = function() {
-                _log("Disconnected");
-                _mqttclient.connect(_options.url, _mqttClientId, _mqttOptions);
-            }.bindenv(this);
-
-            _mqttclient.disconnect(disconnected);
-        }
-
-        function _continueRefreshing() {
-            if (!_isBusy()) {
-                _refreshToken();
-            }
-        }
-
-        function _isBusy() {
-            local isEnabling = _isEnablingMsg || _isEnablingTwin || _isEnablingDMethod;
-            local havePendingRequests = _msgPendingQueue.len() > 0 || _twinPendingRequests.len() > 0 || _twinRetrievedCb != null;
-            return havePendingRequests || isEnabling || _isRefreshingToken;
-        }
-
-        function _resubscribe(callback) {
-            local topicsToSubscribe = [];
-            _onMessageCb != null && topicsToSubscribe.append(_topics.msgRecv + "#");
-            _onTwinReqCb != null && topicsToSubscribe.append(_topics.twinRecv + "#");
-            _onTwinReqCb != null && topicsToSubscribe.append(_topics.twinNotif + "#");
-            _onMethodCb  != null && topicsToSubscribe.append(_topics.dMethodNotif + "#");
-
-            local i = 0;
-            local n = topicsToSubscribe.len();
-            local subscribedCb = null;
-            subscribedCb = function(err, qos) {
-                i++;
-                if (err != 0) {
-                    callback(err);
-                } else if (i == n) {
-                    _log("Resubscribed");
-                    callback(0);
-                } else {
-                    _mqttclient.subscribe(topicsToSubscribe[i], _options.qos, subscribedCb);
-                }
-            }.bindenv(this);
-
-            (n > 0) && _mqttclient.subscribe(topicsToSubscribe[0], _options.qos, subscribedCb);
-            (n == 0) && callback(0);
-        }
-
-        function _runPendingCalls() {
-            foreach (call in _pendingCalls) {
-                call();
-            }
-            _pendingCalls = [];
-        }
-
-        function _timeBeforeRefreshing() {
-            local refreshAfter = _tokenExpiresAt - time();
-            return refreshAfter > 0 ? refreshAfter : 0;
         }
 
         function _onMessage(msg) {
@@ -1453,7 +1302,6 @@ class AzureIoTHub {
             }
             local props = arr[TWIN_PROPERTIES_INDEX];
             local cb = arr[CALLBACK_INDEX];
-            _refreshingPaused && _continueRefreshing();
             if (_statusIsOk(status)) {
                 cb && cb(0, props);
             } else {
@@ -1469,7 +1317,6 @@ class AzureIoTHub {
                 imp.cancelwakeup(_processQueueTimer);
                 _processQueueTimer = null;
             }
-            _refreshingPaused && _continueRefreshing();
             if (!_statusIsOk(status)) {
                 cb(status, null, null);
                 return;
@@ -1504,7 +1351,7 @@ class AzureIoTHub {
                 return;
             }
 
-            local reply = function(resp, onReplied = null) {
+            local reply = function(resp, onReplySent = null) {
                 local topic = _topics.dMethodResp + format("%i/?$rid=%s", resp._status, reqId);
 
                 local respJson = null;
@@ -1512,15 +1359,14 @@ class AzureIoTHub {
                     respJson = http.jsonencode(resp._body);
                 } catch (e) {
                     _log("Exception at parsing the response body for Direct Method: " + e);
-                    onReplied && onReplied(AZURE_IOT_CLIENT_ERROR_GENERAL, resp);
+                    onReplySent && onReplySent(AZURE_IOT_CLIENT_ERROR_GENERAL, resp);
                     return;
                 }
                 local mqttMsg = _mqttclient.createmessage(topic, respJson, _msgOptions);
 
                 local msgSentCb = function (err) {
-                    onReplied && onReplied(err, resp);
+                    onReplySent && onReplySent(err, resp);
                 }.bindenv(this);
-                // TODO: How to be with token refreshing?
                 mqttMsg.sendasync(msgSentCb);
             }.bindenv(this);
 
@@ -1551,7 +1397,7 @@ class AzureIoTHub {
                     (time() - timestamp >= _options.timeout)) {
                     // TODO: Make sure it works correctly
                     delete _twinPendingRequests[reqId];
-                    cb && cb(props, AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT);
+                    cb && cb(AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT, props);
                 }
             }
 
@@ -1559,7 +1405,6 @@ class AzureIoTHub {
                 _processQueueTimer = imp.wakeup(_options.timeout, _processQueue.bindenv(this));
             } else {
                 _processQueueTimer = null;
-                _refreshingPaused && _continueRefreshing();
             }
         }
 
@@ -1596,25 +1441,17 @@ class AzureIoTHub {
         }
 
         function _cleanup() {
-            _isDisconnected     = true;
-            _isDisconnecting    = false;
-            _isConnected        = false;
-            _isConnecting       = false;
-            _isRefreshingToken  = false;
-            _isEnablingMsg      = false;
-            _isEnablingTwin     = false;
-            _isEnablingDMethod  = false;
+            _isDisconnected             = true;
+            _isDisconnecting            = false;
+            _isConnected                = false;
+            _isConnecting               = false;
+            _isEnablingMsg              = false;
+            _isEnablingTwin             = false;
+            _isEnablingDMethod          = false;
 
-            _onMessageCb        = null;
-            _onTwinReqCb        = null;
-            _onMethodCb         = null;
-
-            _refreshingPaused   = false;
-
-            if (_refreshTokenTimer != null) {
-                imp.cancelwakeup(_refreshTokenTimer);
-                _refreshTokenTimer = null;
-            }
+            _onMessageCb                = null;
+            _onTwinReqCb                = null;
+            _onMethodCb                 = null;
 
             if (_processQueueTimer != null) {
                 imp.cancelwakeup(_processQueueTimer);
@@ -1651,8 +1488,6 @@ class AzureIoTHub {
                 _error(_dMethodEnabledCb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
                 _dMethodEnabledCb = null;
             }
-
-            _runPendingCalls();
         }
 
         // Check HTTP status
@@ -1679,7 +1514,9 @@ class AzureIoTHub {
 
         // Error level logger
         function _logError(txt) {
-            server.error("[" + (typeof this) + "] " + txt);
+            if (_debugEnabled) {
+                server.error("[" + (typeof this) + "] " + txt);
+            }
         }
     }
 
