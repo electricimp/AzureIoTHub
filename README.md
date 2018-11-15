@@ -1,4 +1,4 @@
-# Azure IoT Hub 4.0.0 #
+# Azure IoT Hub 5.0.0 #
 
 Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub API version "2016-11-14". Starting with version 3 the library integrates with Azure IoT Hub using the MQTT protocol (rather than AMQP previously) as there is certain functionality such as Device Twins and Direct Methods that IoT Hub only supports via MQTT.
 
@@ -33,7 +33,7 @@ The library consists of the following classes:
   - [enableDirectMethods()](#enabledirectmethodsonmethod-ondone) &mdash; Enables or disables Azure IoT Hub Direct Methods.
   - [setDebug()](#setdebugvalue) &mdash; Enables or disables the client debug output.
 
-**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:4.0.0"` **to the top of your agent code.**
+**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:5.0.0"` **to the top of your agent code.**
 
 [![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=master)](https://travis-ci.org/electricimp/AzureIoTHub)
 
@@ -74,7 +74,7 @@ The *AzureIoTHub.Registry* class is used to manage IoT Hub devices. This class a
 This constructs a *Registry* object which exposes the Device Registry functions. The *connectionString* parameter is provided by the Azure Portal [*(see above)*](#authentication).
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:4.0.0"
+#require "AzureIoTHub.agent.lib.nut:5.0.0"
 
 // Instantiate a client using your connection string
 const AZURE_REGISTRY_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=<KEY_NAME>;SharedAccessKey=<KEY_HASH>";
@@ -153,7 +153,7 @@ The *getBody()* method returns the stored device properties. See the [Device Inf
 This example code will create an IoT Hub device using an imp’s agent ID if one isn’t found in the IoT Hub device registry. It will then instantiate the *AzureIoTHub.Client* class for later use.
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:4.0.0"
+#require "AzureIoTHub.agent.lib.nut:5.0.0"
 
 const AZURE_REGISTRY_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 
@@ -305,9 +305,12 @@ These settings affect the client's behavior and the operations. Every setting is
 | --- | --- | --- | --- |
 | "qos" | Integer | 0 | MQTT QoS. Azure IoT Hub supports QoS `0` and `1` only. |
 | "keepAlive" | Integer | 60 | Keep-alive MQTT parameter, in seconds. For more information, see [here](https://developer.electricimp.com/api/mqtt/mqttclient/connect). |
-| "timeout" | Integer | 10 | Timeout (in seconds) for [Retrieve Twin](#retrievetwinpropertiesonretrieved) and [Update Twin](#updatetwinpropertiesprops-onupdated) operations. |
+| "twinsTimeout" | Integer | 10 | Timeout (in seconds) for [Retrieve Twin](#retrievetwinpropertiesonretrieved) and [Update Twin](#updatetwinpropertiesprops-onupdated) operations. |
+| "dMethodsTimeout" | Integer | 30 | Timeframe (in seconds) to [reply to direct method](#callback-replydata-onreplysent) call. |
 | "maxPendingTwinRequests" | Integer | 3 | Maximum amount of pending [Update Twin](#updatetwinpropertiesprops-onupdated) operations. |
 | "maxPendingSendRequests" | Integer | 3 | Maximum amount of pending [Send Message](#sendmessagemessage-onsent) operations. |
+| "tokenTTL" | Integer | 86400 | SAS token's time-to-live (in seconds). For more information, see [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#security-token-structure). |
+| "tokenAutoRefresh" | Boolean | true | If `true`, the [SAS token auto-refresh feature](#automatic-sas-token-refreshing) is enabled, otherwise disabled. |
 
 #### Example ####
 
@@ -364,7 +367,7 @@ The method returns *Boolean*: `true` if the client is connected, `false` otherwi
 
 This method [sends a message to Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#sending-device-to-cloud-messages).
 
-The method returns nothing. A result of the sending may be obtained via the [*onSent*](#callback-onsentmessage-error) callback, if specified in this method.
+The method returns nothing. A result of the sending may be obtained via the [*onSent*](#callback-onsenterror-message) callback, if specified in this method.
 
 It is allowed to send a new message while the previous send operation is not completed yet. 
 Maximum amount of pending operations is defined by the [client settings](#optional-settings).
@@ -376,16 +379,16 @@ If *message* parameter is `null` or has incompatible type, the method will throw
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *message* | [AzureIoTHub.Message](#azureiothubmessage) | Yes | Message to send. |
-| *[onSent](#callback-onsentmessage-error)* | Function  | Optional | [Callback](#callback-onsentmessage-error) called when the message is considered as sent or an error happens. |
+| *[onSent](#callback-onsenterror-message)* | Function  | Optional | [Callback](#callback-onsenterror-message) called when the message is considered as sent or an error happens. |
 
-#### Callback: onSent(*message, error*) ####
+#### Callback: onSent(*error, message*) ####
 
 This callback is called when the message is considered as sent or an error happens.
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *message* | [AzureIoTHub.Message](#azureiothubmessage) | The original *message* passed to [sendMessage()](#sendmessagemessage-onsent) method. |
 | *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
+| *message* | [AzureIoTHub.Message](#azureiothubmessage) | The original *message* passed to [sendMessage()](#sendmessagemessage-onsent) method. |
 
 #### Example ####
 
@@ -397,7 +400,7 @@ client.sendMessage(message1);
 // Send a string with a callback
 message2 <- AzureIoTHub.Message("This is another string");
 
-function onSent(msg, err) {
+function onSent(err, msg) {
     if (err != 0) {
         server.error("Message sending failed: " + err);
         server.log("Trying to send again...");
@@ -513,7 +516,7 @@ This callback is called when [Device Twin properties are retrieved](https://docs
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
+| *[error](#error-code)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
 | *reportedProps* | Table | Key-value table with the reported properties and their version. This parameter should be ignored if *error* is not `0`. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
 | *desiredProps* | Table | Key-value table with the desired properties and their version. This parameter should be ignored if *error* is not `0`. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
 
@@ -536,7 +539,7 @@ client.retrieveTwinProperties(onRetrieved);
 
 This method [updates Device Twin reported properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#update-device-twins-reported-properties).
 
-The method returns nothing. A result of the operation may be obtained via the [*onUpdated*](#callback-onupdatedprops-error) callback, if specified in this method.
+The method returns nothing. A result of the operation may be obtained via the [*onUpdated*](#callback-onupdatederror-props) callback, if specified in this method.
 
 The method may be called only if Twins functionality is enabled.
 
@@ -548,23 +551,23 @@ If *props* parameter is `null` or has incompatible type, the method will throw a
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *props* | Table | Yes | Key-value table with the reported properties. Every key is always a *String* with the name of the property. The value is the corresponding value of the property. Keys and values are fully application specific. |
-| *[onUpdated](#callback-onupdatedprops-error)* | Function  | Optional | [Callback](#callback-onupdatedprops-error) called when the operation is completed or an error happens. |
+| *[onUpdated](#callback-onupdatederror-props)* | Function  | Optional | [Callback](#callback-onupdatederror-props) called when the operation is completed or an error happens. |
 
-#### Callback: onUpdated(*props, error*) ####
+#### Callback: onUpdated(*error, props*) ####
 
-This callback is called when the message is considered as sent or an error happens.
+This callback is called when [Device Twin properties are updated](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#update-device-twins-reported-properties).
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
+| *[error](#error-code)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
 | *props* | Table | The original properties passed to the [updateTwinProperties()](#updatetwinpropertiesprops-onupdated) method. |
-| *[error](#errorcode)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
 
 #### Example ####
 
 ```squirrel
 props <- {"exampleProp": "val"};
 
-function onUpdated(props, err) {
+function onUpdated(err, props) {
     if (err != 0) {
         server.error("Twin properties update failed: " + err);
     } else {
@@ -580,7 +583,7 @@ client.updateTwinProperties(props, onUpdated);
 
 This method enables or disables [Azure IoT Hub Direct Methods](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-direct-methods).
 
-To enable the feature, specify the [*onMethod*](#callback-onmethodname-params) callback. To disable the feature, specify `null` as that callback.
+To enable the feature, specify the [*onMethod*](#callback-onmethodname-params-reply) callback. To disable the feature, specify `null` as that callback.
 
 The feature is automatically disabled every time the client is disconnected. It should be re-enabled after every new connection, if needed.
 
@@ -588,28 +591,54 @@ The method returns nothing. A result of the operation may be obtained via the [*
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
-| *[onMethod](#callback-onmethodname-params)* | Function  | Yes | [Callback](#callback-onmethodname-params) called every time a direct method is called by Azure IoT Hub. `null` disables the feature. |
+| *[onMethod](#callback-onmethodname-params-reply)* | Function  | Yes | [Callback](#callback-onmethodname-params-reply) called every time a direct method is called by Azure IoT Hub. `null` disables the feature. |
 | *[onDone](#callback-ondoneerror)* | Function  | Optional | [Callback](#callback-ondoneerror) called when the operation is completed or an error happens. |
 
-#### Callback: onMethod(*name, params*) ####
+#### Callback: onMethod(*name, params, reply*) ####
 
 This callback is called every time a [Direct Method](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method) is called by Azure IoT Hub.
-
-The callback **must** return an instance of the [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse).
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
 | *name* | String | Name of the called Direct Method. |
 | *params* | Table | Key-value table with the input parameters of the called Direct Method. Every key is always a *String* with the name of the input parameter. The value is the corresponding value of the input parameter. Keys and values are fully application specific. |
+| *reply* | Function | This [callback](#callback-replydata-onreplysent) should be called to send a reply to the direct method call. |
+
+#### Callback: reply(*data[, onReplySent]*) ####
+
+This [callback](#callback-replydata-onreplysent) should be called by application to [send a reply to the direct method call](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method).
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *data* | [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse) | Data to send in response to the direct method call. |
+| *onReplySent* | Function | [Callback](#callback-onreplysenterror-data) called when the operation is completed or an error happens. |
+
+#### Callback: onReplySent(*error, data*) ####
+
+This callback is called every time a [Direct Method](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method) is called by Azure IoT Hub.
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *[error](#error-code)* | Integer | `0` if the operation is completed successfully, an [error code](#error-code) otherwise. |
+| *data* | [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse) | The original data passed to the [reply()](#callback-replydata-onreplysent) callback. |
 
 #### Example ####
 
 ```squirrel
-function onMethod(name, params) {
+function onReplySent(err, data) {
+    if (err != 0) {
+        server.error("Sending reply failed: " + err);
+    } else {
+        server.log("Reply was sent successfully");
+    }
+}
+
+function onMethod(name, params, reply) {
     server.log("Direct Method called. Name = " + name);
     local responseStatusCode = 200;
     local responseBody = {"example" : "val"};
-    return AzureIoTHub.DirectMethodResponse(responseStatusCode, responseBody);
+    local response = AzureIoTHub.DirectMethodResponse(responseStatusCode, responseBody);
+    reply(response, onReplySent);
 }
 
 function onDone(err) {
@@ -653,6 +682,25 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | 1004 | The operation is not allowed now. Eg. the same operation is already in process. |
 | 1005 | The operation is timed out. |
 | 1010 | General error. |
+
+### Automatic SAS Token Refreshing ###
+
+[SAS Token](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#security-tokens) always has an expiration time. If the token is expired, Azure IoT Hub disconnects the device. To prevent the disconnection the token must be updated before its expiration.
+
+The library implements the token updating algorithm. It is enabled by default.
+
+The token updating algorithm is the following:
+1. Using a timer wakes up when the current token is near to expiration.
+1. Waits for all current MQTT operations to be finished.
+1. Calculates a new token using the connection string.
+1. Disconnects from the MQTT broker.
+1. Connects to the MQTT broker again using the new token as an MQTT client's password.
+1. Subscribes to the topics which were subscribed to before the reconnection.
+1. Sets the timer for the new token expiration.
+
+The library does all these operations automatically and invisibly to an application. The [onDisconnected()](#callback-ondisconnectederror) and [onConnected()](#callback-onconnectederror) callbacks are not called. All the API calls, made by the application at the time of updating, are scheduled in a queue and processed right after the token updating algorithm is successfully finished. If the token update fails, the [onDisconnected()](#callback-ondisconnectederror) callback is called (if the callback has been set).
+
+To disable the automatic token updating algorithm you can set the `tokenAutoRefresh` [client's option](#optional-settings) in the [AzureIoTHub.Client constructor](#constructor-azureiothubclientdeviceconnectionstring-onconnected-ondisconnected-options) to `false`.
 
 ## Examples ##
 
