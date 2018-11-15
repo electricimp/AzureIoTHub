@@ -22,7 +22,7 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-#require "AzureIoTHub.agent.lib.nut:4.0.0"
+#require "AzureIoTHub.agent.lib.nut:5.0.0"
 
 // AzureIoTHub library example.
 // - automatically registers the device (if not registered yet) using the provided Registry Connection String
@@ -138,7 +138,7 @@ class TwinsExample {
         }
     }
 
-    function _onUpdated(props, err) {
+    function _onUpdated(err, props) {
         if (err != 0) {
             server.error("AzureIoTHub updateTwinProperties failed: " + err);
             // Try to update again if the operation is timed out

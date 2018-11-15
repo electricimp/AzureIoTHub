@@ -111,8 +111,7 @@ class TwinsTestCase extends ImpTestCase {
         return _retrieveTwin()
             .then(function (value) {
                 return Promise.reject("Should have returned NOT_ENABLED error");
-            }.bindenv(this),
-                function (reason) {
+            }.bindenv(this), function (reason) {
                 if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
                     return Promise.reject("Should have returned NOT_ENABLED error");
                 }
@@ -124,8 +123,7 @@ class TwinsTestCase extends ImpTestCase {
         return _updateTwin()
             .then(function (value) {
                 return Promise.reject("Should have returned NOT_ENABLED error");
-            }.bindenv(this),
-                function (reason) {
+            }.bindenv(this), function (reason) {
                 if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
                     return Promise.reject("Should have returned NOT_ENABLED error");
                 }
@@ -137,8 +135,7 @@ class TwinsTestCase extends ImpTestCase {
         return _disableTwin()
             .then(function (value) {
                 return Promise.reject("Should have returned NOT_ENABLED error");
-            }.bindenv(this),
-                function (reason) {
+            }.bindenv(this), function (reason) {
                 if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
                     return Promise.reject("Should have returned NOT_ENABLED error");
                 }

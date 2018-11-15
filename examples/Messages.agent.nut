@@ -22,7 +22,7 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-#require "AzureIoTHub.agent.lib.nut:4.0.0"
+#require "AzureIoTHub.agent.lib.nut:5.0.0"
 
 // AzureIoTHub library example.
 // - connects using a manually obtained Device Connection String
@@ -37,7 +37,7 @@ class MessagesExample {
     _azureClient = null;
 
     constructor(deviceConnStr) {
-        _azureClient = AzureIoTHub.Client(deviceConnStr, 
+        _azureClient = AzureIoTHub.Client(deviceConnStr,
             _onConnected.bindenv(this), _onDisconnected.bindenv(this));
     }
 
@@ -52,7 +52,7 @@ class MessagesExample {
         _azureClient.sendMessage(message, _onMessageSent.bindenv(this));
     }
 
-    function _onMessageSent(msg, err) {
+    function _onMessageSent(err, msg) {
         if (err != 0) {
             server.error("AzureIoTHub sendMessage failed: " + err);
         } else {
