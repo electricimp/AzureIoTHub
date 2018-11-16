@@ -200,6 +200,69 @@ registry.get(agentId, function(err, iothubDevice) {
 }.bindenv(this));
 ```
 
+## AzureIoTHub.DPS ##
+
+TODO
+
+### Constructor: AzureIoTHub.DPS(*scopeId, deviceId, deviceSAS*) ###
+
+This method returns a new AzureIoTHub.DPS instance.
+
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *scopeId* | String | Yes | TODO |
+| *deviceId* | String | Yes | TODO |
+| *deviceSAS* | String | Yes | TODO |
+
+### register(*onDone*) ###
+
+[Registers](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/registerdevice) the device on IoT Hub Device Provisioning Service.
+
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *onDone* | Function | Yes | [Callback](TODO) called when the operation is completed or an error happens. |
+
+#### Callback: onDone(*error, response, connectionString*) ####
+
+This callback is called when [registration](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/registerdevice) is done successfully or failed.
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *error* | Integer | `0` if the operation is successful, otherwise an [error code](TODO). |
+| *response* | Table | Key-value table with the response provided by Azure server. May be `null`. For information on the response format, please see [the Azure documentation](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/registerdevice#response). May also contain error details. |
+| *connectionString* | String | Device connection string (TODO). |
+
+### getConnectionString(*onDone*) ###
+
+If the device is [registered on the Device Provisioning Service](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/deviceregistrationstatuslookup) and assigned to any IoT Hub, this method returns the connection string via the [*onDone* callback](TODO).
+
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *onDone* | Function | Yes | [Callback](TODO) called when the operation is completed or an error happens. |
+
+#### Callback: onDone(*error, response, connectionString*) ####
+
+This callback is called when the operation is done successfully or failed.
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *error* | Integer | `0` if the operation is successful, otherwise an [error code](TODO). |
+| *response* | Table | Key-value table with the response provided by Azure server. May be `null`. For information on the response format, please see [the Azure documentation](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/registerdevice#response). May also contain error details. |
+| *connectionString* | String | Device connection string (TODO). |
+
+### Additional Info ###
+
+#### Error Code ####
+
+An *Integer* error code which specifies a concrete error (if any) happened during an operation.
+
+| Error Code | Description |
+| --- | --- |
+| 0 | No error. |
+| 1-99 | [Internal errors of the HTTP API](https://developer.electricimp.com/api/httprequest/sendasync). |
+| 100-999 |	HTTP error codes from the Azure server. TODO |
+| 1010 | General error. |
+
 ## AzureIoTHub.Message ##
 
 This class is used as a wrapper for messages to/from Azure IoT Hub.
