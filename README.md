@@ -37,6 +37,10 @@ The library consists of the following classes:
 
 [![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=master)](https://travis-ci.org/electricimp/AzureIoTHub)
 
+## Examples ##
+
+Full working examples are provided in the [examples](./examples) directory and described [here](./examples/README.md).
+
 ## Authentication ##
 
 You will need a Microsoft Azure account. If you do not have one please sign up [here](https://azure.microsoft.com/en-us/resources/videos/sign-up-for-microsoft-azure/) before continuing.
@@ -653,10 +657,6 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | 1004 | The operation is not allowed now. Eg. the same operation is already in process. |
 | 1005 | The operation is timed out. |
 | 1010 | General error. |
-
-## Examples ##
-
-Full working examples are provided in the [examples](./examples) directory and described [here](./examples/README.md).
 
 ## Testing ##
 
