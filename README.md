@@ -500,8 +500,8 @@ If `null` is passed into *message*, or the argument is of an incompatible type, 
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *message* | [AzureIoTHub.Message](#azureiothubmessage) | The original *message* passed to *sendMessage()* |
 | *[error](#error-codes)* | Integer | `0` if the operation completed successfully, otherwise an [error code](#error-codes) |
+| *message* | [AzureIoTHub.Message](#azureiothubmessage) | The original *message* passed to *sendMessage()* |
 
 #### Returns ####
 
@@ -517,7 +517,7 @@ client.sendMessage(message1);
 // Send a string with a callback
 message2 <- AzureIoTHub.Message("This is another string");
 
-function onSent(msg, err) {
+function onSent(err, msg) {
     if (err != 0) {
         server.error("Message sending failed: " + err);
         server.log("Trying to send again...");
@@ -679,8 +679,8 @@ If the *properties* parameter is passed `null` or an item of incompatible type, 
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *properties* | Table | The original properties passed to *updateTwinProperties()* |
 | *[error](#error-codes)* | Integer | `0` if the operation is completed successfully, otherwise an [error code](#error-codes) |
+| *properties* | Table | The original properties passed to *updateTwinProperties()* |
 
 #### Returns ####
 
@@ -691,7 +691,7 @@ Nothing &mdash; The result of the operation may be obtained via the [onUpdated h
 ```squirrel
 props <- {"exampleProp": "val"};
 
-function onUpdated(props, err) {
+function onUpdated(err, props) {
     if (err != 0) {
         server.error("Twin properties update failed: " + err);
     } else {
@@ -718,27 +718,53 @@ The feature is automatically disabled every time the client is disconnected. It 
 | *[onMethod](#onmethod-callback)* | Function  | Yes | A function to be called every time a Direct Method is called by Azure IoT Hub, or `null` to disable the feature |
 | *[onDone](#ondone-callback)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
 
-#### onMethod Callback ####
+#### Returns ####
 
-The callback **must** return an instance of the [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse) class.
+Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback).
+
+#### onMethod Callback ####
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
 | *name* | String | Name of the called Direct Method |
 | *params* | Table | The input parameters of the called Direct Method. Every key is always a string. Keys and values are entirely application specific |
+| *[reply](#reply-function)* | Function | A function to be called to [send a reply to the direct method call](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method) |
+
+#### reply Function ####
+
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *data* | [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse) | Yes | Data to send in response to the direct method call |
+| *[onReplySent](#onreplysent-callback)* | Function | Optional | A function to be called when the operation is completed or an error happens |
 
 #### Returns ####
 
-Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback).
+Nothing &mdash; The result of the operation may be obtained via the [onReplySent handler](#onreplysent-callback).
+
+#### onReplySent Callback ####
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *[error](#error-codes)* | Integer | `0` if the operation is completed successfully, an [error code](#error-codes) otherwise. |
+| *data* | [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse) | The original data passed to the [reply()](#reply-function) function. |
 
 #### Example ####
 
 ```squirrel
-function onMethod(name, params) {
+function onReplySent(err, data) {
+    if (err != 0) {
+        server.error("Sending reply failed: " + err);
+    } else {
+        server.log("Reply was sent successfully");
+    }
+}
+
+function onMethod(name, params, reply) {
     server.log("Direct Method called. Name = " + name);
     local responseStatusCode = 200;
     local responseBody = {"example" : "val"};
-    return AzureIoTHub.DirectMethodResponse(responseStatusCode, responseBody);
+    local response = AzureIoTHub.DirectMethodResponse(responseStatusCode, responseBody);
+    reply(response, onReplySent);
 }
 
 function onDone(err) {
