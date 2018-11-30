@@ -718,6 +718,10 @@ The feature is automatically disabled every time the client is disconnected. It 
 | *[onMethod](#onmethod-callback)* | Function  | Yes | A function to be called every time a Direct Method is called by Azure IoT Hub, or `null` to disable the feature |
 | *[onDone](#ondone-callback)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
 
+#### Returns ####
+
+Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback).
+
 #### onMethod Callback ####
 
 | Parameter | Data Type | Description |
@@ -726,16 +730,16 @@ The feature is automatically disabled every time the client is disconnected. It 
 | *params* | Table | The input parameters of the called Direct Method. Every key is always a string. Keys and values are entirely application specific |
 | *[reply](#reply-function)* | Function | A function to be called to [send a reply to the direct method call](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method) |
 
-#### Returns ####
-
-Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback).
-
 #### reply Function ####
 
 | Parameter | Data Type | Required? | Description |
 | --- | --- | --- | --- |
 | *data* | [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse) | Yes | Data to send in response to the direct method call |
 | *[onReplySent](#onreplysent-callback)* | Function | Optional | A function to be called when the operation is completed or an error happens |
+
+#### Returns ####
+
+Nothing &mdash; The result of the operation may be obtained via the [onReplySent handler](#onreplysent-callback).
 
 #### onReplySent Callback ####
 
