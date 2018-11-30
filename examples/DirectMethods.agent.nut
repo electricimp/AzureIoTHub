@@ -22,7 +22,7 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-#require "AzureIoTHub.agent.lib.nut:3.0.0"
+#require "AzureIoTHub.agent.lib.nut:4.0.0"
 
 // AzureIoTHub library example.
 // - automatically registers the device (if not registered yet) using the provided Registry Connection String

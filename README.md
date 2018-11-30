@@ -1,8 +1,10 @@
-# Azure IoT Hub 3.0.0 #
+# Azure IoT Hub 4.0.0 #
 
 Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub API version "2016-11-14". Starting with version 3, the library integrates with Azure IoT Hub using the MQTT protocol (previous versions used AMQP) as there is certain functionality, such as Device Twins and Direct Methods, that IoT Hub only supports via MQTT.
 
 **Note** The Azure IoT Hub MQTT integration is currently in public Beta. Before proceeding, please sign up for access to the Azure IoT Hub MQTT integration using [this link](https://connect.electricimp.com/azure-mqtt-integration-signup).
+
+**Important** All Electric Imp devices can connect to Azure IoT Hub, regardless of which impCloud™ (AWS or Azure) they are linked to. For devices on the AWS impCloud, the connection to IoT Hub will occur cloud-to-cloud from AWS to Azure. For devices on the Azure impCloud, the connection to IoT Hub will occur within Azure. However, there is no difference between the functionality provided by the library in either of these scenarios.
 
 The library consists of the following classes and methods:
 
@@ -31,9 +33,13 @@ The library consists of the following classes and methods:
   - [*enableDirectMethods()*](#enabledirectmethodsonmethod-ondone) &mdash; Enables or disables Azure IoT Hub Direct Methods.
   - [*setDebug()*](#setdebugvalue) &mdash; Enables or disables the client debug output.
 
-**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:3.0.0"` **to the top of your agent code.**
+**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:4.0.0"` **to the top of your agent code.**
 
 [![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=master)](https://travis-ci.org/electricimp/AzureIoTHub)
+
+## Examples ##
+
+Full working examples are provided in the [examples](./examples) directory and described [here](./examples/README.md).
 
 ## Authentication ##
 
@@ -80,7 +86,7 @@ This method instantiates an AzureIoTHub.Registry object which exposes the Device
 #### Example ####
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:3.0.0"
+#require "AzureIoTHub.agent.lib.nut:4.0.0"
 
 // Instantiate a client using your connection string
 const AZURE_REGISTRY_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=<KEY_NAME>;SharedAccessKey=<KEY_HASH>";
@@ -155,7 +161,7 @@ This method requests a list of device identities. When IoT Hub responds, an arra
 This example code will create an IoT Hub device using an imp’s agent ID if one isn’t found in the IoT Hub device registry. It will then instantiate the [AzureIoTHub.Client](#azureiothubclient) class for later use.
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:3.0.0"
+#require "AzureIoTHub.agent.lib.nut:4.0.0"
 
 const AZURE_REGISTRY_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 
@@ -494,8 +500,8 @@ If `null` is passed into *message*, or the argument is of an incompatible type, 
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *message* | [AzureIoTHub.Message](#azureiothubmessage) | The original *message* passed to *sendMessage()* |
 | *[error](#error-codes)* | Integer | `0` if the operation completed successfully, otherwise an [error code](#error-codes) |
+| *message* | [AzureIoTHub.Message](#azureiothubmessage) | The original *message* passed to *sendMessage()* |
 
 #### Returns ####
 
@@ -511,7 +517,7 @@ client.sendMessage(message1);
 // Send a string with a callback
 message2 <- AzureIoTHub.Message("This is another string");
 
-function onSent(msg, err) {
+function onSent(err, msg) {
     if (err != 0) {
         server.error("Message sending failed: " + err);
         server.log("Trying to send again...");
@@ -673,8 +679,8 @@ If the *properties* parameter is passed `null` or an item of incompatible type, 
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
-| *properties* | Table | The original properties passed to *updateTwinProperties()* |
 | *[error](#error-codes)* | Integer | `0` if the operation is completed successfully, otherwise an [error code](#error-codes) |
+| *properties* | Table | The original properties passed to *updateTwinProperties()* |
 
 #### Returns ####
 
@@ -685,7 +691,7 @@ Nothing &mdash; The result of the operation may be obtained via the [onUpdated h
 ```squirrel
 props <- {"exampleProp": "val"};
 
-function onUpdated(props, err) {
+function onUpdated(err, props) {
     if (err != 0) {
         server.error("Twin properties update failed: " + err);
     } else {
@@ -712,27 +718,53 @@ The feature is automatically disabled every time the client is disconnected. It 
 | *[onMethod](#onmethod-callback)* | Function  | Yes | A function to be called every time a Direct Method is called by Azure IoT Hub, or `null` to disable the feature |
 | *[onDone](#ondone-callback)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
 
-#### onMethod Callback ####
+#### Returns ####
 
-The callback **must** return an instance of the [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse) class.
+Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback).
+
+#### onMethod Callback ####
 
 | Parameter | Data Type | Description |
 | --- | --- | --- |
 | *name* | String | Name of the called Direct Method |
 | *params* | Table | The input parameters of the called Direct Method. Every key is always a string. Keys and values are entirely application specific |
+| *[reply](#reply-function)* | Function | A function to be called to [send a reply to the direct method call](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method) |
+
+#### reply Function ####
+
+| Parameter | Data Type | Required? | Description |
+| --- | --- | --- | --- |
+| *data* | [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse) | Yes | Data to send in response to the direct method call |
+| *[onReplySent](#onreplysent-callback)* | Function | Optional | A function to be called when the operation is completed or an error happens |
 
 #### Returns ####
 
-Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback).
+Nothing &mdash; The result of the operation may be obtained via the [onReplySent handler](#onreplysent-callback).
+
+#### onReplySent Callback ####
+
+| Parameter | Data Type | Description |
+| --- | --- | --- |
+| *[error](#error-codes)* | Integer | `0` if the operation is completed successfully, an [error code](#error-codes) otherwise. |
+| *data* | [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse) | The original data passed to the [reply()](#reply-function) function. |
 
 #### Example ####
 
 ```squirrel
-function onMethod(name, params) {
+function onReplySent(err, data) {
+    if (err != 0) {
+        server.error("Sending reply failed: " + err);
+    } else {
+        server.log("Reply was sent successfully");
+    }
+}
+
+function onMethod(name, params, reply) {
     server.log("Direct Method called. Name = " + name);
     local responseStatusCode = 200;
     local responseBody = {"example" : "val"};
-    return AzureIoTHub.DirectMethodResponse(responseStatusCode, responseBody);
+    local response = AzureIoTHub.DirectMethodResponse(responseStatusCode, responseBody);
+    reply(response, onReplySent);
 }
 
 function onDone(err) {
@@ -753,10 +785,6 @@ This method enables (*value* is `true`) or disables (*value* is `false`) the cli
 #### Returns ####
 
 Nothing.
-
-## Examples ##
-
-Full working examples are provided in the [examples](./examples) directory.
 
 ## Testing ##
 
