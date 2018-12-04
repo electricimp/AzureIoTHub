@@ -79,9 +79,9 @@ This method instantiates an AzureIoTHub.Registry object which exposes the Device
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
-| *connectionString* | String | Yes | Provided by the Azure Portal [*(see ‘Authentication’,above)*](#authentication) |
+| *connectionString* | String | Yes | Provided by the Azure Portal *(see [‘Authentication’](#authentication), above)* |
 
 #### Example ####
 
@@ -108,7 +108,7 @@ This method creates a new device identity in IoT Hub.
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *deviceInfo* | Table | No | Must contain the required keys specified in the [Device Info Table](#device-info-table) or an [*AzureIoTHub.Device*](#azureiothubdevice) object. If the *deviceInfo* table’s *deviceId* key is not provided, the agent’s ID will be used |
 | *callback* | Function | No | A function to be called when the IoT Hub responds |
@@ -119,7 +119,7 @@ This method updates an existing device identity in IoT Hub. The update function 
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *deviceInfo* | Table | Yes | Must contain the required keys specified in the [Device Info Table](#device-info-table) or an [*AzureIoTHub.Device*](#azureiothubdevice) object. It **must** include a *deviceId* key |
 | *callback* | Function | No | A function to be called when the IoT Hub responds |
@@ -130,7 +130,7 @@ This method deletes a single device identity from IoT Hub.
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *deviceID* | String | Yes | A device identifier |
 | *callback* | Function | No | A function to be called when the IoT Hub responds |
@@ -141,7 +141,7 @@ This method requests the properties of an existing device identity in IoT Hub.
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *deviceID* | String | Yes | A device identifier |
 | *callback* | Function | Yes | A function to be called when the IoT Hub responds |
@@ -152,7 +152,7 @@ This method requests a list of device identities. When IoT Hub responds, an arra
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *callback* | Function | Yes | A function to be called when the IoT Hub responds |
 
@@ -222,7 +222,7 @@ The constructor creates a device object from the *deviceInfo* parameter. See the
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *deviceInfo* | Table | No | Device specification information: see ‘Device Info Table’, below |
 
@@ -252,7 +252,7 @@ This method retrieves the Device Connection String from the stored *authenticati
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *hostname* | String | No | The name of the host, found within the Device Connection String |
 
@@ -278,7 +278,7 @@ This class is used as a wrapper for messages send to and received from Azure IoT
 
 This method returns a new AzureIoTHub.Message instance.
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *message* | [Any supported by the MQTT API](https://developer.electricimp.com/api/mqtt/mqttclient/createmessage) | Yes | The message body |
 | *properties* | Table | Optional | The message properties. Keys (which are always strings) and values are entirely application specific |
@@ -321,7 +321,7 @@ This method returns a new AzureIoTHub.DirectMethodResponse instance.
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *status* | Integer | Yes | The status of the Direct Method execution. Fully application specific |
 | *body* | Table | Optional | The returned data. Every key is always a string. Keys and values are fully application specific |
@@ -354,7 +354,7 @@ This method returns a new AzureIoTHub.Client instance.
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *deviceConnectionString* | String | Yes | A Device Connection String: includes the host name to connect, the device ID and the shared access string. It can be obtained from the Azure Portal [*(see above)*](#authentication). However, if the device was registered using the [AzureIoTHub.Registry](#azureiothubregistry) class, the Device Connection String can be retrieved from the [AzureIoTHub.Device](#azureiothubdevice) instance passed to the *AzureIoTHub.Registry.get()* or *AzureIoTHub.Registry.create()* method callbacks. For more guidance, please see the [AzureIoTHub.registry example](#azureiothubregistry-example) |
 | *[onConnected](#onconnected-callback)* | Function | Optional | A function to be called every time the device connects *(see below)* |
@@ -365,7 +365,7 @@ This method returns a new AzureIoTHub.Client instance.
 
 This callback is a good place to enable optional functionality, if needed.
 
-| Parameter | Data Type | Description |
+| Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
 | *[error](#error-codes)* | Integer | `0` if the connection was successful, otherwise an [error code](#error-codes) |
 
@@ -375,7 +375,7 @@ This callback is a good place to call the [*connect()*](#connect) method again, 
 
 **Note** IoT Hub expires authentication tokens. When the token expires, the client connection disconnects and the onDisconnected handler is called. To reconnect with a new token, you can simply execute the connect flow again by calling [*connect()*](#connect). The library is configured to request tokens with a one-hour life.
 
-| Parameter | Data Type | Description |
+| Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
 | *[error](#error-codes)* | Integer | `0` if the disconnection was caused by the [*disconnect()*](#disconnect) method, otherwise an [error code](#error-codes) |
 
@@ -434,7 +434,7 @@ This callback is executed when a AzureIoTHub.Client method completes. Many of th
 
 The callback has the following parameter:
 
-| Parameter | Data Type | Description |
+| Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
 | *[error](#error-codes)* | Integer | `0` if the operation is completed successfully, otherwise an [error code](#error-codes) |
 
@@ -489,7 +489,7 @@ The Azure IoT Hub provides only limited support of the `retain` MQTT flag (as de
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *message* | [AzureIoTHub.Message](#azureiothubmessage) | Yes | The message to send |
 | *[onSent](#onsent-callback)* | Function | Optional | A function to be called when the message is considered as sent or an error occurs |
@@ -498,7 +498,7 @@ If `null` is passed into *message*, or the argument is of an incompatible type, 
 
 #### onSent Callback ####
 
-| Parameter | Data Type | Description |
+| Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
 | *[error](#error-codes)* | Integer | `0` if the operation completed successfully, otherwise an [error code](#error-codes) |
 | *message* | [AzureIoTHub.Message](#azureiothubmessage) | The original *message* passed to *sendMessage()* |
@@ -542,14 +542,14 @@ The feature is automatically disabled every time the client disconnects. It shou
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *[onReceive](#onreceive-callback)* | Function | Yes | A function to be called every time a new message is received from Azure IoT Hub, or `null` to disable message receipt |
 | *[onDone](#ondone-callback)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
 
 #### onReceive Callback ####
 
-| Parameter | Data Type | Description |
+| Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
 | *message* | [AzureIoTHub.Message](#azureiothubmessage) | A received message |
 
@@ -585,14 +585,14 @@ The feature is automatically disabled every time the client disconnects. It shou
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *[onRequest](#onrequest-callback)* | Function  | Yes | A function to be called every time a new request with desired Device Twin properties is received from Azure IoT Hub, `null` to disable the feature |
 | *[onDone](#ondone-callback)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
 
 #### onRequest Callback ####
 
-| Parameter | Data Type | Description |
+| Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
 | *properties* | Table | The desired properties and their version. Every key is a string. Keys and values are entirely application specific |
 
@@ -626,13 +626,13 @@ It may be called only if Device Twins functionality is enabled. Do not call this
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *[onRetrieved](#onretrieved-callback)* | Function | Yes | A function to be called when the properties have been retrieved |
 
 #### onRetrieved Callback ####
 
-| Parameter | Data Type | Description |
+| Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
 | *[error](#error-codes)* | Integer | `0` if the operation is completed successfully, otherwise an [error code](#error-codes) |
 | *reportedProperties* | Table | The reported properties and their version. This parameter should be ignored if *error* is not `0`. Every key is always a string. Keys and values are entirely application specific |
@@ -668,7 +668,7 @@ You can call this method again while the previous update operation is not yet co
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *properties* | Table | Yes | The reported properties. Every key is always a string. Keys and values are entirely application specific |
 | *[onUpdated](#onupdated-callback)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
@@ -677,7 +677,7 @@ If the *properties* parameter is passed `null` or an item of incompatible type, 
 
 #### onUpdated Callback ####
 
-| Parameter | Data Type | Description |
+| Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
 | *[error](#error-codes)* | Integer | `0` if the operation is completed successfully, otherwise an [error code](#error-codes) |
 | *properties* | Table | The original properties passed to *updateTwinProperties()* |
@@ -713,7 +713,7 @@ The feature is automatically disabled every time the client is disconnected. It 
 
 #### Parameters ####
 
-| Parameter | Data Type | Required? | Description |
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *[onMethod](#onmethod-callback)* | Function  | Yes | A function to be called every time a Direct Method is called by Azure IoT Hub, or `null` to disable the feature |
 | *[onDone](#ondone-callback)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
@@ -724,29 +724,20 @@ Nothing &mdash; The result of the operation may be obtained via the [onDone hand
 
 #### onMethod Callback ####
 
-| Parameter | Data Type | Description |
+| Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
 | *name* | String | Name of the called Direct Method |
 | *params* | Table | The input parameters of the called Direct Method. Every key is always a string. Keys and values are entirely application specific |
-| *[reply](#reply-function)* | Function | A function to be called to [send a reply to the direct method call](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method) |
+| *reply* | Function | A function to be called to [send a reply to the direct method call](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method). Details below |
 
-#### reply Function ####
+##### The onMethod Callback Reply Function #####
 
-| Parameter | Data Type | Required? | Description |
+The function passed into the *onMethod* callback’s *reply* parameter has the following parameters of its own:
+
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *data* | [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse) | Yes | Data to send in response to the direct method call |
-| *[onReplySent](#onreplysent-callback)* | Function | Optional | A function to be called when the operation is completed or an error happens |
-
-#### Returns ####
-
-Nothing &mdash; The result of the operation may be obtained via the [onReplySent handler](#onreplysent-callback).
-
-#### onReplySent Callback ####
-
-| Parameter | Data Type | Description |
-| --- | --- | --- |
-| *[error](#error-codes)* | Integer | `0` if the operation is completed successfully, an [error code](#error-codes) otherwise. |
-| *data* | [AzureIoTHub.DirectMethodResponse](#azureiothubdirectmethodresponse) | The original data passed to the [reply()](#reply-function) function. |
+| *onReplySent* | Function | No | A function to be called when the operation is complete or an error occurs. It returns nothing, and has the following parameters:<br />&bull; *error* &mdash; An integer which will be `0` if the operation is completed successfully, otherwise an [error code](#error-codes)<br />&bull; *data* &mdash; A reference to the data passed into the callback function |
 
 #### Example ####
 
