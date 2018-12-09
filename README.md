@@ -210,6 +210,64 @@ registry.get(agentId, function(err, iothubDevice) {
 }.bindenv(this));
 ```
 
+## AzureIoTHub.Device ##
+
+The AzureIoTHub.Device class is used to create Devices identity objects used by the [AzureIoTHub.Registry](#azureiothubregistry) class. Registry methods will create device objects for you if you choose to pass in tables. 
+
+### AzureIoTHub.Device Class Usage ###
+
+#### Constructor: AzureIoTHub.Device(*[deviceInfo]*) ####
+
+The constructor creates a device object from the *deviceInfo* parameter. See the *Device Info Table* below for details on what to include in the table. If no *deviceInfo* is provided, default settings will be used. 
+
+#### Parameters ####
+
+| Parameter | Data&nbsp;Type | Required? | Description |
+| --- | --- | --- | --- |
+| *deviceInfo* | Table | No | Device specification information: see ‘Device Info Table’, below |
+
+#### Device Info Table ####
+
+| Key | Required? | Description |
+| --- | --- | --- |
+| *deviceId* | Yes, read-only on updates | A case-sensitive string (up to 128 characters long) of Ascii 7-bit alphanumeric characters plus -, :, ., +, %, \_, #, \*, ?, !, (, ), =, @, ;, $, ' and ,<br />Default: the device’s agent ID |
+| *generationId* | Read only | An IoT Hub-generated, case-sensitive string up to 128 characters long. This value is used to distinguish devices with the same *deviceId*, when they have been deleted and re-created. Default: `null` |
+| *etag* | Read only | A string representing a weak ETag for the device identity, as per RFC7232. Default: `null` |
+| *connectionState* | Read only | A field indicating connection status: either `"Connected"` or `"Disconnected"`. This field represents the IoT Hub view of the device connection status. **Important** This field should be used only for development/debugging purposes. The connection state is updated only for devices using MQTT or AMQP. It is based on protocol-level pings (MQTT pings, or AMQP pings), and it can have a maximum delay of only five minutes. For these reasons, there can be false positives, such as devices reported as connected but that are disconnected. Default: `"Disconnected"` |
+| *status* | Yes | An access indicator. Can be `"Enabled"` or `"Disabled"`. If `"Enabled"`, the device is allowed to connect. If `"Disabled"`, this device cannot access any device-facing endpoint. Default: `"Enabled"` |
+| *statusReason* | Optional | A 128-character string that stores the reason for the device status. All UTF-8 characters are allowed. Default: `null` |
+| *connectionStateUpdatedTime* | Read only | A temporal indicator, showing the date and time the connection state was last updated. Default: `null` |
+| *statusUpdatedTime* | Read only | A temporal indicator, showing the date and time of the last status update. Default: `null` |
+| *lastActivityTime* | Read only | A temporal indicator, showing the date and time the device last connected, received or sent a message. Default: `null` |
+| *cloudToDeviceMessageCount* | Read only | The number of cloud to device messages awaiting delivery. Default: 0 |                               
+| *authentication* | Optional | An authentication table containing information and security materials. The primary and a secondary key are stored in base64 format. Default: `{"symmetricKey" : {"primaryKey" : null, "secondaryKey" : null}}` |
+
+**Note** The default authentication parameters do not contain the authentication needed to create an [AzureIoTHub.Client](#azureiothubclient) object.    
+
+## AzureIoTHub.Device Class Methods ##
+
+### connectionString(*hostname*) ###
+
+This method retrieves the Device Connection String from the stored *authentication* and *deviceId* properties of the specified host. A Device Connection String is needed to create an [AzureIoTHub.Client](#azureiothubclient) object. 
+
+#### Parameters ####
+
+| Parameter | Data&nbsp;Type | Required? | Description |
+| --- | --- | --- | --- |
+| *hostname* | String | No | The name of the host, found within the Device Connection String |
+
+#### Returns ####
+
+String &mdash; The requested Device Connection String.
+
+### getBody() ###
+
+This method returns the stored device properties.
+
+#### Returns ####
+
+Table &mdash; The stored device properties. See the [Device Info Table](#device-info-table), above, for details of the possible keys the table may contain.
+
 ## AzureIoTHub.DPS ##
 
 TODO
@@ -272,64 +330,6 @@ An *Integer* error code which specifies a concrete error (if any) happened durin
 | 1-99 | [Internal errors of the HTTP API](https://developer.electricimp.com/api/httprequest/sendasync). |
 | 100-999 |	HTTP error codes from the Azure server. TODO |
 | 1010 | General error. |
-
-## AzureIoTHub.Device ##
-
-The AzureIoTHub.Device class is used to create Devices identity objects used by the [AzureIoTHub.Registry](#azureiothubregistry) class. Registry methods will create device objects for you if you choose to pass in tables. 
-
-### AzureIoTHub.Device Class Usage ###
-
-#### Constructor: AzureIoTHub.Device(*[deviceInfo]*) ####
-
-The constructor creates a device object from the *deviceInfo* parameter. See the *Device Info Table* below for details on what to include in the table. If no *deviceInfo* is provided, default settings will be used. 
-
-#### Parameters ####
-
-| Parameter | Data&nbsp;Type | Required? | Description |
-| --- | --- | --- | --- |
-| *deviceInfo* | Table | No | Device specification information: see ‘Device Info Table’, below |
-
-#### Device Info Table ####
-
-| Key | Required? | Description |
-| --- | --- | --- |
-| *deviceId* | Yes, read-only on updates | A case-sensitive string (up to 128 characters long) of Ascii 7-bit alphanumeric characters plus -, :, ., +, %, \_, #, \*, ?, !, (, ), =, @, ;, $, ' and ,<br />Default: the device’s agent ID |
-| *generationId* | Read only | An IoT Hub-generated, case-sensitive string up to 128 characters long. This value is used to distinguish devices with the same *deviceId*, when they have been deleted and re-created. Default: `null` |
-| *etag* | Read only | A string representing a weak ETag for the device identity, as per RFC7232. Default: `null` |
-| *connectionState* | Read only | A field indicating connection status: either `"Connected"` or `"Disconnected"`. This field represents the IoT Hub view of the device connection status. **Important** This field should be used only for development/debugging purposes. The connection state is updated only for devices using MQTT or AMQP. It is based on protocol-level pings (MQTT pings, or AMQP pings), and it can have a maximum delay of only five minutes. For these reasons, there can be false positives, such as devices reported as connected but that are disconnected. Default: `"Disconnected"` |
-| *status* | Yes | An access indicator. Can be `"Enabled"` or `"Disabled"`. If `"Enabled"`, the device is allowed to connect. If `"Disabled"`, this device cannot access any device-facing endpoint. Default: `"Enabled"` |
-| *statusReason* | Optional | A 128-character string that stores the reason for the device status. All UTF-8 characters are allowed. Default: `null` |
-| *connectionStateUpdatedTime* | Read only | A temporal indicator, showing the date and time the connection state was last updated. Default: `null` |
-| *statusUpdatedTime* | Read only | A temporal indicator, showing the date and time of the last status update. Default: `null` |
-| *lastActivityTime* | Read only | A temporal indicator, showing the date and time the device last connected, received or sent a message. Default: `null` |
-| *cloudToDeviceMessageCount* | Read only | The number of cloud to device messages awaiting delivery. Default: 0 |                               
-| *authentication* | Optional | An authentication table containing information and security materials. The primary and a secondary key are stored in base64 format. Default: `{"symmetricKey" : {"primaryKey" : null, "secondaryKey" : null}}` |
-
-**Note** The default authentication parameters do not contain the authentication needed to create an [AzureIoTHub.Client](#azureiothubclient) object.    
-
-## AzureIoTHub.Device Class Methods ##
-
-### connectionString(*hostname*) ###
-
-This method retrieves the Device Connection String from the stored *authentication* and *deviceId* properties of the specified host. A Device Connection String is needed to create an [AzureIoTHub.Client](#azureiothubclient) object. 
-
-#### Parameters ####
-
-| Parameter | Data&nbsp;Type | Required? | Description |
-| --- | --- | --- | --- |
-| *hostname* | String | No | The name of the host, found within the Device Connection String |
-
-#### Returns ####
-
-String &mdash; The requested Device Connection String.
-
-### getBody() ###
-
-This method returns the stored device properties.
-
-#### Returns ####
-
-Table &mdash; The stored device properties. See the [Device Info Table](#device-info-table), above, for details of the possible keys the table may contain.
 
 ## AzureIoTHub.Message ##
 
@@ -451,11 +451,11 @@ These settings affect the behavior of the client and the operations it performs.
 | *qos* | Integer | An MQTT Quality of Service (QoS) setting. Azure IoT Hub supports QoS 0 and 1 only. Default: 0 |
 | *keepAlive* | Integer | Keep-alive MQTT parameter, in seconds. See [here](https://developer.electricimp.com/api/mqtt/mqttclient/connect) for more information. Default: 60s |
 | *twinsTimeout* | Integer | Timeout in seconds for [Retrieve Twin](#retrievetwinpropertiesonretrieved) and [Update Twin](#updatetwinpropertiesproperties-onupdated) operations. Default: 10s |
-| "dMethodsTimeout" | Integer | Timeframe (in seconds) to [reply to direct method](#callback-replydata-onreplysent) call. Default: 30s |
+| *dMethodsTimeout* | Integer | Timeframe (in seconds) to [reply to direct method](#callback-replydata-onreplysent) call. Default: 30s |
 | *maxPendingTwinRequests* | Integer | Maximum number of pending [Update Twin](#updatetwinpropertiesproperties-onupdated) operations. Default: 3 |
 | *maxPendingSendRequests* | Integer | Maximum number of pending [Send Message](#sendmessagemessage-onsent) operations. Default: 3 |
-| "tokenTTL" | Integer | SAS token's time-to-live (in seconds). For more information, see [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#security-token-structure). Default: 86400s |
-| "tokenAutoRefresh" | Boolean | If `true`, the [SAS token auto-refresh feature](#automatic-sas-token-refreshing) is enabled, otherwise disabled. Default: true |
+| *tokenTTL* | Integer | SAS token's time-to-live (in seconds). For more information, see [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#security-token-structure). Default: 86400s |
+| *tokenAutoRefresh* | Boolean | If `true`, the [SAS token auto-refresh feature](#refreshing-sas-tokens-automatically) is enabled, otherwise disabled. Default: true |
 
 #### Example ####
 
@@ -842,6 +842,25 @@ This method enables (*value* is `true`) or disables (*value* is `false`) the cli
 #### Returns ####
 
 Nothing.
+
+### Additional info ###
+
+#### Refreshing SAS Tokens Automatically ####
+
+[SAS Token](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#security-tokens) always has an expiration time. If the token is expired, Azure IoT Hub will disconnect the device. To prevent the disconnection, the token must be updated before its expiration.
+The library implements token updating, which is enabled by default.
+The token updating algorithm is the following:
+1. A timer fires when the current token is near to expiration.
+1. The library waits for all current MQTT operations to be completed.
+1. The library generates a new token using the connection string.
+1. The library disconnects from Azure IoT Hub.
+1. The library re-connects to Azure IoT Hub using the new token as the MQTT client's password.
+1. The library subscribes to the topics to which it was subscribed before the reconnection.
+1. The library sets a new timer to fire just before the new token is due to expire.
+
+The library performs all these operations automatically and invisibly to an application. The [*onDisconnected*](#callbacks) and [*onConnected*](#callbacks) callbacks are not called. Any API calls made by the application during the update process are retained in a queue and processed once the token has been successfully updated. If the token can’t be updated, the [*onDisconnected*](#callbacks) callback is executed if set.
+
+To stop the token being updated automatically, you can set the *tokenAutoRefresh* option in the [AzureIoTHub.Client constructor](#constructor-azureiothubclientdeviceconnectionstring-onconnected-ondisconnected-options) to `false`.
 
 ## Testing ##
 
