@@ -52,7 +52,7 @@ class MessagesExample {
         _azureClient.sendMessage(message, _onMessageSent.bindenv(this));
     }
 
-    function _onMessageSent(msg, err) {
+    function _onMessageSent(err, msg) {
         if (err != 0) {
             server.error("AzureIoTHub sendMessage failed: " + err);
         } else {
