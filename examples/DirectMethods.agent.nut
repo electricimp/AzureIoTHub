@@ -105,7 +105,15 @@ class DirectMethodsExample {
         _azureClient.connect();
     }
 
-    function _onMethod(name, params) {
+    function _onReplySent(err, data) {
+        if (err != 0) {
+            server.error("Sending reply failed: " + err);
+        } else {
+            server.log("Reply was sent successfully");
+        }
+    }
+
+    function _onMethod(name, params, reply) {
         server.log("Direct method called:");
         server.log("name: " + name);
         if (params != null) {
@@ -113,7 +121,7 @@ class DirectMethodsExample {
             _printTable(params);
         }
         local resp = AzureIoTHub.DirectMethodResponse(200, {"status": "done"});
-        return resp;
+        reply(resp, _onReplySent);
     }
 
     function _printTable(tbl) {
