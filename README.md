@@ -67,6 +67,12 @@ If your device is already registered in the Azure Portal, you can use a Device C
 4. Select your device &mdash; you will need to know the device ID used to register the device with IoT Hub.
 5. Copy the **Connection string--primary key** to the clipboard and paste it into the *AzureIoTHub.Client* constructor in your Squirrel application code.
 
+## Device Provisioning ##
+
+This library provides the two following ways of automatic provisioning of devices:
+1. Using the [Registry](#azureiothubregistry) class. This class allows you to create a device directly in the [IoT Hub Registry](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry). This is not a recommended way for production use cases, because the IoT Hub registry is [supposed to be accessed by a dedicated device management component](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#access-control-and-permissions). Registry class should be mostly used in demos/PoC/etc.
+2. Using the [DPS](azureiothubdps) class. This is a production-oriented way. You can use it if you have an instance of DPS in your solution. For more information, see [here](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps).
+
 ## AzureIoTHub.Registry ##
 
 The AzureIoTHub.Registry class is used to manage IoT Hub devices. This class allows your to create, remove, update, delete and list the IoT Hub devices in your Azure account.
@@ -270,66 +276,102 @@ Table &mdash; The stored device properties. See the [Device Info Table](#device-
 
 ## AzureIoTHub.DPS ##
 
-TODO
+This class is used to provision devices in Azure IoT Hub Device Provisioning Service. It allows you to register a device and obtain its device connection string.
 
-### Constructor: AzureIoTHub.DPS(*scopeId, deviceId, deviceSAS*) ###
+## AzureIoTHub.DPS Class Usage ##
+
+### Constructor: AzureIoTHub.DPS(*scopeId, registrationId, deviceKey*) ###
 
 This method returns a new AzureIoTHub.DPS instance.
 
-| Parameter | Data Type | Required? | Description |
+#### Parameters ####
+
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
-| *scopeId* | String | Yes | TODO |
-| *deviceId* | String | Yes | TODO |
-| *deviceSAS* | String | Yes | TODO |
+| *scopeId* | String | Yes | [Scope ID](https://docs.microsoft.com/en-us/azure/iot-dps/concepts-device#id-scope) of Azure IoT Hub DPS |
+| *registrationId* | String | Yes | [Registration ID](https://docs.microsoft.com/en-us/azure/iot-dps/concepts-device#registration-id) of the device |
+| *deviceKey* | String | Yes | [Device symmetric key](https://docs.microsoft.com/en-us/azure/iot-dps/concepts-symmetric-key-attestation) |
+
+#### Example ####
+
+```squirrel
+const AZURE_DPS_SCOPE_ID  = "<Scope ID>";
+const AZURE_DPS_REG_ID    = "<Registration ID>";
+const AZURE_DPS_DEV_KEY   = "<Device key>";
+
+// Create an instance
+dps <- AzureIoTHub.DPS(AZURE_DPS_SCOPE_ID, AZURE_DPS_REG_ID, AZURE_DPS_DEV_KEY);
+```
+
+## AzureIoTHub.DPS Class Methods ##
+
+### onDone Callback ###
+
+This callback is executed when a AzureIoTHub.DPS method completes. All of the methods below make use of this callback, but it is important to understand that each of these methods registers their own callback. In other words, you may choose to implement as many different onDone handlers as there are AzureIoTHub.DPS methods capable of using one, or simply register a single callback with all of the methods. If you register a callback with one method, the handler will not be called by other methods: each method has to explicitly register its callback.
+
+The callback has the following parameters:
+
+| Parameter | Data&nbsp;Type | Description |
+| --- | --- | --- |
+| *error* | Integer | `0` if the operation is successful, otherwise an [error code](#error-codes). |
+| *response* | Table | Key-value table with the response provided by Azure server. May be `null`. For information on the response format, please see [the Azure documentation](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration). May also contain error details. |
+| *connectionString* | String | Device connection string |
 
 ### register(*onDone*) ###
 
-[Registers](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/registerdevice) the device on IoT Hub Device Provisioning Service.
+[Registers](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/registerdevice) the device on IoT Hub Device Provisioning Service. If registration completes successfully and the device is assigned to any IoT Hub, this method returns the connection string via the [onDone handler](#ondone-callback).
 
-| Parameter | Data Type | Required? | Description |
+#### Parameters ####
+
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
-| *onDone* | Function | Yes | [Callback](TODO) called when the operation is completed or an error happens. |
+| *[onDone](#ondone-callback)* | Function | Yes | A function to be called when the operation is completed or an error occurs |
 
-#### Callback: onDone(*error, response, connectionString*) ####
+#### Returns ####
 
-This callback is called when [registration](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/registerdevice) is done successfully or failed.
+Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback).
 
-| Parameter | Data Type | Description |
-| --- | --- | --- |
-| *error* | Integer | `0` if the operation is successful, otherwise an [error code](TODO). |
-| *response* | Table | Key-value table with the response provided by Azure server. May be `null`. For information on the response format, please see [the Azure documentation](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/registerdevice#response). May also contain error details. |
-| *connectionString* | String | Device connection string (TODO). |
+#### Example ####
+
+```squirrel
+function onDone(err, resp, connStr) {
+    if (err != 0) {
+        server.error("Registration failed: code = " + err + " response = " + http.jsonencode(resp));
+    } else {
+        server.log("Registration finished successfully. Connection string = " + connStr);
+    }
+}
+
+dps.register(onDone);
+```
 
 ### getConnectionString(*onDone*) ###
 
-If the device is [registered on the Device Provisioning Service](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/deviceregistrationstatuslookup) and assigned to any IoT Hub, this method returns the connection string via the [*onDone* callback](TODO).
+If the device is already [registered on the Device Provisioning Service](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/deviceregistrationstatuslookup) and assigned to any IoT Hub, this method returns the connection string via the [onDone handler](#ondone-callback).
 
-| Parameter | Data Type | Required? | Description |
+#### Parameters ####
+
+| Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
-| *onDone* | Function | Yes | [Callback](TODO) called when the operation is completed or an error happens. |
+| *[onDone](#ondone-callback)* | Function | Yes | A function to be called when the operation is completed or an error occurs |
 
-#### Callback: onDone(*error, response, connectionString*) ####
+#### Returns ####
 
-This callback is called when the operation is done successfully or failed.
+Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback).
 
-| Parameter | Data Type | Description |
-| --- | --- | --- |
-| *error* | Integer | `0` if the operation is successful, otherwise an [error code](TODO). |
-| *response* | Table | Key-value table with the response provided by Azure server. May be `null`. For information on the response format, please see [the Azure documentation](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/registerdevice#response). May also contain error details. |
-| *connectionString* | String | Device connection string (TODO). |
+#### Example ####
 
-### Additional Info ###
+```squirrel
+function onDone(err, resp, connStr) {
+    if (err != 0) {
+        server.error("Getting of the connection string failed: code = " + err + " response = " + http.jsonencode(resp));
+    } else {
+        server.log("Connection string = " + connStr);
+    }
+}
 
-#### Error Code ####
-
-An *Integer* error code which specifies a concrete error (if any) happened during an operation.
-
-| Error Code | Description |
-| --- | --- |
-| 0 | No error. |
-| 1-99 | [Internal errors of the HTTP API](https://developer.electricimp.com/api/httprequest/sendasync). |
-| 100-999 |	HTTP error codes from the Azure server. TODO |
-| 1010 | General error. |
+dps.getConnectionString(onDone);
+```
 
 ## AzureIoTHub.Message ##
 
@@ -450,7 +492,7 @@ These settings affect the behavior of the client and the operations it performs.
 | --- | --- | --- |
 | *qos* | Integer | An MQTT Quality of Service (QoS) setting. Azure IoT Hub supports QoS 0 and 1 only. Default: 0 |
 | *keepAlive* | Integer | Keep-alive MQTT parameter, in seconds. See [here](https://developer.electricimp.com/api/mqtt/mqttclient/connect) for more information. Default: 60s |
-| *twinsTimeout* | Integer | Timeout in seconds for [Retrieve Twin](#retrievetwinpropertiesonretrieved) and [Update Twin](#updatetwinpropertiesproperties-onupdated) operations. Default: 10s |
+| *twinsTimeout* | Integer | Timeout in seconds for [Retrieve Twin](#retrievetwinpropertiesonretrieved) and [Update Twin](#updatetwinpropertiesproperties-onupdated) operations.  Default: 10s |
 | *dMethodsTimeout* | Integer | Timeframe (in seconds) to [reply to direct method](#callback-replydata-onreplysent) call. Default: 30s |
 | *maxPendingTwinRequests* | Integer | Maximum number of pending [Update Twin](#updatetwinpropertiesproperties-onupdated) operations. Default: 3 |
 | *maxPendingSendRequests* | Integer | Maximum number of pending [Send Message](#sendmessagemessage-onsent) operations. Default: 3 |
@@ -503,23 +545,6 @@ The callback has the following parameter:
 | Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
 | *[error](#error-codes)* | Integer | `0` if the operation is completed successfully, otherwise an [error code](#error-codes) |
-
-### Error Codes ###
-
-An integer error code which specifies a concrete error (if any) which occurred during an operation.
-
-| Error Code | Description |
-| --- | --- |
-| 0 | No error |
-| -99..-1 and 128 | [Codes returned by the MQTT API](https://developer.electricimp.com/api/mqtt) |
-| 100-999 except 128 | [Azure IoT Hub errors](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support) |
-| 1000 | The client is not connected |
-| 1001 | The client is already connected |
-| 1002 | The feature is not enabled |
-| 1003 | The feature is already enabled |
-| 1004 | The operation is not allowed at the moment, eg. the same operation is already in process |
-| 1005 | The operation timed out |
-| 1010 | General error |
 
 ### connect() ###
 
@@ -611,7 +636,7 @@ The feature is automatically disabled every time the client disconnects. It shou
 | Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *[onReceive](#onreceive-callback)* | Function | Yes | A function to be called every time a new message is received from Azure IoT Hub, or `null` to disable message receipt |
-| *[onDone](#ondone-callback)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
+| *[onDone](#ondone-callback-1)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
 
 #### onReceive Callback ####
 
@@ -621,7 +646,7 @@ The feature is automatically disabled every time the client disconnects. It shou
 
 #### Returns ####
 
-Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback), if specified in this method.
+Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback-1), if specified in this method.
 
 #### Example ####
 
@@ -654,7 +679,7 @@ The feature is automatically disabled every time the client disconnects. It shou
 | Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *[onRequest](#onrequest-callback)* | Function  | Yes | A function to be called every time a new request with desired Device Twin properties is received from Azure IoT Hub, `null` to disable the feature |
-| *[onDone](#ondone-callback)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
+| *[onDone](#ondone-callback-1)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
 
 #### onRequest Callback ####
 
@@ -664,7 +689,7 @@ The feature is automatically disabled every time the client disconnects. It shou
 
 #### Returns ####
 
-Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback), if specified in this method.
+Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback-1), if specified in this method.
 
 #### Example ####
 
@@ -782,11 +807,11 @@ The feature is automatically disabled every time the client is disconnected. It 
 | Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
 | *[onMethod](#onmethod-callback)* | Function  | Yes | A function to be called every time a Direct Method is called by Azure IoT Hub, or `null` to disable the feature |
-| *[onDone](#ondone-callback)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
+| *[onDone](#ondone-callback-1)* | Function | Optional | A function to be called when the operation is completed or an error occurs |
 
 #### Returns ####
 
-Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback).
+Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback-1).
 
 #### onMethod Callback ####
 
@@ -851,7 +876,7 @@ Nothing.
 The library implements token updating, which is enabled by default.
 The token updating algorithm is the following:
 1. A timer fires when the current token is near to expiration.
-1. The library waits for all current MQTT operations to be completed.
+1. The library waits for all current operations to be completed (see the note below).
 1. The library generates a new token using the connection string.
 1. The library disconnects from Azure IoT Hub.
 1. The library re-connects to Azure IoT Hub using the new token as the MQTT client's password.
@@ -861,6 +886,28 @@ The token updating algorithm is the following:
 The library performs all these operations automatically and invisibly to an application. The [*onDisconnected*](#callbacks) and [*onConnected*](#callbacks) callbacks are not called. Any API calls made by the application during the update process are retained in a queue and processed once the token has been successfully updated. If the token can’t be updated, the [*onDisconnected*](#callbacks) callback is executed if set.
 
 To stop the token being updated automatically, you can set the *tokenAutoRefresh* option in the [AzureIoTHub.Client constructor](#constructor-azureiothubclientdeviceconnectionstring-onconnected-ondisconnected-options) to `false`.
+
+**Note:** Some of the operations (like retrieving twin properties) are two-phase. This means that the library sends a message and waits for a response message from the server. During these operations the library doesn't start token refreshing and firstly waits for them to finish. This rule also works with direct methods: when the library receives a direct method call, it doesn't start token refreshing until that call is replied or timed out. So please keep this in mind setting the timeouts for these operations.
+
+## Error Codes ##
+
+The table below describes the error codes for all the library classes.
+Error code - an integer number which specifies a concrete error (if any) which occurred during an operation.
+
+| Error Code | Description |
+| --- | --- |
+| 0 | No error |
+| -99..-1 and 128 | [Codes returned by the MQTT API](https://developer.electricimp.com/api/mqtt) |
+| 1..99 | [Internal errors of the HTTP API](https://developer.electricimp.com/api/httprequest/sendasync) |
+| 100-999 except 128 | For the [Client](#azureiothubclient) class - [Azure IoT Hub errors](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support). For the [DPS](#azureiothubdps) class - HTTP error codes from [Azure DPS REST API](https://docs.microsoft.com/en-us/rest/api/iot-dps/). |
+| 1000 | The client is not connected |
+| 1001 | The client is already connected |
+| 1002 | The feature is not enabled |
+| 1003 | The feature is already enabled |
+| 1004 | The operation is not allowed at the moment, eg. the same operation is already in process |
+| 1005 | The operation timed out |
+| 1010 | The device is/was not registered |
+| 1100 | General error |
 
 ## Testing ##
 
