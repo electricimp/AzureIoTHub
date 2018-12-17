@@ -894,20 +894,20 @@ To stop the token being updated automatically, you can set the *tokenAutoRefresh
 The table below describes the error codes for all the library classes.
 Error code - an integer number which specifies a concrete error (if any) which occurred during an operation.
 
-| Error Code | Description |
-| --- | --- |
-| 0 | No error |
-| -99..-1 and 128 | [Codes returned by the MQTT API](https://developer.electricimp.com/api/mqtt) |
-| 1..99 | [Internal errors of the HTTP API](https://developer.electricimp.com/api/httprequest/sendasync) |
-| 100-999 except 128 | For the [Client](#azureiothubclient) class - [Azure IoT Hub errors](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support). For the [DPS](#azureiothubdps) class - HTTP error codes from [Azure DPS REST API](https://docs.microsoft.com/en-us/rest/api/iot-dps/). |
-| 1000 | The client is not connected |
-| 1001 | The client is already connected |
-| 1002 | The feature is not enabled |
-| 1003 | The feature is already enabled |
-| 1004 | The operation is not allowed at the moment, eg. the same operation is already in process |
-| 1005 | The operation timed out |
-| 1010 | The device is/was not registered |
-| 1100 | General error |
+| Error Code | Applicable classes | Description |
+| --- | --- | --- |
+| 0 | [DPS](#azureiothubdps), [Client](#azureiothubclient) | No error |
+| -99..-1 and 128 | [Client](#azureiothubclient) | [Codes returned by the MQTT API](https://developer.electricimp.com/api/mqtt) |
+| 1..99 | [DPS](#azureiothubdps) | [Internal errors of the HTTP API](https://developer.electricimp.com/api/httprequest/sendasync) |
+| 100-999 except 128 | [DPS](#azureiothubdps), [Client](#azureiothubclient) | For the [Client](#azureiothubclient) class - [Azure IoT Hub errors](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support). For the [DPS](#azureiothubdps) class - HTTP error codes from [Azure DPS REST API](https://docs.microsoft.com/en-us/rest/api/iot-dps/). |
+| 1000 | [Client](#azureiothubclient) | The client is not connected |
+| 1001 | [Client](#azureiothubclient) | The client is already connected |
+| 1002 | [Client](#azureiothubclient) | The feature is not enabled |
+| 1003 | [Client](#azureiothubclient) | The feature is already enabled |
+| 1004 | [Client](#azureiothubclient) | The operation is not allowed at the moment, eg. the same operation is already in process |
+| 1005 | [Client](#azureiothubclient) | The operation timed out |
+| 1010 | [DPS](#azureiothubdps) | The device is/was not registered |
+| 1100 | [DPS](#azureiothubdps), [Client](#azureiothubclient) | General error |
 
 ## Testing ##
 
