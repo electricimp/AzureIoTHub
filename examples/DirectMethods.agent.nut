@@ -24,11 +24,10 @@
 
 #require "AzureIoTHub.agent.lib.nut:5.0.0"
 
-// AzureIoTHub library example.
 // - automatically registers the device (if not registered yet) using the provided Registry Connection String
-// - connects using an automatically obtained Device Connection String
+// - connects the device to Azure IoT Hub using an automatically obtained Device Connection String
 // - enables Direct Methods functionality
-// - logs all comming Direct Method calls, always responds success
+// - logs all Direct Method calls received from the cloud, always responds success
 
 class DirectMethodsExample {
     _azureClient = null;

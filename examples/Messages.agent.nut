@@ -24,11 +24,12 @@
 
 #require "AzureIoTHub.agent.lib.nut:5.0.0"
 
-// AzureIoTHub library example.
-// - connects using a manually obtained Device Connection String
+// - connects the device to Azure IoT Hub using the provided Device Connection String
 // - enables cloud-to-device messages functionality
-// - logs all incoming messages
-// - sends messages with the current value of a counter and timestamp every 10 seconds, increments the counter
+// - logs all messages received from the cloud
+// - periodically (every 10 seconds) sends a message to the cloud. The message contains an integer value and the current
+//   timestamp. The value increases by 1 with every sending, it restarts from 1 every time the example is restarted.
+
 
 const SEND_MESSAGE_PERIOD = 10.0;
 

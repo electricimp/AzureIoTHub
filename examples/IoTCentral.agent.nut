@@ -25,21 +25,24 @@
 #require "AzureIoTHub.agent.lib.nut:5.0.0"
 
 // AzureIoTHub library example.
-// - automatically registers the device (if not registered yet) via the Device Provisioning Service
-//   using the provided Scope ID, Registration ID and Device symmetric key
+// - computes the Device Symmetric Key using the provided Group Key
+// - automatically registers the device (if not registered yet) in IoT Central via the Device Provisioning Service
+//   using the provided Scope ID, Registration ID and computed Device Symmetric Key
 // - connects the device to Azure IoT Hub using an automatically obtained Device Connection String
 // - enables Twin functionality
-// - retrieves the Twin's properties (both - Desired and Reported) from the cloud and logs them
-// - logs all Desired properties received from the cloud, reads the value of the Desired property "test" and
-//   sends it back to the cloud as a Reported property
+// - receives Settings updates from IoT Central (it is just an update of Desired properties)
+// - confirms Settings updates by updating Reported properties
+// - sends the value of a property "test" (from received Settings/Desired properties) as a telemetry data
+//   by sending a device-to-cloud message
 
 const PROPERTY_NAME = "test";
 
-class TwinsExample {
+class IoTCentralExample {
     _azureClient = null;
     _azureDPS = null;
 
-    constructor(scopeId, registrationId, deviceKey) {
+    constructor(scopeId, registrationId, groupKey) {
+        local deviceKey = _computeDeviceKey(groupKey, registrationId);
         _azureDPS = AzureIoTHub.DPS(scopeId, registrationId, deviceKey);
     }
 
@@ -66,6 +69,10 @@ class TwinsExample {
         _azureDPS.getConnectionString(onDone);
     }
 
+    function _computeDeviceKey(groupKey, regId) {
+        return http.base64encode(crypto.hmacsha256(regId, http.base64decode(groupKey)));
+    }
+
     function _onConnected(err) {
         if (err != 0) {
             server.error("AzureIoTHub connect failed: " + err);
@@ -75,8 +82,6 @@ class TwinsExample {
         _azureClient.enableTwin(_onRequest.bindenv(this), function (err) {
             if (err != 0) {
                 server.error("AzureIoTHub enableTwin failed: " + err);
-            } else {
-                _azureClient.retrieveTwinProperties(_onRetrieved.bindenv(this));
             }
         }.bindenv(this));
     }
@@ -87,27 +92,40 @@ class TwinsExample {
         _azureClient.connect();
     }
 
-    function _onRetrieved(err, reportedProps, desiredProps) {
+    function _sendTelemetry(value) {
+        local msgBody = {
+            [PROPERTY_NAME] = value
+        };
+        local message = AzureIoTHub.Message(http.jsonencode(msgBody));
+        _azureClient.sendMessage(message, _onMessageSent.bindenv(this));
+    }
+
+    function _onMessageSent(err, msg) {
         if (err != 0) {
-            server.error("AzureIoTHub retrieveTwinProperties failed: " + err);
-            return;
+            server.error("AzureIoTHub sendMessage failed: " + err);
+        } else {
+            server.log("Telemetry successfully sent: " + msg.getBody());
         }
-        server.log("Twin properties retrieved:");
-        server.log("reported props:");
-        _printTable(reportedProps);
-        server.log("desired props:");
-        _printTable(desiredProps);
     }
 
     function _onRequest(props) {
         server.log("Desired props received:");
         server.log("props:");
         _printTable(props);
-        if (PROPERTY_NAME in props) {
+        if (PROPERTY_NAME in props && "value" in props[PROPERTY_NAME]) {
             server.log("Updating reported properties...")
             local propUpd = {};
-            propUpd[PROPERTY_NAME] <- props[PROPERTY_NAME];
+            propUpd[PROPERTY_NAME] <- {
+                "value" : props[PROPERTY_NAME]["value"],
+                "statusCode" : "200",
+                "status" : "completed",
+                "desiredVersion" : props["$version"]
+            };
 
+            // Sending the new value as telemetry
+            _sendTelemetry(props[PROPERTY_NAME]["value"]);
+
+            // Confirming the new value as a setting
             _azureClient.updateTwinProperties(propUpd, _onUpdated.bindenv(this));
         } else {
             server.log(format("No property \"%s\" in desired properties", PROPERTY_NAME));
@@ -117,21 +135,14 @@ class TwinsExample {
     function _onUpdated(err, props) {
         if (err != 0) {
             server.error("AzureIoTHub updateTwinProperties failed: " + err);
-            // Try to update again if the operation is timed out
-            // Timeout error is just an example. Of course, you should analyze all the error codes
-            // required for your application and take appropriate actions
-            if (err == AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT) {
-                server.error("Trying to update the properties again...");
-                _azureClient.updateTwinProperties(props, _onUpdated.bindenv(this));
-            }
         } else {
-            server.log("Reported properties successfully updated");
+            server.log("The settings update was confirmed");
         }
     }
 
     function _printTable(tbl) {
         foreach (k, v in tbl) {
-            server.log(k + " : " + v);
+            server.log(k + " : " + http.jsonencode(v));
         }
     }
 }
@@ -143,8 +154,8 @@ class TwinsExample {
 // ---------------------------------------------------------------------------------
 const AZURE_DPS_SCOPE_ID = "<YOUR_AZURE_DPS_SCOPE_ID>";
 const AZURE_DPS_REGISTRATION_ID = "<YOUR_AZURE_DPS_REGISTRATION_ID>";
-const AZURE_DPS_DEVICE_KEY = "<YOUR_AZURE_DPS_DEVICE_KEY>";
+const AZURE_DPS_GROUP_KEY = "<YOUR_AZURE_DPS_GROUP_KEY>";
 
 // Start application
-twinsExample <- TwinsExample(AZURE_DPS_SCOPE_ID, AZURE_DPS_REGISTRATION_ID, AZURE_DPS_DEVICE_KEY);
-twinsExample.start();
+iotCentralExample <- IoTCentralExample(AZURE_DPS_SCOPE_ID, AZURE_DPS_REGISTRATION_ID, AZURE_DPS_GROUP_KEY);
+iotCentralExample.start();

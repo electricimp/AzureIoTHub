@@ -26,30 +26,30 @@
 // AzureIoTHub is an Electric Imp agent-side library for interfacing with Azure IoT Hub version “2016-11-14”
 
 const AZURE_API_VERSION = "2016-11-14";
-const AZURE_CLAIM_BASED_SECURITY_PATH = "$cbs";
 
-const AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED          = 1000;
-const AZURE_IOT_CLIENT_ERROR_ALREADY_CONNECTED      = 1001;
-const AZURE_IOT_CLIENT_ERROR_NOT_ENABLED            = 1002;
-const AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED        = 1003;
-const AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW     = 1004;
-const AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT           = 1005;
-const AZURE_IOT_CLIENT_ERROR_GENERAL                = 1010;
+const AZURE_CLIENT_ERROR_NOT_CONNECTED          = 1000;
+const AZURE_CLIENT_ERROR_ALREADY_CONNECTED      = 1001;
+const AZURE_CLIENT_ERROR_NOT_ENABLED            = 1002;
+const AZURE_CLIENT_ERROR_ALREADY_ENABLED        = 1003;
+const AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW     = 1004;
+const AZURE_CLIENT_ERROR_OP_TIMED_OUT           = 1005;
+const AZURE_DPS_ERROR_NOT_REGISTERED            = 1010;
+const AZURE_ERROR_GENERAL                       = 1100;
 
 // MQTT QoS. Azure IoT Hub supports QoS 0 and 1 only
-const AZURE_IOT_CLIENT_DEFAULT_QOS                  = 0;
+const AZURE_CLIENT_DEFAULT_QOS                  = 0;
 // MQTT Keep-alive (in seconds)
-const AZURE_IOT_CLIENT_DEFAULT_KEEP_ALIVE           = 60;
+const AZURE_CLIENT_DEFAULT_KEEP_ALIVE           = 60;
 // Timeout (in seconds) for Retrieve Twin and Update Twin operations
-const AZURE_IOT_CLIENT_DEFAULT_TWINS_TIMEOUT        = 10;
+const AZURE_CLIENT_DEFAULT_TWINS_TIMEOUT        = 10;
 // Maximum amount of pending Update Twin operations
-const AZURE_IOT_CLIENT_DEFAULT_TWIN_UPD_PARAL_REQS  = 3;
+const AZURE_CLIENT_DEFAULT_TWIN_UPD_PARAL_REQS  = 3;
 // Maximum amount of pending Send Message operations
-const AZURE_IOT_CLIENT_DEFAULT_MSG_SEND_PARAL_REQS  = 3;
+const AZURE_CLIENT_DEFAULT_MSG_SEND_PARAL_REQS  = 3;
 // SAS token's time-to-live (sec)
-const AZURE_IOT_CLIENT_DEFAULT_TOKEN_TTL            = 86400;
+const AZURE_CLIENT_DEFAULT_TOKEN_TTL            = 86400;
 // Timeframe (sec) to reply to direct method call
-const AZURE_IOT_CLIENT_DEFAULT_DMETHODS_TIMEOUT     = 30;
+const AZURE_CLIENT_DEFAULT_DMETHODS_TIMEOUT     = 30;
 
 
 class AzureIoTHub {
@@ -630,6 +630,187 @@ class AzureIoTHub {
 
     //------------------------------------------------------------------------------
 
+    DPS = class {
+        _scopeId    = null;
+        _regId      = null;
+        _deviceKey  = null;
+
+        _headers    = null;
+        _resUri     = null;
+        _regIdBody  = null;
+
+        constructor(scopeId, registrationId, deviceKey) {
+            const AZURE_DPS_API_VERSION = "2018-09-01-preview";
+            const AZURE_DPS_REG_KEY_NAME = "registration";
+            const AZURE_DPS_GLOBAL_HOST = "https://global.azure-devices-provisioning.net";
+
+            // Looks like "https://global.azure-devices-provisioning.net/0ne000366B8/registrations/my-device/register?api-version=2018-09-01-preview"
+            const AZURE_DPS_REG_ENDPOINT_FMT        = "%s/%s/registrations/%s/register?api-version=%s";
+            // Looks like "https://global.azure-devices-provisioning.net/0ne000366B8/registrations/my-device/operations/4.176af959adcba99f.d5817a51-c64b-409b-83df-8425b610cbd2?api-version=2018-09-01-preview"
+            const AZURE_DPS_OP_STATUS_ENDPOINT_FMT  = "%s/%s/registrations/%s/operations/%s?api-version=%s";
+            // Looks like "https://global.azure-devices-provisioning.net/0ne000366B8/registrations/my-device?api-version=2018-09-01-preview"
+            const AZURE_DPS_REG_STATUS_ENDPOINT_FMT = "%s/%s/registrations/%s?api-version=%s";
+
+            const AZURE_DPS_SAS_TTL = 3600;
+            // Default delay (sec) between polling requests
+            const AZURE_DPS_DEFAULT_DELAY = 3.0;
+
+            _headers = {
+                "Accept": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
+                "Connection": "keep-alive",
+                "UserAgent": "prov_device_client/1.0",
+                "Authorization" : null
+            };
+
+            _scopeId    = scopeId;
+            _regId      = registrationId;
+            _deviceKey  = deviceKey;
+
+            _regIdBody = http.jsonencode({
+                "registrationId" : _regId
+            });
+            _resUri = AzureIoTHub.Authorization.encodeUri(_scopeId + "/registrations/" + _regId);
+        }
+
+        function register(onDone) {
+            local sasExpTime = time() + AZURE_DPS_SAS_TTL;
+            local sas = AzureIoTHub.SharedAccessSignature(_resUri, AZURE_DPS_REG_KEY_NAME, _deviceKey, sasExpTime).toString();
+
+            _headers["Authorization"] = sas;
+
+            local url = format(AZURE_DPS_REG_ENDPOINT_FMT, AZURE_DPS_GLOBAL_HOST, _scopeId, _regId, AZURE_DPS_API_VERSION);
+            local request = http.put(url, _headers, _regIdBody);
+
+            local onSent = function(resp) {
+                local body = _parseBody(resp.body, onDone);
+                if (body == null) {
+                    return;
+                }
+
+                if (resp.statuscode == 200 || resp.statuscode == 202) {
+                    if ("operationId" in body) {
+                        _regOperationStatus(body["operationId"], onDone);
+                    } else {
+                        server.error("Response body doesn't have the \"operationId\" field");
+                        onDone(AZURE_ERROR_GENERAL, body, null);
+                    }
+                } else {
+                    onDone(resp.statuscode, body, null);
+                }
+            }.bindenv(this);
+
+            request.sendasync(onSent);
+        }
+
+        function getConnectionString(onDone) {
+            local sasExpTime = time() + AZURE_DPS_SAS_TTL;
+            local sas = AzureIoTHub.SharedAccessSignature(_resUri, AZURE_DPS_REG_KEY_NAME, _deviceKey, sasExpTime).toString();
+
+            _headers["Authorization"] = sas;
+
+            local url = format(AZURE_DPS_REG_STATUS_ENDPOINT_FMT, AZURE_DPS_GLOBAL_HOST, _scopeId, _regId, AZURE_DPS_API_VERSION);
+            local request = http.post(url, _headers, _regIdBody);
+
+            local onSent = function(resp) {
+                local body = _parseBody(resp.body, onDone);
+                if (body == null) {
+                    return;
+                }
+
+                if (resp.statuscode == 200) {
+                    if (!("status" in body)) {
+                        server.error("Response body doesn't have the \"status\" field");
+                        onDone(AZURE_ERROR_GENERAL, body, null);
+                        return;
+                    }
+
+                    if (body["status"] == "assigned") {
+                        if ("assignedHub" in body) {
+                            onDone(0, body, _connectionString(body["assignedHub"]));
+                        } else {
+                            server.error("Response body doesn't have the \"assignedHub\" field");
+                            onDone(AZURE_ERROR_GENERAL, body, null);
+                        }
+                    } else {
+                        onDone(AZURE_DPS_ERROR_NOT_REGISTERED, body, null);
+                    }
+                } else if (resp.statuscode == 404) {
+                    onDone(AZURE_DPS_ERROR_NOT_REGISTERED, body, null);
+                } else {
+                    onDone(resp.statuscode, body, null);
+                }
+            }.bindenv(this);
+
+            request.sendasync(onSent);
+        }
+
+        function _regOperationStatus(operationId, onDone) {
+            local url = format(AZURE_DPS_OP_STATUS_ENDPOINT_FMT, AZURE_DPS_GLOBAL_HOST, _scopeId, _regId, operationId, AZURE_DPS_API_VERSION);
+            local request = http.get(url, _headers);
+            local onSent = null;
+
+            onSent = function(resp) {
+                local body = _parseBody(resp.body, onDone);
+                if (body == null) {
+                    return;
+                }
+
+                local retryAfter = AZURE_DPS_DEFAULT_DELAY;
+
+                if (resp.statuscode == 200 || resp.statuscode == 202) {
+                    if (!("status" in body)) {
+                        server.error("Response body doesn't have the \"status\" field");
+                        onDone(AZURE_ERROR_GENERAL, body, null);
+                        return;
+                    }
+
+                    if (body["status"] == "assigned") {
+                        if ("registrationState" in body && "assignedHub" in body["registrationState"]) {
+                            onDone(0, body, _connectionString(body["registrationState"]["assignedHub"]));
+                        } else {
+                            server.error("Response body doesn't have the \"registrationState.assignedHub\" field");
+                            onDone(AZURE_ERROR_GENERAL, body, null);
+                        }
+                        return;
+                    } else if (body["status"] != "assigning") {
+                        onDone(AZURE_DPS_ERROR_NOT_REGISTERED, body, null);
+                        return;
+                    }
+                } else if (resp.statuscode != 429) {
+                    onDone(resp.statuscode, body, null);
+                    return;
+                }
+
+                if ("retry-after" in resp.headers) {
+                    retryAfter = resp.headers["retry-after"].tointeger();
+                }
+                request = http.get(url, _headers);
+                imp.wakeup(retryAfter, @() request.sendasync(onSent));
+            }.bindenv(this);
+
+            request.sendasync(onSent);
+        }
+
+        function _connectionString(iotHubAddr) {
+            return format("HostName=%s;DeviceId=%s;SharedAccessKey=%s", iotHubAddr, _regId, _deviceKey);
+        }
+
+        function _parseBody(body, onError) {
+            try {
+                body = http.jsondecode(body);
+            } catch (e) {
+                server.error("Response body is not a valid JSON: " + e);
+                onError(AZURE_ERROR_GENERAL, null, null);
+                return null;
+            }
+            return body;
+        }
+    }
+
+
+    //------------------------------------------------------------------------------
+
     // This class is used to transfer data to and from Azure IoT Hub.
     // To use this class, the device must be registered as an IoT Hub device in an Azure account.
     // AzureIoTHub.Client works over MQTT v3.1.1 protocol. It supports the following functionality:
@@ -718,12 +899,12 @@ class AzureIoTHub {
         //
         // Returns:                         AzureIoTHub.Client instance created.
         constructor(deviceConnStr, onConnected = null, onDisconnected = null, options = {}) {
-            const MESSAGE_INDEX         = 0;
-            const REQ_ID_INDEX          = 0;
-            const TWIN_PROPERTIES_INDEX = 0;
-            const DMETHOD_RESP_INDEX    = 0;
-            const CALLBACK_INDEX        = 1;
-            const TIMESTAMP_INDEX       = 2;
+            const AZURE_CLIENT_MESSAGE_INDEX        = 0;
+            const AZURE_CLIENT_REQ_ID_INDEX         = 0;
+            const AZURE_CLIENT_TWIN_PROPS_INDEX     = 0;
+            const AZURE_CLIENT_DMETHOD_RESP_INDEX   = 0;
+            const AZURE_CLIENT_CALLBACK_INDEX       = 1;
+            const AZURE_CLIENT_TIMESTAMP_INDEX      = 2;
 
             _msgBeingSent       = {};
             _twinUpdateRequests = {};
@@ -731,19 +912,20 @@ class AzureIoTHub {
             _pendingCalls       = [];
 
             _options = {
-                "qos" : AZURE_IOT_CLIENT_DEFAULT_QOS,
-                "keepAlive" : AZURE_IOT_CLIENT_DEFAULT_KEEP_ALIVE,
-                "twinsTimeout" : AZURE_IOT_CLIENT_DEFAULT_TWINS_TIMEOUT,
-                "dMethodsTimeout" : AZURE_IOT_CLIENT_DEFAULT_DMETHODS_TIMEOUT,
-                "maxPendingTwinRequests" : AZURE_IOT_CLIENT_DEFAULT_TWIN_UPD_PARAL_REQS,
-                "maxPendingSendRequests" : AZURE_IOT_CLIENT_DEFAULT_MSG_SEND_PARAL_REQS,
-                "tokenTTL" : AZURE_IOT_CLIENT_DEFAULT_TOKEN_TTL,
+                "qos" : AZURE_CLIENT_DEFAULT_QOS,
+                "keepAlive" : AZURE_CLIENT_DEFAULT_KEEP_ALIVE,
+                "twinsTimeout" : AZURE_CLIENT_DEFAULT_TWINS_TIMEOUT,
+                "dMethodsTimeout" : AZURE_CLIENT_DEFAULT_DMETHODS_TIMEOUT,
+                "maxPendingTwinRequests" : AZURE_CLIENT_DEFAULT_TWIN_UPD_PARAL_REQS,
+                "maxPendingSendRequests" : AZURE_CLIENT_DEFAULT_MSG_SEND_PARAL_REQS,
+                "tokenTTL" : AZURE_CLIENT_DEFAULT_TOKEN_TTL,
                 "tokenAutoRefresh" : true
             };
 
             _onConnectedCb      = onConnected;
             _onDisconnectedCb   = onDisconnected;
 
+            // TODO: Allow for registryConnStr?
             _connStrParsed = AzureIoTHub.ConnectionString.Parse(deviceConnStr);
             _mqttclient = mqtt.createclient();
             _mqttclient.onconnect(_onConnected.bindenv(this));
@@ -778,7 +960,7 @@ class AzureIoTHub {
         function connect() {
             _log("Call: connect()");
             if (_isConnected || _isConnecting) {
-                _onConnectedCb && _onConnectedCb(_isConnected ? AZURE_IOT_CLIENT_ERROR_ALREADY_CONNECTED : AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
+                _onConnectedCb && _onConnectedCb(_isConnected ? AZURE_CLIENT_ERROR_ALREADY_CONNECTED : AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
                 return;
             }
 
@@ -828,7 +1010,7 @@ class AzureIoTHub {
         function sendMessage(msg, onSent = null) {
             _log("Call: sendMessage()");
             if (!_isConnected || _isDisconnecting) {
-                onSent && onSent(_isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, msg);
+                onSent && onSent(_isConnected ? AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_CLIENT_ERROR_NOT_CONNECTED, msg);
                 return;
             }
 
@@ -842,7 +1024,7 @@ class AzureIoTHub {
             local tooManyRequests = _msgBeingSent.len() >= _options.maxPendingSendRequests;
 
             if (tooManyRequests) {
-                onSent && onSent(AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW, msg);
+                onSent && onSent(AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW, msg);
                 return;
             }
 
@@ -855,7 +1037,7 @@ class AzureIoTHub {
                     props = http.urlencode(msg.getProperties());
                 } catch (e) {
                     _log("Exception at parsing the properties: " + e);
-                    onSent && onSent(AZURE_IOT_CLIENT_ERROR_GENERAL, msg);
+                    onSent && onSent(AZURE_ERROR_GENERAL, msg);
                     return;
                 }
             }
@@ -1033,18 +1215,18 @@ class AzureIoTHub {
             local isRetrieving = _twinRetrievedCb != null;
 
             if (!_isConnected || _isDisconnecting) {
-                onRetrieved(_isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, null, null);
+                onRetrieved(_isConnected ? AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_CLIENT_ERROR_NOT_CONNECTED, null, null);
                 return;
             }
 
             if (!enabled) {
-                onRetrieved(AZURE_IOT_CLIENT_ERROR_NOT_ENABLED, null, null);
+                onRetrieved(AZURE_CLIENT_ERROR_NOT_ENABLED, null, null);
                 return;
             }
 
             // Only one retrieve operation at a time is allowed
             if (isRetrieving) {
-                onRetrieved(AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW, null, null);
+                onRetrieved(AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW, null, null);
                 return;
             }
 
@@ -1100,17 +1282,17 @@ class AzureIoTHub {
             local tooManyRequests = _twinUpdateRequests.len() >= _options.maxPendingTwinRequests;
 
             if (!_isConnected || _isDisconnecting) {
-                onUpdated && onUpdated(_isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, props);
+                onUpdated && onUpdated(_isConnected ? AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_CLIENT_ERROR_NOT_CONNECTED, props);
                 return;
             }
 
             if (!enabled) {
-                onUpdated && onUpdated(AZURE_IOT_CLIENT_ERROR_NOT_ENABLED, props);
+                onUpdated && onUpdated(AZURE_CLIENT_ERROR_NOT_ENABLED, props);
                 return;
             }
 
             if (tooManyRequests) {
-                onUpdated && onUpdated(AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW, props);
+                onUpdated && onUpdated(AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW, props);
                 return;
             }
 
@@ -1132,7 +1314,7 @@ class AzureIoTHub {
                 jsonProps = http.jsonencode(props);
             } catch (e) {
                 _log("Exception at parsing the properties: " + e);
-                onUpdated && onUpdated(AZURE_IOT_CLIENT_ERROR_GENERAL, props);
+                onUpdated && onUpdated(AZURE_ERROR_GENERAL, props);
                 return;
             }
             local mqttMsg = _mqttclient.createmessage(topic, jsonProps, _msgOptions);
@@ -1296,7 +1478,7 @@ class AzureIoTHub {
 
         function _onDisconnected() {
             _log("Disconnected!");
-            local reason = _isDisconnecting ? 0 : AZURE_IOT_CLIENT_ERROR_GENERAL;
+            local reason = _isDisconnecting ? 0 : AZURE_ERROR_GENERAL;
             _cleanup();
             _onDisconnectedCb && _onDisconnectedCb(reason);
         }
@@ -1472,7 +1654,7 @@ class AzureIoTHub {
             if (reqId in _twinUpdateRequests) {
                 _handleTwinUpdateResponse(reqId, status);
             // Twin's properties received after GET request
-            } else if (_twinRetrievedCb != null && _twinRetrievedCb[REQ_ID_INDEX] == reqId) {
+            } else if (_twinRetrievedCb != null && _twinRetrievedCb[AZURE_CLIENT_REQ_ID_INDEX] == reqId) {
                 _handleTwinGetResponse(reqId, status, parsedMsg);
             } else {
                 _logError("Message with unknown request ID received: " + reqId);
@@ -1484,8 +1666,8 @@ class AzureIoTHub {
             local arr = delete _twinUpdateRequests[reqId];
             // If no pending requests, cancel the timer
             _queuesMayBeEmpty();
-            local props = arr[TWIN_PROPERTIES_INDEX];
-            local cb = arr[CALLBACK_INDEX];
+            local props = arr[AZURE_CLIENT_TWIN_PROPS_INDEX];
+            local cb = arr[AZURE_CLIENT_CALLBACK_INDEX];
             _refreshingPaused && _continueRefreshing();
             if (_statusIsOk(status)) {
                 cb && cb(0, props);
@@ -1495,7 +1677,7 @@ class AzureIoTHub {
         }
 
         function _handleTwinGetResponse(reqId, status, parsedMsg) {
-            local cb = _twinRetrievedCb[CALLBACK_INDEX];
+            local cb = _twinRetrievedCb[AZURE_CLIENT_CALLBACK_INDEX];
             _twinRetrievedCb = null;
             // If no pending requests, cancel the timer
             _queuesMayBeEmpty();
@@ -1511,7 +1693,7 @@ class AzureIoTHub {
                 desProps = parsedMsg["desired"];
             } catch (e) {
                 _log("Exception at parsing the message: " + e);
-                cb(AZURE_IOT_CLIENT_ERROR_GENERAL, null, null);
+                cb(AZURE_ERROR_GENERAL, null, null);
                 return;
             }
             cb(0, repProps, desProps);
@@ -1546,11 +1728,11 @@ class AzureIoTHub {
         function _dMethodReply(reqId) {
             return function(resp, onReplySent = null) {
                 if (!(reqId in _dMethodCalls)) {
-                    onReplySent && onReplySent(AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT, resp);
+                    onReplySent && onReplySent(AZURE_CLIENT_ERROR_OP_TIMED_OUT, resp);
                     return;
                 }
-                if (time() - _dMethodCalls[reqId][TIMESTAMP_INDEX] > _options.dMethodsTimeout) {
-                    _dMethodReplied(AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT, reqId, resp, onReplySent);
+                if (time() - _dMethodCalls[reqId][AZURE_CLIENT_TIMESTAMP_INDEX] > _options.dMethodsTimeout) {
+                    _dMethodReplied(AZURE_CLIENT_ERROR_OP_TIMED_OUT, reqId, resp, onReplySent);
                     return;
                 }
 
@@ -1561,7 +1743,7 @@ class AzureIoTHub {
                     respJson = http.jsonencode(resp._body);
                 } catch (e) {
                     _log("Exception at parsing the response body for Direct Method: " + e);
-                    _dMethodReplied(AZURE_IOT_CLIENT_ERROR_GENERAL, reqId, resp, onReplySent);
+                    _dMethodReplied(AZURE_ERROR_GENERAL, reqId, resp, onReplySent);
                     return;
                 }
 
@@ -1573,8 +1755,8 @@ class AzureIoTHub {
                     }
                 }.bindenv(this);
 
-                _dMethodCalls[reqId][DMETHOD_RESP_INDEX] = resp;
-                _dMethodCalls[reqId][CALLBACK_INDEX] = onReplySent;
+                _dMethodCalls[reqId][AZURE_CLIENT_DMETHOD_RESP_INDEX] = resp;
+                _dMethodCalls[reqId][AZURE_CLIENT_CALLBACK_INDEX] = onReplySent;
 
                 mqttMsg.sendasync(msgSentCb);
             }.bindenv(this);
@@ -1620,26 +1802,26 @@ class AzureIoTHub {
             local cb = null;
             local timestamp = null;
             // If _twinRetrievedCb is not null it is guaranteed to be array of length 3
-            local isPending = _twinRetrievedCb != null && _twinRetrievedCb[TIMESTAMP_INDEX] != null;
+            local isPending = _twinRetrievedCb != null && _twinRetrievedCb[AZURE_CLIENT_TIMESTAMP_INDEX] != null;
 
             if (isPending) {
-                cb = _twinRetrievedCb[CALLBACK_INDEX];
-                timestamp = _twinRetrievedCb[TIMESTAMP_INDEX];
+                cb = _twinRetrievedCb[AZURE_CLIENT_CALLBACK_INDEX];
+                timestamp = _twinRetrievedCb[AZURE_CLIENT_TIMESTAMP_INDEX];
                 if (now - timestamp >= _options.twinsTimeout) {
                     _twinRetrievedCb = null;
-                    cb(AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT, null, null);
+                    cb(AZURE_CLIENT_ERROR_OP_TIMED_OUT, null, null);
                 }
             }
 
             local props = null;
             local callbacks = [];
             foreach (reqId, arr in _twinUpdateRequests) {
-                timestamp = arr[TIMESTAMP_INDEX];
+                timestamp = arr[AZURE_CLIENT_TIMESTAMP_INDEX];
                 isPending = timestamp != null;
                 if (isPending &&
                     (now - timestamp >= _options.twinsTimeout)) {
-                    props = arr[TWIN_PROPERTIES_INDEX];
-                    cb = arr[CALLBACK_INDEX];
+                    props = arr[AZURE_CLIENT_TWIN_PROPS_INDEX];
+                    cb = arr[AZURE_CLIENT_CALLBACK_INDEX];
                     delete _twinUpdateRequests[reqId];
                     if (cb != null) {
                         callbacks.append(cb);
@@ -1650,7 +1832,7 @@ class AzureIoTHub {
             for (local i = 0; i < callbacks.len(); i += 2) {
                 cb = callbacks[i];
                 props = callbacks[i + 1];
-                cb(AZURE_IOT_CLIENT_ERROR_OP_TIMED_OUT, props);
+                cb(AZURE_CLIENT_ERROR_OP_TIMED_OUT, props);
             }
         }
 
@@ -1658,9 +1840,9 @@ class AzureIoTHub {
             local now = time();
             local timestamp = null;
             foreach (reqId, arr in _dMethodCalls) {
-                timestamp = arr[TIMESTAMP_INDEX];
-                // if arr[DMETHOD_RESP_INDEX] is not null, the call is being replied now
-                if (arr[DMETHOD_RESP_INDEX] == null && (now - timestamp >= _options.dMethodsTimeout)) {
+                timestamp = arr[AZURE_CLIENT_TIMESTAMP_INDEX];
+                // if arr[AZURE_CLIENT_DMETHOD_RESP_INDEX] is not null, the call is being replied now
+                if (arr[AZURE_CLIENT_DMETHOD_RESP_INDEX] == null && (now - timestamp >= _options.dMethodsTimeout)) {
                     delete _dMethodCalls[reqId];
                 }
             }
@@ -1668,22 +1850,22 @@ class AzureIoTHub {
 
         function _readyToEnable(isEnabling, enabled, disable, callback) {
             if (!_isConnected || _isDisconnecting) {
-                _error(callback, _isConnected ? AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                _error(callback, _isConnected ? AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW : AZURE_CLIENT_ERROR_NOT_CONNECTED);
                 return false;
             }
 
             if (isEnabling) {
-                _error(callback, AZURE_IOT_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
+                _error(callback, AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW);
                 return false;
             }
 
             if (enabled && !disable) {
-                _error(callback, AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED);
+                _error(callback, AZURE_CLIENT_ERROR_ALREADY_ENABLED);
                 return false;
             }
 
             if (disable && !enabled) {
-                _error(callback, AZURE_IOT_CLIENT_ERROR_NOT_ENABLED);
+                _error(callback, AZURE_CLIENT_ERROR_NOT_ENABLED);
                 return false;
             }
 
@@ -1725,42 +1907,42 @@ class AzureIoTHub {
             }
 
             if (_msgEnabledCb != null) {
-                _error(_msgEnabledCb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                _error(_msgEnabledCb, AZURE_CLIENT_ERROR_NOT_CONNECTED);
                 _msgEnabledCb = null;
             }
             if (_twinEnabledCb != null) {
-                _error(_twinEnabledCb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                _error(_twinEnabledCb, AZURE_CLIENT_ERROR_NOT_CONNECTED);
                 _twinEnabledCb = null;
             }
             if (_dMethodEnabledCb != null) {
-                _error(_dMethodEnabledCb, AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED);
+                _error(_dMethodEnabledCb, AZURE_CLIENT_ERROR_NOT_CONNECTED);
                 _dMethodEnabledCb = null;
             }
 
             foreach (reqId, arr in _msgBeingSent) {
-                local msg = arr[MESSAGE_INDEX];
-                local cb = arr[CALLBACK_INDEX];
-                cb && cb(AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, msg);
+                local msg = arr[AZURE_CLIENT_MESSAGE_INDEX];
+                local cb = arr[AZURE_CLIENT_CALLBACK_INDEX];
+                cb && cb(AZURE_CLIENT_ERROR_NOT_CONNECTED, msg);
             }
             _msgBeingSent = {};
 
             if (_twinRetrievedCb != null) {
-                local cb = _twinRetrievedCb[CALLBACK_INDEX];
+                local cb = _twinRetrievedCb[AZURE_CLIENT_CALLBACK_INDEX];
                 _twinRetrievedCb = null;
-                cb(AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, null, null);
+                cb(AZURE_CLIENT_ERROR_NOT_CONNECTED, null, null);
             }
 
             foreach (reqId, arr in _twinUpdateRequests) {
-                local props = arr[TWIN_PROPERTIES_INDEX];
-                local cb = arr[CALLBACK_INDEX];
-                cb && cb(AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, props);
+                local props = arr[AZURE_CLIENT_TWIN_PROPS_INDEX];
+                local cb = arr[AZURE_CLIENT_CALLBACK_INDEX];
+                cb && cb(AZURE_CLIENT_ERROR_NOT_CONNECTED, props);
             }
             _twinUpdateRequests = {};
 
             foreach (reqId, arr in _dMethodCalls) {
-                local resp = arr[DMETHOD_RESP_INDEX];
-                local cb = arr[CALLBACK_INDEX];
-                cb && cb(AZURE_IOT_CLIENT_ERROR_NOT_CONNECTED, resp);
+                local resp = arr[AZURE_CLIENT_DMETHOD_RESP_INDEX];
+                local cb = arr[AZURE_CLIENT_CALLBACK_INDEX];
+                cb && cb(AZURE_CLIENT_ERROR_NOT_CONNECTED, resp);
             }
             _dMethodCalls = {};
 
