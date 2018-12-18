@@ -143,6 +143,11 @@ The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;
 10. Set *AZURE_REGISTRY_CONN_STRING* constant in the agent example code to the **Registry Connection String** you obtained and saved earlier.
 The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;SharedAccessKey=<SAS Key>`.
 
+9. Set constants in the agent example code:
+ - *AZURE_DPS_SCOPE_ID*: set the **Scope ID** from the [step 3](#create-iot-hub-device-provisioning-service-resource)
+ - *AZURE_DPS_REGISTRATION_ID*: set the **Registration ID** from the [step 5](#create-an-individual-enrollment)
+ - *AZURE_DPS_DEVICE_KEY*: set the **Device Symmetric Key** from the [step 5](#create-an-individual-enrollment)
+
 ![TwinsSetConst](./example_imgs/TwinsSetConst.png)
 
 11. Click **Build and Force Restart**.
@@ -172,97 +177,25 @@ If you are not registered, create an account with subscription (free subscriptio
 
 2. In the **IoT Hub** pane, enter the following information for your IoT hub:
 
- - **Name** This is the name for your IoT hub. If the name you enter is valid, a green check mark appears.
-
- - **Pricing and scale tier** Select the free F1 tier. This option is sufficient for this demo. See [pricing and scale tier](https://azure.microsoft.com/pricing/details/iot-hub/).
+ - **Subscription** Select your subscription. You may need to set up a free trial or "Pay-As-You-Go" subscription.
 
  - **Resource group** Create a resource group to host the IoT hub or use an existing one. See [Using resource groups to manage your Azure resources](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-portal).
 
- - **Location** Select the location closest to where the IoT hub was created.
+ - **Region** Select the location closest to where the IoT hub was created.
 
- - **Pin the dashboard** Check this option for easy access to your IoT hub from the dashboard.
+ - **IoT Hub name** This is the name for your IoT hub. If the name you enter is valid, a green check mark appears.
 
 ![IoT Hub Create Resource](./example_imgs/IoTHubCreateResource.png)
 
-3. Click **Create**. It could take a few minutes for your IoT hub to be created. You can see progress in the **Notifications** pane:
+3. Click **Next: Size and scale** select the free F1 tier for **Pricing and scale tier**. This option is sufficient for this demo. See [pricing and scale tier](https://azure.microsoft.com/pricing/details/iot-hub/).
+
+4. Click **Review + create**.
+
+![IoT Hub Create Resource](./example_imgs/IoTHubCreateResource2.png)
+
+5. Click **Create**. It could take a few minutes for your IoT hub to be created. You can see progress in the **Notifications** pane:
 
 ![Notifications](./example_imgs/IoTHubNotifications.png)
-
-### Create IoT Hub Device Provisioning Service Resource ###
-
-1. In the [Azure portal](https://portal.azure.com/), click **New > Internet of Things > IoT Hub Device Provisioning Service**:
-
-![Create DPS](./example_imgs/CreateDPS.png)
-
-2. In the **IoT Hub Device Provisioning Service** pane, enter the following information for your IoT Hub DPS:
-
- - **Name** This is the name for your IoT Hub DPS. If the name you enter is valid, a green check mark appears.
-
- - **Subscription** Select your subscription. You may need to set up a free trial or "Pay-As-You-Go" subscription.
-
- - **Resource group** Choose the same resource group as for the IoT hub you created in the previous steps.
-
- - **Location** Select the same location as for the IoT hub.
-
-![DPS Create Resource](./example_imgs/DPSCreateResource.png)
-
-3. Click **Create**. It could take a few minutes for your IoT Hub DPS  to be created. You can see progress in the **Notifications** pane:
-
-![Notifications](./example_imgs/DPSNotifications.png)
-
-4. Once your DPS created, open its **Overview** pane and make a note of the **ID Scope** - this is the **Scope ID** which may be needed to setup and run your application.
-
-![DPS Scope ID](./example_imgs/DPSScopeID.png)
-
-### Link An IoT Hub To DPS ###
-
-1. In the [Azure portal](https://portal.azure.com/), open your IoT Hub DPS.
-
-2. Click **Linked IoT hubs**.
-
-3. Press the **Add** button.
-
-4. In the **Add link to IoT hub** pane, enter the following information:
-
- - **Subscription** Select your subscription. You may need to set up a free trial or "Pay-As-You-Go" subscription.
-
- - **IoT hub** Choose the IoT hub you created in the previous steps.
-
- - **Access Policy** Select **iothubowner**.
-
-![DPS Link An IoT Hub](./example_imgs/DPSLinkAnIoTHub.png)
-
-5. Click **Save**.
-
-### Create An Individual Enrollment ###
-
-1. In the [Azure portal](https://portal.azure.com/), open your IoT Hub DPS.
-
-2. Click **Manage enrollments**.
-
-3. Press the **Add individual enrollment** button.
-
-4. In the **IoT Hub Device Provisioning Service** pane, enter the following information for your IoT Hub DPS:
-
- - **Mechanism** This is the name for your IoT Hub DPS. If the name you enter is valid, a green check mark appears.
-
- - **Auto-generate keys** Check this field.
-
- - **Registration ID** Select your subscription. You may need to set up a free trial or "Pay-As-You-Go" subscription.
-
- - **Select the IoT hubs this group can be assigned to** Make sure the only IoT hub checked is the one you created in the previous steps.
-
-![DPS Create An Individual Enrollment](./example_imgs/DPSCreateIndEnrollment.png)
-
-5. Click **Save**.
-
-6. Open the enrollment you have just created.
-
-![DPS Open Enrollment](./example_imgs/DPSOpenEnrollment.png)
-
-7.Make a note of the **Primary Key** - this is the **Device Symmetric Key** which may be needed to setup and run your application.
-
-![DPS Primary Key](./example_imgs/DPSPrimaryKey.png)
 
 ### Obtain Registry Connection String ###
 
@@ -347,3 +280,80 @@ If you are not registered, create an account with subscription (free subscriptio
 
 4. Click **Invoke Method**.
 
+## Azure IoT Hub Device Provisioning Service (DPS) How To ##
+
+### Create IoT Hub Device Provisioning Service Resource ###
+
+1. In the [Azure portal](https://portal.azure.com/), click **New > Internet of Things > IoT Hub Device Provisioning Service**:
+
+![Create DPS](./example_imgs/CreateDPS.png)
+
+2. In the **IoT Hub Device Provisioning Service** pane, enter the following information for your IoT Hub DPS:
+
+ - **Name** This is the name for your IoT Hub DPS. If the name you enter is valid, a green check mark appears.
+
+ - **Subscription** Select your subscription. You may need to set up a free trial or "Pay-As-You-Go" subscription.
+
+ - **Resource group** Choose the same resource group as for the IoT hub you created in the previous steps.
+
+ - **Location** Select the same location as for the IoT hub.
+
+![DPS Create Resource](./example_imgs/DPSCreateResource.png)
+
+3. Click **Create**. It could take a few minutes for your IoT Hub DPS  to be created. You can see progress in the **Notifications** pane.
+
+4. Once your DPS created, open its **Overview** pane and make a note of the **ID Scope** - this is the **Scope ID** which may be needed to setup and run your application.
+
+![DPS Scope ID](./example_imgs/DPSScopeID.png)
+
+### Link An IoT Hub To DPS ###
+
+1. In the [Azure portal](https://portal.azure.com/), open your IoT Hub DPS.
+
+2. Click **Linked IoT hubs**.
+
+3. Press the **Add** button.
+
+4. In the **Add link to IoT hub** pane, enter the following information:
+
+ - **Subscription** Select your subscription. You may need to set up a free trial or "Pay-As-You-Go" subscription.
+
+ - **IoT hub** Choose the IoT hub you created in the previous steps.
+
+ - **Access Policy** Select **iothubowner**.
+
+![DPS Link An IoT Hub](./example_imgs/DPSLinkAnIoTHub.png)
+
+5. Click **Save**.
+
+### Create An Individual Enrollment ###
+
+1. In the [Azure portal](https://portal.azure.com/), open your IoT Hub DPS.
+
+2. Click **Manage enrollments**.
+
+3. Press the **Add individual enrollment** button.
+
+![DPS Create An Individual Enrollment](./example_imgs/DPSCreateIndEnrollment1.png)
+
+4. In the **Add Enrollment** pane, enter the following information for your IoT Hub DPS:
+
+ - **Mechanism** This is the name for your IoT Hub DPS. If the name you enter is valid, a green check mark appears.
+
+ - **Auto-generate keys** Check this field.
+
+ - **Registration ID** The ID of the new device. You can type here some arbitrary name.
+
+ - **Select the IoT hubs this group can be assigned to** Make sure the only IoT hub checked is the one you created in the previous steps.
+
+5. Click **Save**.
+
+![DPS Create An Individual Enrollment](./example_imgs/DPSCreateIndEnrollment2.png)
+
+6. Click the **Individual enrollments** tab and open the enrollment you have just created.
+
+![DPS Open Enrollment](./example_imgs/DPSOpenEnrollment.png)
+
+7.Make a note of the **Primary Key** - this is the **Device Symmetric Key** which may be needed to setup and run your application.
+
+![DPS Primary Key](./example_imgs/DPSPrimaryKey.png)
