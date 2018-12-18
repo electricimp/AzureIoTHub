@@ -185,7 +185,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
  - **IoT Hub name** This is the name for your IoT hub. If the name you enter is valid, a green check mark appears.
 
-![IoT Hub Create Resource](./example_imgs/IoTHubCreateResource.png)
+![IoT Hub Create Resource](./example_imgs/IoTHubCreateResource1.png)
 
 3. Click **Next: Size and scale** select the free F1 tier for **Pricing and scale tier**. This option is sufficient for this demo. See [pricing and scale tier](https://azure.microsoft.com/pricing/details/iot-hub/).
 
