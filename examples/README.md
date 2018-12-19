@@ -192,7 +192,7 @@ The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;
 
 ![ConnectIoTCentralLogs](./example_imgs/ConnectIoTCLogs.png)
 
-13. [Update Device Settings](#update-device-settings) in IoT Central and check from the logs that the settings update is received and confirmed
+13. [Update Device Settings](#update-device-settings) in IoT Central and check from the logs that the settings update is received and confirmed and that the telemetry data was sent
 
 ![SettingsUpdateIoTCentralLogs](./example_imgs/SettingsUpdateIoTCLogs.png)
 
@@ -491,13 +491,11 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Obtain Scope ID And Group Key ###
 
-1. In your [IoT Central](https://apps.azureiotcentral.com/) application, open **Administration**:
-
-![IoT Central Open Administration](./example_imgs/IoTCOpenAdministration.png)
+1. In your [IoT Central](https://apps.azureiotcentral.com/) application, open **Administration**.
 
 2. Click **Device Connection** and make a note of **Scope ID** and **Primary Key** - they are **Scope ID** and **Group Symmetric Key** which may be needed to setup and run your application.
 
-![IoT Central Create A Device](./example_imgs/IoTCDeviceConnection.png)
+![IoT Central Device Connection](./example_imgs/IoTCDeviceConnection.png)
 
 ### Update Device Settings ###
 
