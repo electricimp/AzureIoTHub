@@ -683,10 +683,7 @@ class AzureIoTHub {
             local request = http.put(url, _headers, _regIdBody);
 
             local onSent = function(resp) {
-                local body = _parseBody(resp.body, onDone);
-                if (body == null) {
-                    return;
-                }
+                local body = _parseBody(resp.body);
 
                 if (resp.statuscode == 200 || resp.statuscode == 202) {
                     if ("operationId" in body) {
@@ -713,10 +710,7 @@ class AzureIoTHub {
             local request = http.post(url, _headers, _regIdBody);
 
             local onSent = function(resp) {
-                local body = _parseBody(resp.body, onDone);
-                if (body == null) {
-                    return;
-                }
+                local body = _parseBody(resp.body);
 
                 if (resp.statuscode == 200) {
                     if (!("status" in body)) {
@@ -751,10 +745,7 @@ class AzureIoTHub {
             local onSent = null;
 
             onSent = function(resp) {
-                local body = _parseBody(resp.body, onDone);
-                if (body == null) {
-                    return;
-                }
+                local body = _parseBody(resp.body);
 
                 local retryAfter = AZURE_DPS_DEFAULT_DELAY;
 
@@ -796,12 +787,11 @@ class AzureIoTHub {
             return format("HostName=%s;DeviceId=%s;SharedAccessKey=%s", iotHubAddr, _regId, _deviceKey);
         }
 
-        function _parseBody(body, onError) {
+        function _parseBody(body) {
             try {
                 body = http.jsondecode(body);
             } catch (e) {
                 server.error("Response body is not a valid JSON: " + e);
-                onError(AZURE_ERROR_GENERAL, null, null);
                 return null;
             }
             return body;

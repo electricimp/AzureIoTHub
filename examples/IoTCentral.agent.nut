@@ -109,11 +109,11 @@ class IoTCentralExample {
     }
 
     function _onRequest(props) {
-        server.log("Desired props received:");
+        server.log("Settings update (desired properties) received:");
         server.log("props:");
         _printTable(props);
         if (PROPERTY_NAME in props && "value" in props[PROPERTY_NAME]) {
-            server.log("Updating reported properties...")
+            server.log("Confirming the update (updating reported properties)...")
             local propUpd = {};
             propUpd[PROPERTY_NAME] <- {
                 "value" : props[PROPERTY_NAME]["value"],
@@ -152,10 +152,10 @@ class IoTCentralExample {
 
 // AzureIoTHub constants
 // ---------------------------------------------------------------------------------
-const AZURE_DPS_SCOPE_ID = "<YOUR_AZURE_DPS_SCOPE_ID>";
-const AZURE_DPS_REGISTRATION_ID = "<YOUR_AZURE_DPS_REGISTRATION_ID>";
-const AZURE_DPS_GROUP_KEY = "<YOUR_AZURE_DPS_GROUP_KEY>";
+const AZURE_IOT_CENTRAL_SCOPE_ID = "<YOUR_AZURE_IOT_CENTRAL_SCOPE_ID>";
+const AZURE_IOT_CENTRAL_DEVICE_ID = "<YOUR_AZURE_IOT_CENTRAL_DEVICE_ID>";
+const AZURE_IOT_CENTRAL_GROUP_KEY = "<YOUR_AZURE_IOT_CENTRAL_GROUP_KEY>";
 
 // Start application
-iotCentralExample <- IoTCentralExample(AZURE_DPS_SCOPE_ID, AZURE_DPS_REGISTRATION_ID, AZURE_DPS_GROUP_KEY);
+iotCentralExample <- IoTCentralExample(AZURE_IOT_CENTRAL_SCOPE_ID, AZURE_IOT_CENTRAL_DEVICE_ID, AZURE_IOT_CENTRAL_GROUP_KEY);
 iotCentralExample.start();
