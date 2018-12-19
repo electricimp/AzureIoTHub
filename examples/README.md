@@ -141,7 +141,7 @@ The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;
 9. Copy the [Twins example source code](./Twins.agent.nut) and paste it into the IDE as the agent code.
 
 10. Set constants in the agent example code:
- - *AZURE_DPS_SCOPE_ID*: set the **Scope ID** from the [step 3](#create-iot-hub-device-provisioning-service-resource)
+ - *AZURE_DPS_SCOPE_ID*: set the **Scope ID** from the [step 3](#create-iot-hub-dps-resource)
  - *AZURE_DPS_REGISTRATION_ID*: set the **Registration ID** from the [step 5](#create-an-individual-enrollment)
  - *AZURE_DPS_DEVICE_KEY*: set the **Device Symmetric Key** from the [step 5](#create-an-individual-enrollment)
 
@@ -380,7 +380,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
  - **Auto-generate keys** Check this field.
 
- - **Registration ID** The ID of the new device. You can type here some arbitrary name.
+ - **Registration ID** The ID of the new device. You can type here some arbitrary name. Make a note of the value you type here - this is the **Registration ID** which may be needed to setup and run your application.
 
  - **Select the IoT hubs this group can be assigned to** Make sure the only IoT hub checked is the one you created in the previous steps.
 
