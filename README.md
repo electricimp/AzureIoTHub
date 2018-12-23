@@ -54,23 +54,32 @@ Communication with a concrete Azure IoT Hub happens using [AzureIoTHub.Client](#
 
 Use this way when your solution has several Azure IoT Hubs and an instance of Azure [Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps), which distributes your devices between the hubs. This is the main production-oriented way.
 
-1. **TODO (describe the steps, like for other ways below. Using DPS and/or IoTCentral ?)**
+1. Open the [Azure Portal](https://portal.azure.com/). You need to have owner-level permissions.
+2. Select or create your Azure IoT Hub resource.
+3. Select or create your Azure IoT Hub Device Provisioning Service (DPS) resource.
+4. Open the **Overview** page of your DPS, copy the **ID Scope** to the clipboard and paste it (as **scopeID**) into the [AzureIoTHub.DPS](#azureiothubdps) constructor in your Squirrel application code.
+5. Link the IoT Hub to the DPS (if not linked yet) on the **Linked IoT hubs** page of your DPS.
+6. Select or create your Individual Enrollment on the **Manage enrollments** page of your DPS. The enrollment must use the **Symmetric key** attestation mechanism.
+7. Open your Individual Enrollment, copy the **Primary key** to the clipboard and paste it (as **deviceKey**) into the [AzureIoTHub.DPS](#azureiothubdps) constructor in your Squirrel application code.
+8. Put the **Registration ID** you used when creating the Individual Enrollment to [AzureIoTHub.DPS](#azureiothubdps) constructor (as **registrationId**) in your Squirrel application code.
+9. Using [*register()*](#registeroncompleted) method of the AzureIoTHub.DPS instance register your device in the IoT Hub and obtain a **Device Connection String**.
+10. Pass the **Device Connection String** into the [AzureIoTHub.Client](#azureiothubclient) constructor.
 
-Examples: [here](#azureiothubdps-example), here and here. **TODO (links to the two full examples)**
+Examples: [here](#azureiothubdps-example), [here](./examples#twins-example-setup-and-run) and [here](./examples#iot-central-example-setup-and-run). **TODO (Does the IoTCentral full example fit here?)**
 
 ### Using IoT Hub Registry ###
 
-You may use this way when your solution has only one Azure IoT Hub or when you know in advance which device should be registered in which IoT Hub. 
+You may use this way when your solution has only one Azure IoT Hub or when you know in advance which device should be registered in which IoT Hub.
 
 1. Open the [Azure Portal](https://portal.azure.com/). You need to have owner-level permissions.
 2. Select or create your Azure IoT Hub resource.
 3. Under **Settings** click **Shared Access Policies**.
 4. Select a policy which has read/write permissions (such as the *registryReadWrite*) or create a new policy.
 5. Copy the **Connection string--primary key** to the clipboard and paste it into the [AzureIoTHub.Registry](#azureiothubregistry) constructor in your Squirrel application code.
-6. **TODO (check)** Using [*create()*](#createdeviceinfo-callback) method of the AzureIoTHub.Registry instance register your device in the IoT Hub and obtain the device description as an instance of the [AzureIoTHub.Device](#azureiothubdevice) class.
-7. **TODO (check)** Using [*connectionString()*](#connectionstringhostname) method of the AzureIoTHub.Device instance get **Device Connection String** and pass it into the [AzureIoTHub.Client](#azureiothubclient) constructor.
+6. Using [*create()*](#createdeviceinfo-callback) method of the AzureIoTHub.Registry instance register your device in the IoT Hub and obtain the device description as an instance of the [AzureIoTHub.Device](#azureiothubdevice) class.
+7. Using [*connectionString()*](#connectionstringhostname) method of the AzureIoTHub.Device instance get **Device Connection String** and pass it into the [AzureIoTHub.Client](#azureiothubclient) constructor.
 
-Examples: [here](#azureiothubregistry-example) and here. **TODO (link to the full example)**
+Examples: [here](#azureiothubregistry-example) and [here](./examples#direct-methods-example-setup-and-run).
 
 ### Using Azure Portal ###
 
@@ -82,7 +91,7 @@ You may use this way if your device is already registered in an Azure IoT Hub. I
 4. Select your device &mdash; you will need to know the device ID used to register the device with IoT Hub.
 5. Copy the **Connection string--primary key** (this is the needed **Device Connection String**) to the clipboard and paste it into the [AzureIoTHub.Client](#azureiothubclient) constructor in your Squirrel application code.
 
-Examples: here. **TODO (link to the full example)**
+Examples: [here](./examples#messages-example-setup-and-run).
 
 ## AzureIoTHub.Registry ##
 
@@ -190,8 +199,7 @@ local hostname = AzureIoTHub.ConnectionString.Parse(AZURE_REGISTRY_CONN_STRING).
 
 function onConnected(err) {
     if (err != 0) {
-        server.error("Connect failed: " + err);
-        return;
+        server.error("Connection failed: " + err);
     }
 }
 
@@ -271,7 +279,7 @@ This method retrieves the Device Connection String from the stored *authenticati
 
 | Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
-| *hostname* | String | No | The name of the host, found within the Device Connection String |
+| *hostname* | String | Yes | The name of the host, found within the Device Connection String |
 
 #### Returns ####
 
@@ -324,9 +332,9 @@ The callback has the following parameters:
 
 | Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
-| *error* | Integer | `0` if the operation is successful, otherwise an [error code](#error-codes). |
-| *response* | Table | Key-value table with the response provided by Azure server. May be `null`. For information on the response format, please see [the Azure documentation](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration). May also contain error details. |
-| *connectionString* | String | Device connection string |
+| *error* | Integer | `0` if the operation is successful, otherwise an [error code](#error-codes) |
+| *response* | Table | Key-value table with the response provided by Azure server. May be `null`. For information on the response format, please see [the Azure documentation](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration). May also contain error details |
+| *connectionString* | String | Device connection string. `null` in case of an error |
 
 ### register(*onCompleted*) ###
 
@@ -358,7 +366,7 @@ dps.register(onCompleted);
 
 ### getConnectionString(*onCompleted*) ###
 
-If the device is already [registered](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/deviceregistrationstatuslookup) and assigned to an IoT Hub, this method returns **Device Connection String** via the [onCompleted handler](#oncompleted-callback). **TODO (what is returned if the device is not registered)**
+If the device is already [registered](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/deviceregistrationstatuslookup) and assigned to an IoT Hub, this method returns **Device Connection String** via the [onCompleted handler](#oncompleted-callback). Otherwise returns the **The device is/was not registered)** error (see [error codes](#error-codes)).
 
 #### Parameters ####
 
@@ -386,7 +394,47 @@ dps.getConnectionString(onCompleted);
 
 ## AzureIoTHub.DPS Example ##
 
-**TODO ("full" example like AzureIoTHub.Registry Example ?)**
+```squirrel
+#require "AzureIoTHub.agent.lib.nut:5.0.0"
+
+const AZURE_DPS_SCOPE_ID = "<YOUR_AZURE_DPS_SCOPE_ID>";
+const AZURE_DPS_REGISTRATION_ID = "<YOUR_AZURE_DPS_REGISTRATION_ID>";
+const AZURE_DPS_DEVICE_KEY = "<YOUR_AZURE_DPS_DEVICE_KEY>";
+
+client <- null;
+
+local dps = AzureIoTHub.DPS(AZURE_DPS_SCOPE_ID, AZURE_DPS_REGISTRATION_ID, AZURE_DPS_DEVICE_KEY);
+
+function onConnected(err) {
+    if (err != 0) {
+        server.error("Connection failed: " + err);
+    }
+}
+
+local registrationCalled = false;
+local onCompleted = null;
+onCompleted = function(err, resp, connStr) {
+    if (err == 0) {
+        if (registrationCalled) {
+            server.log("Device has been registered!");
+        } else {
+            server.log("Device is registered already!");
+        }
+        ::client <- AzureIoTHub.Client(connStr, onConnected);
+    } else if (err == AZURE_DPS_ERROR_NOT_REGISTERED && !registrationCalled) {
+        // The device is not registered
+        server.log("Device is not registered. Starting registration...");
+        registrationCalled = true;
+        // Register the device
+        dps.register(onCompleted);
+    } else {
+        server.error("Error occured: code = " + err + " response = " + http.jsonencode(resp));
+    }
+}.bindenv(this);
+
+// Try to get a Device Connection String
+dps.getConnectionString(onCompleted);
+```
 
 ## AzureIoTHub.Message ##
 
