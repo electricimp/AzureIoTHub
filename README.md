@@ -65,7 +65,7 @@ Use this way when your solution has several Azure IoT Hubs and an instance of Az
 9. Using [*register()*](#registeroncompleted) method of the AzureIoTHub.DPS instance register your device in the IoT Hub and obtain a **Device Connection String**.
 10. Pass the **Device Connection String** into the [AzureIoTHub.Client](#azureiothubclient) constructor.
 
-Examples: [here](#azureiothubdps-example), [here](./examples#twins-example-setup-and-run) and [here](./examples#iot-central-example-setup-and-run). **TODO (Does the IoTCentral full example fit here?)**
+Examples: [here](#azureiothubdps-example), [here](./examples#twins-example) and [here](./examples#iot-central-example). **TODO (Does the IoTCentral full example fit here?)**
 
 ### Using IoT Hub Registry ###
 
@@ -79,7 +79,7 @@ You may use this way when your solution has only one Azure IoT Hub or when you k
 6. Using [*create()*](#createdeviceinfo-callback) method of the AzureIoTHub.Registry instance register your device in the IoT Hub and obtain the device description as an instance of the [AzureIoTHub.Device](#azureiothubdevice) class.
 7. Using [*connectionString()*](#connectionstringhostname) method of the AzureIoTHub.Device instance get **Device Connection String** and pass it into the [AzureIoTHub.Client](#azureiothubclient) constructor.
 
-Examples: [here](#azureiothubregistry-example) and [here](./examples#direct-methods-example-setup-and-run).
+Examples: [here](#azureiothubregistry-example) and [here](./examples#direct-methods-example).
 
 ### Using Azure Portal ###
 
@@ -91,7 +91,7 @@ You may use this way if your device is already registered in an Azure IoT Hub. I
 4. Select your device &mdash; you will need to know the device ID used to register the device with IoT Hub.
 5. Copy the **Connection string--primary key** (this is the needed **Device Connection String**) to the clipboard and paste it into the [AzureIoTHub.Client](#azureiothubclient) constructor in your Squirrel application code.
 
-Examples: [here](./examples#messages-example-setup-and-run).
+Examples: [here](./examples#messages-example).
 
 ## AzureIoTHub.Registry ##
 
