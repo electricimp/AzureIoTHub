@@ -45,7 +45,7 @@ class TwinsExample {
     }
 
     function start() {
-        _registerDevice(function (err) {
+        _registerDevice(function(err) {
             if (err == null) {
                 _azureClient = AzureIoTHub.Client(_deviceConnString,
                     _onConnected.bindenv(this), _onDisconnected.bindenv(this));
@@ -138,7 +138,7 @@ class TwinsExample {
         }
     }
 
-    function _onUpdated(props, err) {
+    function _onUpdated(err, props) {
         if (err != 0) {
             server.error("AzureIoTHub updateTwinProperties failed: " + err);
             // Try to update again if the operation is timed out
