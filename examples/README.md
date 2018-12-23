@@ -58,13 +58,13 @@ See [IoT Central Example Setup and Run](#iot-central-example-setup-and-run).
 
 ### Messages Example Setup and Run ###
 
-1. [Login To Azure Portal](#login-to-azure-portal)
+1. [Login To Azure Portal](#login-to-azure-portal).
 
-2. [Create IoT Hub Resource](#create-iot-hub-resource) (if not created yet)
+2. [Create IoT Hub Resource](#create-iot-hub-resource) (if not created yet).
 
-3. [Manually Register Device And Obtain Device Connection String](#manually-register-device-and-obtain-device-connection-string)
+3. [Manually Register Device And Obtain Device Connection String](#manually-register-device-and-obtain-device-connection-string).
 
-4. [Set up your Imp device](https://developer.electricimp.com/gettingstarted)
+4. [Set up your Imp device](https://developer.electricimp.com/gettingstarted).
 
 5. In the [Electric Imp's IDE](https://ide.electricimp.com) create new Product and Development Device Group.
 
@@ -79,23 +79,23 @@ The value should look like `HostName=<Host Name>;DeviceId=<Device Name>;SharedAc
 
 9. Click **Build and Force Restart**.
 
-10. Check from the logs in the IDE that messages are successfully sent from the device (periodically)
+10. Check from the logs in the IDE that messages are successfully sent from the device (periodically).
 
 ![SendMessagesLogs](./example_imgs/SendMessagesLogs.png)
 
-11. [Send Message To Device](#send-message-to-device) from the Azure Portal and check from the logs in the IDE that the message is received successfully
+11. [Send Message To Device](#send-message-to-device) from the Azure Portal and check from the logs in the IDE that the message is received successfully.
 
 ![ReceiveMessagesLogs](./example_imgs/ReceiveMessagesLogs.png)
 
 ### Direct Methods Example Setup and Run ###
 
-1. [Login To Azure Portal](#login-to-azure-portal)
+1. [Login To Azure Portal](#login-to-azure-portal).
 
-2. [Create IoT Hub Resource](#create-iot-hub-resource) (if not created yet)
+2. [Create IoT Hub Resource](#create-iot-hub-resource) (if not created yet).
 
-3. [Obtain Registry Connection String](#obtain-registry-connection-string)
+3. [Obtain Registry Connection String](#obtain-registry-connection-string).
 
-4. [Set up your Imp device](https://developer.electricimp.com/gettingstarted)
+4. [Set up your Imp device](https://developer.electricimp.com/gettingstarted).
 
 5. In the [Electric Imp's IDE](https://ide.electricimp.com) create new Product and Development Device Group.
 
@@ -110,11 +110,11 @@ The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;
 
 9. Click **Build and Force Restart**.
 
-10. Check from the logs in the IDE that the device is registered and connected
+10. Check from the logs in the IDE that the device is registered and connected.
 
 ![StartDirectMethodsLogs](./example_imgs/StartDirectMethodsLogs.png)
 
-11. [Call Direct Method](#call-direct-method) from the Azure Portal and check from the logs in the IDE that the call is received
+11. [Call Direct Method](#call-direct-method) (**of the automatically created device**, whose ID you can see in logs) from the Azure Portal and check from the logs in the IDE that the call is received.
 
 ![CallDirectMethodsLogs](./example_imgs/CallDirectMethodsLogs.png)
 
@@ -122,17 +122,17 @@ The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;
 
 ### Twins Example Setup and Run ###
 
-1. [Login To Azure Portal](#login-to-azure-portal)
+1. [Login To Azure Portal](#login-to-azure-portal).
 
-2. [Create IoT Hub Resource](#create-iot-hub-resource) (if not created yet)
+2. [Create IoT Hub Resource](#create-iot-hub-resource) (if not created yet).
 
-3. [Create IoT Hub DPS Resource](#create-iot-hub-dps-resource) (if not created yet)
+3. [Create IoT Hub DPS Resource](#create-iot-hub-dps-resource) (if not created yet).
 
-4. [Link The IoT Hub To DPS](#link-an-iot-hub-to-dps)
+4. [Link The IoT Hub To DPS](#link-an-iot-hub-to-dps).
 
-5. [Create An Individual Enrollment](#create-an-individual-enrollment)
+5. [Create An Individual Enrollment](#create-an-individual-enrollment).
 
-6. [Set up your Imp device](https://developer.electricimp.com/gettingstarted)
+6. [Set up your Imp device](https://developer.electricimp.com/gettingstarted).
 
 7. In the [Electric Imp's IDE](https://ide.electricimp.com) create new Product and Development Device Group.
 
@@ -149,11 +149,11 @@ The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;
 
 11. Click **Build and Force Restart**.
 
-12. Check from the logs in the IDE that the device is registered, connected, and twin's properties are retrieved
+12. Check from the logs in the IDE that the device is registered, connected, and twin's properties are retrieved.
 
 ![RetrieveTwinLogs](./example_imgs/RetrieveTwinLogs.png)
 
-13. [Update Twin Document](#retrieveupdate-twin-document) from the Azure Portal: add or change, if already exists, the desired property "test". Then check from the logs in the IDE that the desired properties are received and the reported properties are updated.
+13. [Update Twin Document](#retrieveupdate-twin-document) (**of the device with ID used in the step 5**) from the Azure Portal: add or change, if already exists, the desired property "test". Then check from the logs in the IDE that the desired properties are received and the reported properties are updated.
 
 ![UpdateTwinLogs](./example_imgs/UpdateTwinLogs.png)
 
@@ -161,17 +161,17 @@ The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;
 
 ### IoT Central Example Setup and Run ###
 
-1. [Login To Azure IoT Central](#login-to-azure-iot-central)
+1. [Login To Azure IoT Central](#login-to-azure-iot-central).
 
-2. [Create An Application](#create-an-application) (if not created yet)
+2. [Create An Application](#create-an-application) (if not created yet).
 
-3. [Setup A Device Template](#setup-a-device-template)
+3. [Setup A Device Template](#setup-a-device-template).
 
-4. [Create A Device](#create-a-device)
+4. [Create A Device](#create-a-device).
 
-5. [Obtain Scope ID And Group Key](#obtain-scope-id-and-group-key)
+5. [Obtain Scope ID And Group Key](#obtain-scope-id-and-group-key).
 
-6. [Set up your Imp device](https://developer.electricimp.com/gettingstarted)
+6. [Set up your Imp device](https://developer.electricimp.com/gettingstarted).
 
 7. In the [Electric Imp's IDE](https://ide.electricimp.com) create new Product and Development Device Group.
 
@@ -180,19 +180,19 @@ The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;
 9. Copy the [IoT Central example source code](./IoTCentral.agent.nut) and paste it into the IDE as the agent code.
 
 10. Set constants in the agent example code:
- - *AZURE_IOT_CENTRAL_SCOPE_ID*: set the **Scope ID** from the [step 6](#obtain-scope-id-and-group-key)
- - *AZURE_IOT_CENTRAL_DEVICE_ID*: set the **Device ID** from the [step 5](#create-a-device)
- - *AZURE_IOT_CENTRAL_GROUP_KEY*: set the **Group Symmetric Key** from the [step 6](#obtain-scope-id-and-group-key)
+ - *AZURE_IOT_CENTRAL_SCOPE_ID*: set the **Scope ID** from the [step 5](#obtain-scope-id-and-group-key)
+ - *AZURE_IOT_CENTRAL_DEVICE_ID*: set the **Device ID** from the [step 4](#create-a-device)
+ - *AZURE_IOT_CENTRAL_GROUP_KEY*: set the **Group Symmetric Key** from the [step 5](#obtain-scope-id-and-group-key)
 
 ![IoTCentralSetConst](./example_imgs/IoTCSetConst.png)
 
 11. Click **Build and Force Restart**.
 
-12. Check from the logs in the IDE that the device is registered and connected
+12. Check from the logs in the IDE that the device is registered and connected.
 
 ![ConnectIoTCentralLogs](./example_imgs/ConnectIoTCLogs.png)
 
-13. [Update Device Settings](#update-device-settings) in IoT Central and check from the logs that the settings update is received and confirmed and that the telemetry data was sent
+13. [Update Device Settings](#update-device-settings) in IoT Central and check from the logs that the settings update is received and confirmed and that the telemetry data was sent.
 
 ![SettingsUpdateIoTCentralLogs](./example_imgs/SettingsUpdateIoTCLogs.png)
 
@@ -204,12 +204,18 @@ The value should look like `HostName=<Host Name>;SharedAccessKeyName=<Key Name>;
 
 ### Login To Azure Portal ###
 
-Login to [Azure portal](https://portal.azure.com/).
-If you are not registered, create an account with subscription (free subscription is enough for testing purposes).
+Login to [Azure portal](https://portal.azure.com/) using your Microsoft Account (register if not registered yet).
+Create Azure account with subscription (free subscription is enough for testing purposes).
+
+### Find A Resource In Azure Portal ###
+
+1. In the [Azure portal](https://portal.azure.com/), open the **Home** page. Click **See all your resources** and choose the resource you need.
+
+![Find a resource](./example_imgs/FindResource.png)
 
 ### Create IoT Hub Resource ###
 
-1. In the [Azure portal](https://portal.azure.com/), click **New > Internet of Things > IoT Hub**:
+1. In the [Azure portal](https://portal.azure.com/), click **New > Internet of Things > IoT Hub**. If there is no **IoT Hub** item, click **See all** in the top right corner of the **New** pane and you will be able to see all items.
 
 ![Create IoT hub](./example_imgs/CreateIoTHub.png)
 
@@ -237,7 +243,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Obtain Registry Connection String ###
 
-1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
+1. In the [Azure portal](https://portal.azure.com/), [open your IoT hub](#find-a-resource-in-azure-portal).
 
 2. Click **Shared access policies**.
 
@@ -247,7 +253,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Manually Register Device And Obtain Device Connection String ###
 
-1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
+1. In the [Azure portal](https://portal.azure.com/), [open your IoT hub](#find-a-resource-in-azure-portal).
 
 2. Click **IoT Devices** in the **DEVICE MANAGEMENT** section.
 
@@ -270,7 +276,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Send Message To Device ###
 
-1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
+1. In the [Azure portal](https://portal.azure.com/), [open your IoT hub](#find-a-resource-in-azure-portal).
 
 2. In the IoT hub, open the device you want to send a message to.
 
@@ -286,7 +292,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Retrieve/Update Twin Document ###
 
-1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
+1. In the [Azure portal](https://portal.azure.com/), [open your IoT hub](#find-a-resource-in-azure-portal).
 
 2. In the IoT hub, open the device you want to get the twin's document of.
 
@@ -306,7 +312,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Call Direct Method ###
 
-1. In the [Azure portal](https://portal.azure.com/), open your IoT hub.
+1. In the [Azure portal](https://portal.azure.com/), [open your IoT hub](#find-a-resource-in-azure-portal).
 
 2. In the IoT hub, open the device you want to call a direct method of.
 
@@ -322,7 +328,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Create IoT Hub DPS Resource ###
 
-1. In the [Azure portal](https://portal.azure.com/), click **New > Internet of Things > IoT Hub Device Provisioning Service**:
+1. In the [Azure portal](https://portal.azure.com/), click **New > Internet of Things > IoT Hub Device Provisioning Service**. If there is no **IoT Hub Device Provisioning Service** item, click **See all** in the top right corner of the **New** pane and you will be able to see all items.
 
 ![Create DPS](./example_imgs/CreateDPS.png)
 
@@ -346,7 +352,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Link An IoT Hub To DPS ###
 
-1. In the [Azure portal](https://portal.azure.com/), open your IoT Hub DPS.
+1. In the [Azure portal](https://portal.azure.com/), [open your IoT Hub DPS](#find-a-resource-in-azure-portal).
 
 2. Click **Linked IoT hubs**.
 
@@ -366,7 +372,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Create An Individual Enrollment ###
 
-1. In the [Azure portal](https://portal.azure.com/), open your IoT Hub DPS.
+1. In the [Azure portal](https://portal.azure.com/), [open your IoT Hub DPS](#find-a-resource-in-azure-portal).
 
 2. Click **Manage enrollments**.
 
@@ -405,7 +411,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Create An Application ###
 
-1. In [IoT Central](https://apps.azureiotcentral.com/), click **New Application**:
+1. In [IoT Central](https://apps.azureiotcentral.com/), click **New Application**.
 
 ![IoT Central Create App](./example_imgs/IoTCCreateApp1.png)
 
@@ -423,7 +429,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Setup A Device Template ###
 
-1. On the **Home** page of your application in [IoT Central](https://apps.azureiotcentral.com/), click **Create Device Templates**:
+1. On the **Home** page of your application in [IoT Central](https://apps.azureiotcentral.com/), click **Create Device Templates**.
 
 ![IoT Central Create Device Template](./example_imgs/IoTCCreateDevTempl1.png)
 
@@ -433,11 +439,11 @@ If you are not registered, create an account with subscription (free subscriptio
 
 3. Click **Create**.
 
-4. After creation you will be redirected to the template's page. Click **Edit Template**:
+4. After creation you will be redirected to the template's page. Click **Edit Template**.
 
 ![IoT Central Adjust Device Template](./example_imgs/IoTCAdjustDevTempl1.png)
 
-5. In the menu appeared, click **New Measurement** and choose **Telemetry**
+5. In the menu appeared, click **New Measurement** and choose **Telemetry**.
 
 ![IoT Central Adjust Device Template](./example_imgs/IoTCAdjustDevTempl2.png)
 
@@ -451,15 +457,15 @@ If you are not registered, create an account with subscription (free subscriptio
 
 7. Click **Save**.
 
-8. Press the **Done** button:
+8. Press the **Done** button.
 
 ![IoT Central Adjust Device Template](./example_imgs/IoTCAdjustDevTempl4.png)
 
-9. Open the **Settings** tab and again press the **Edit Template** button:
+9. Open the **Settings** tab and again press the **Edit Template** button.
 
 ![IoT Central Adjust Device Template](./example_imgs/IoTCAdjustDevTempl5.png)
 
-10. Click on **Number** in the left-side menu:
+10. Click on **Number** in the left-side menu.
 
 ![IoT Central Adjust Device Template](./example_imgs/IoTCAdjustDevTempl6.png)
 
@@ -475,11 +481,11 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Create A Device ###
 
-1. In your [IoT Central](https://apps.azureiotcentral.com/) application, open **Device Explorer**:
+1. In your [IoT Central](https://apps.azureiotcentral.com/) application, open **Device Explorer**.
 
 ![IoT Central Open Device Explorer](./example_imgs/IoTCOpenDevExplorer.png)
 
-2. Click the **Add** button (with an icon of a plus sign) and choose **Real**:
+2. Click the **Add** button (with an icon of a plus sign) and choose **Real**.
 
 ![IoT Central Create A Device](./example_imgs/IoTCCreateDevice1.png)
 
@@ -499,11 +505,11 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Update Device Settings ###
 
-1. On the **Explorer** page of your application in [IoT Central](https://apps.azureiotcentral.com/), open the device you want to update settings of:
+1. On the **Explorer** page of your application in [IoT Central](https://apps.azureiotcentral.com/), open the device you want to update settings of.
 
 ![IoT Central Open The Device](./example_imgs/IoTCOpenDevice.png)
 
-2. Open the **Settings** tab and type the new value in the field you want to update:
+2. Open the **Settings** tab and type the new value in the field you want to update.
 
 ![IoT Central Update Setting](./example_imgs/IoTCUpdSetting.png)
 
@@ -511,7 +517,7 @@ If you are not registered, create an account with subscription (free subscriptio
 
 ### Check Telemetry ###
 
-1. On the **Device Explorer** page of your application in [IoT Central](https://apps.azureiotcentral.com/), open the device you want to check telemetry of:
+1. On the **Device Explorer** page of your application in [IoT Central](https://apps.azureiotcentral.com/), open the device you want to check telemetry of.
 
 ![IoT Central Open The Device](./example_imgs/IoTCOpenDevice.png)
 
