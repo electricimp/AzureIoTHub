@@ -630,6 +630,8 @@ class AzureIoTHub {
 
     //------------------------------------------------------------------------------
 
+    // This class is used to provision devices in Azure IoT Hub Device Provisioning Service.
+    // It allows you to register a device and obtain its Device Connection String.
     DPS = class {
         _scopeId    = null;
         _regId      = null;
@@ -639,6 +641,14 @@ class AzureIoTHub {
         _resUri     = null;
         _regIdBody  = null;
 
+        // DPS class constructor.
+        //
+        // Parameters:
+        //     scopeId : String             Scope ID of Azure IoT Hub DPS
+        //     registrationId : String      Registration ID of the device
+        //     deviceKey : String           Device symmetric key
+        //
+        // Returns:                         AzureIoTHub.DPS instance created.
         constructor(scopeId, registrationId, deviceKey) {
             const AZURE_DPS_API_VERSION = "2018-09-01-preview";
             const AZURE_DPS_REG_KEY_NAME = "registration";
@@ -655,11 +665,16 @@ class AzureIoTHub {
             // Default delay (sec) between polling requests
             const AZURE_DPS_DEFAULT_DELAY = 3.0;
 
+            const AZURE_DPS_OK_CODE             = 200;
+            const AZURE_DPS_ACCEPTED_CODE       = 202;
+            const AZURE_DPS_NOT_FOUND_CODE      = 404;
+            const AZURE_DPS_TOO_MANY_REQS_CODE  = 429;
+
             _headers = {
-                "Accept": "application/json",
-                "Content-Type": "application/json; charset=utf-8",
-                "Connection": "keep-alive",
-                "UserAgent": "prov_device_client/1.0",
+                "Accept" : "application/json",
+                "Content-Type" : "application/json; charset=utf-8",
+                "Connection" : "keep-alive",
+                "UserAgent" : "prov_device_client/1.0",
                 "Authorization" : null
             };
 
@@ -673,7 +688,22 @@ class AzureIoTHub {
             _resUri = AzureIoTHub.Authorization.encodeUri(_scopeId + "/registrations/" + _regId);
         }
 
-        function register(onDone) {
+
+        // Registers the device using Azure IoT Hub Device Provisioning Service.
+        //
+        // Parameters:
+        //     onCompleted : Function       A function to be called when the operation is completed or an error occurs
+        //                                  The callback signature:
+        //                                  onCompleted(error, response, connectionString), where
+        //                                      error : Integer     0 if the operation is successful, otherwise an error code
+        //                                      response : String   Key-value table with the response provided by Azure server. May be null.
+        //                                                          For information on the response format, please see the Azure documentation.
+        //                                                          May also contain error details
+        //                                      connectionString :  Device connection string. null in case of an error
+        //                                          String
+        //
+        // Returns:                         Nothing.
+        function register(onCompleted) {
             local sasExpTime = time() + AZURE_DPS_SAS_TTL;
             local sas = AzureIoTHub.SharedAccessSignature(_resUri, AZURE_DPS_REG_KEY_NAME, _deviceKey, sasExpTime).toString();
 
@@ -685,22 +715,37 @@ class AzureIoTHub {
             local onSent = function(resp) {
                 local body = _parseBody(resp.body);
 
-                if (resp.statuscode == 200 || resp.statuscode == 202) {
+                if (resp.statuscode == AZURE_DPS_OK_CODE || resp.statuscode == AZURE_DPS_ACCEPTED_CODE) {
                     if ("operationId" in body) {
-                        _regOperationStatus(body["operationId"], onDone);
+                        _regOperationStatus(body["operationId"], onCompleted);
                     } else {
                         server.error("Response body doesn't have the \"operationId\" field");
-                        onDone(AZURE_ERROR_GENERAL, body, null);
+                        onCompleted(AZURE_ERROR_GENERAL, body, null);
                     }
                 } else {
-                    onDone(resp.statuscode, body, null);
+                    onCompleted(resp.statuscode, body, null);
                 }
             }.bindenv(this);
 
             request.sendasync(onSent);
         }
 
-        function getConnectionString(onDone) {
+        // If the device is already registered and assigned to an IoT Hub,
+        // this method returns Device Connection String via the onCompleted handler.
+        //
+        // Parameters:
+        //     onCompleted : Function       A function to be called when the operation is completed or an error occurs
+        //                                  The callback signature:
+        //                                  onCompleted(error, response, connectionString), where
+        //                                      error : Integer     0 if the operation is successful, otherwise an error code
+        //                                      response : String   Key-value table with the response provided by Azure server. May be null.
+        //                                                          For information on the response format, please see the Azure documentation.
+        //                                                          May also contain error details
+        //                                      connectionString :  Device connection string. null in case of an error
+        //                                          String
+        //
+        // Returns:                         Nothing.
+        function getConnectionString(onCompleted) {
             local sasExpTime = time() + AZURE_DPS_SAS_TTL;
             local sas = AzureIoTHub.SharedAccessSignature(_resUri, AZURE_DPS_REG_KEY_NAME, _deviceKey, sasExpTime).toString();
 
@@ -712,34 +757,36 @@ class AzureIoTHub {
             local onSent = function(resp) {
                 local body = _parseBody(resp.body);
 
-                if (resp.statuscode == 200) {
+                if (resp.statuscode == AZURE_DPS_OK_CODE) {
                     if (!("status" in body)) {
                         server.error("Response body doesn't have the \"status\" field");
-                        onDone(AZURE_ERROR_GENERAL, body, null);
+                        onCompleted(AZURE_ERROR_GENERAL, body, null);
                         return;
                     }
 
                     if (body["status"] == "assigned") {
                         if ("assignedHub" in body) {
-                            onDone(0, body, _connectionString(body["assignedHub"]));
+                            onCompleted(0, body, _connectionString(body["assignedHub"]));
                         } else {
                             server.error("Response body doesn't have the \"assignedHub\" field");
-                            onDone(AZURE_ERROR_GENERAL, body, null);
+                            onCompleted(AZURE_ERROR_GENERAL, body, null);
                         }
                     } else {
-                        onDone(AZURE_DPS_ERROR_NOT_REGISTERED, body, null);
+                        onCompleted(AZURE_DPS_ERROR_NOT_REGISTERED, body, null);
                     }
-                } else if (resp.statuscode == 404) {
-                    onDone(AZURE_DPS_ERROR_NOT_REGISTERED, body, null);
+                } else if (resp.statuscode == AZURE_DPS_NOT_FOUND_CODE) {
+                    onCompleted(AZURE_DPS_ERROR_NOT_REGISTERED, body, null);
                 } else {
-                    onDone(resp.statuscode, body, null);
+                    onCompleted(resp.statuscode, body, null);
                 }
             }.bindenv(this);
 
             request.sendasync(onSent);
         }
 
-        function _regOperationStatus(operationId, onDone) {
+        // -------------------- PRIVATE METHODS -------------------- //
+
+        function _regOperationStatus(operationId, onCompleted) {
             local url = format(AZURE_DPS_OP_STATUS_ENDPOINT_FMT, AZURE_DPS_GLOBAL_HOST, _scopeId, _regId, operationId, AZURE_DPS_API_VERSION);
             local request = http.get(url, _headers);
             local onSent = null;
@@ -749,27 +796,27 @@ class AzureIoTHub {
 
                 local retryAfter = AZURE_DPS_DEFAULT_DELAY;
 
-                if (resp.statuscode == 200 || resp.statuscode == 202) {
+                if (resp.statuscode == AZURE_DPS_OK_CODE || resp.statuscode == AZURE_DPS_ACCEPTED_CODE) {
                     if (!("status" in body)) {
                         server.error("Response body doesn't have the \"status\" field");
-                        onDone(AZURE_ERROR_GENERAL, body, null);
+                        onCompleted(AZURE_ERROR_GENERAL, body, null);
                         return;
                     }
 
                     if (body["status"] == "assigned") {
                         if ("registrationState" in body && "assignedHub" in body["registrationState"]) {
-                            onDone(0, body, _connectionString(body["registrationState"]["assignedHub"]));
+                            onCompleted(0, body, _connectionString(body["registrationState"]["assignedHub"]));
                         } else {
                             server.error("Response body doesn't have the \"registrationState.assignedHub\" field");
-                            onDone(AZURE_ERROR_GENERAL, body, null);
+                            onCompleted(AZURE_ERROR_GENERAL, body, null);
                         }
                         return;
                     } else if (body["status"] != "assigning") {
-                        onDone(AZURE_DPS_ERROR_NOT_REGISTERED, body, null);
+                        onCompleted(AZURE_DPS_ERROR_NOT_REGISTERED, body, null);
                         return;
                     }
-                } else if (resp.statuscode != 429) {
-                    onDone(resp.statuscode, body, null);
+                } else if (resp.statuscode != AZURE_DPS_TOO_MANY_REQS_CODE) {
+                    onCompleted(resp.statuscode, body, null);
                     return;
                 }
 

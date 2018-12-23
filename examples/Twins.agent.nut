@@ -44,26 +44,26 @@ class TwinsExample {
     }
 
     function start() {
-        local registrationStarted = false;
-        local onDone = null;
-        onDone = function(err, resp, connStr) {
+        local registrationCalled = false;
+        local onCompleted = null;
+        onCompleted = function(err, resp, connStr) {
             if (err == 0) {
-                if (registrationStarted) {
+                if (registrationCalled) {
                     server.log("Device has been registered!");
                 } else {
                     server.log("Device is registered already!");
                 }
                 _azureClient = AzureIoTHub.Client(connStr, _onConnected.bindenv(this), _onDisconnected.bindenv(this));
                 _azureClient.connect();
-            } else if (err == AZURE_DPS_ERROR_NOT_REGISTERED && !registrationStarted) {
+            } else if (err == AZURE_DPS_ERROR_NOT_REGISTERED && !registrationCalled) {
                 server.log("Device is not registered. Starting registration...");
-                registrationStarted = true;
-                _azureDPS.register(onDone);
+                registrationCalled = true;
+                _azureDPS.register(onCompleted);
             } else {
                 server.error("Error occured: code = " + err + " response = " + http.jsonencode(resp));
             }
         }.bindenv(this);
-        _azureDPS.getConnectionString(onDone);
+        _azureDPS.getConnectionString(onCompleted);
     }
 
     function _onConnected(err) {
