@@ -2,7 +2,11 @@
 
 This document describes the example applications provided with the [AzureIoTHub library](../README.md).
 
-## Messages example ##
+**Note** The Azure IoT Hub MQTT integration is currently in public Beta. Before proceeding, please sign up for access to the Azure IoT Hub MQTT integration using [this link](https://connect.electricimp.com/azure-mqtt-integration-signup).
+
+**Important** All Electric Imp devices can connect to Azure IoT Hub, regardless of which impCloud™ (AWS or Azure) they are linked to. For devices on the AWS impCloud, the connection to IoT Hub will occur cloud-to-cloud from AWS to Azure. For devices on the Azure impCloud, the connection to IoT Hub will occur within Azure. However, there is no difference between the functionality provided by the library in either of these scenarios.
+
+## Messages Example ##
 
 This example:
 - connects the device to Azure IoT Hub using the provided Device Connection String
