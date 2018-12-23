@@ -326,7 +326,7 @@ dps <- AzureIoTHub.DPS(AZURE_DPS_SCOPE_ID, AZURE_DPS_REG_ID, AZURE_DPS_DEV_KEY);
 
 ### onCompleted Callback ###
 
-This callback is executed when a AzureIoTHub.DPS method completes. All of the methods below make use of this callback, but it is important to understand that each of these methods registers their own callback. In other words, you may choose to implement as many different onDone handlers as there are AzureIoTHub.DPS methods capable of using one, or simply register a single callback with all of the methods. If you register a callback with one method, the handler will not be called by other methods: each method has to explicitly register its callback.
+This callback is executed when a AzureIoTHub.DPS method completes. All of the methods below make use of this callback, but it is important to understand that each of these methods registers their own callback. In other words, you may choose to implement as many different onCompleted handlers as there are AzureIoTHub.DPS methods capable of using one, or simply register a single callback with all of the methods. If you register a callback with one method, the handler will not be called by other methods: each method has to explicitly register its callback.
 
 The callback has the following parameters:
 
@@ -376,7 +376,7 @@ If the device is already [registered](https://docs.microsoft.com/en-us/rest/api/
 
 #### Returns ####
 
-Nothing &mdash; The result of the operation may be obtained via the [onDone handler](#ondone-callback).
+Nothing &mdash; The result of the operation may be obtained via the [onCompleted handler](#onCompleted-callback).
 
 #### Example ####
 
@@ -955,7 +955,7 @@ To stop the token being updated automatically, you can set the *tokenAutoRefresh
 ## Error Codes ##
 
 The table below describes the error codes for all the library classes.
-Error code - an integer number which specifies a concrete error (if any) which occurred during an operation.
+Error code &mdash; an integer number which specifies a concrete error (if any) which occurred during an operation.
 
 | Error Code | Applicable classes | Description |
 | --- | --- | --- |
