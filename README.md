@@ -65,7 +65,7 @@ Use this way when your solution has several Azure IoT Hubs and an instance of Az
 9. Using [*register()*](#registeroncompleted) method of the AzureIoTHub.DPS instance register your device in the IoT Hub and obtain a **Device Connection String**.
 10. Pass the **Device Connection String** into the [AzureIoTHub.Client](#azureiothubclient) constructor.
 
-Examples: [here](#azureiothubdps-example), [here](./examples#twins-example) and [here](./examples#iot-central-example). **TODO (Does the IoTCentral full example fit here?)**
+Examples: [here](#azureiothubdps-example), [here](./examples#twins-example) and [here](./examples#iot-central-example).
 
 ### Using IoT Hub Registry ###
 
