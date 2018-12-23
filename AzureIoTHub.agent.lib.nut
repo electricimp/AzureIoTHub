@@ -696,7 +696,7 @@ class AzureIoTHub {
         //                                  The callback signature:
         //                                  onCompleted(error, response, connectionString), where
         //                                      error : Integer     0 if the operation is successful, otherwise an error code
-        //                                      response : String   Key-value table with the response provided by Azure server. May be null.
+        //                                      response : Table    Key-value table with the response provided by Azure server. May be null.
         //                                                          For information on the response format, please see the Azure documentation.
         //                                                          May also contain error details
         //                                      connectionString :  Device connection string. null in case of an error
@@ -738,7 +738,7 @@ class AzureIoTHub {
         //                                  The callback signature:
         //                                  onCompleted(error, response, connectionString), where
         //                                      error : Integer     0 if the operation is successful, otherwise an error code
-        //                                      response : String   Key-value table with the response provided by Azure server. May be null.
+        //                                      response : Table    Key-value table with the response provided by Azure server. May be null.
         //                                                          For information on the response format, please see the Azure documentation.
         //                                                          May also contain error details
         //                                      connectionString :  Device connection string. null in case of an error
