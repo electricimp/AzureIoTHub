@@ -541,7 +541,7 @@ This callback is a good place to enable optional functionality, if needed.
 
 This callback is a good place to call the [*connect()*](#connect) method again, if an unexpected disconnection occurred.
 
-**Note** Authentication token always has an expiration time. The library is configured to request tokens with a one-hour life. If the [SAS token auto-refresh](#refreshing-sas-tokens-automatically) feature is disabled and the current token has expired, the Azure IoT Hub disconnects the device and the *onDisconnected()* handler is called. To reconnect with a new token, you can simply execute the connection flow again by calling [*connect()*](#connect).
+**Note** Authentication token always has an expiration time. The library is configured to request tokens with a one-day life. If the [SAS token auto-refresh](#refreshing-sas-tokens-automatically) feature is disabled and the current token has expired, the Azure IoT Hub disconnects the device and the *onDisconnected()* handler is called. To reconnect with a new token, you can simply execute the connection flow again by calling [*connect()*](#connect).
 
 | Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
