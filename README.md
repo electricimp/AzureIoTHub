@@ -55,13 +55,13 @@ Communication with a concrete Azure IoT Hub happens using [AzureIoTHub.Client](#
 Use this way when your solution has several Azure IoT Hubs and an instance of Azure [Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps), which distributes your devices between the hubs. This is the main production-oriented way.
 
 1. Open the [Azure Portal](https://portal.azure.com/). You need to have owner-level permissions.
-2. Select or create your Azure IoT Hub resource.
+2. Select or create your Azure IoT Hub resource(s).
 3. Select or create your Azure IoT Hub Device Provisioning Service (DPS) resource.
-4. Open the **Overview** page of your DPS, copy the **ID Scope** to the clipboard and paste it (as **scopeID**) into the [AzureIoTHub.DPS](#azureiothubdps) constructor in your Squirrel application code.
-5. Link the IoT Hub to the DPS (if not linked yet) on the **Linked IoT hubs** page of your DPS.
-6. Select or create your Individual Enrollment on the **Manage enrollments** page of your DPS. The enrollment must use the **Symmetric key** attestation mechanism.
-7. Open your Individual Enrollment, copy the **Primary key** to the clipboard and paste it (as **deviceKey**) into the [AzureIoTHub.DPS](#azureiothubdps) constructor in your Squirrel application code.
-8. Put the **Registration ID** you used when creating the Individual Enrollment to [AzureIoTHub.DPS](#azureiothubdps) constructor (as **registrationId**) in your Squirrel application code.
+4. Open the **Overview** page of your DPS, copy the **ID Scope** to the clipboard and paste it (as **scopeId** param) into the [AzureIoTHub.DPS](#azureiothubdps) constructor in your Squirrel application code.
+5. Link your IoT Hub(s) to the DPS (if not linked yet) on the **Linked IoT hubs** page of your DPS.
+6. Create an Individual Enrollment on the **Manage enrollments** page of your DPS (if not created yet). The enrollment must use the **Symmetric key** attestation mechanism.
+7. Open your Individual Enrollment, copy the **Primary key** to the clipboard and paste it (as **deviceKey** param) into the [AzureIoTHub.DPS](#azureiothubdps) constructor in your Squirrel application code.
+8. Put the **Registration ID** you used when creating the Individual Enrollment to [AzureIoTHub.DPS](#azureiothubdps) constructor (as **registrationId** param) in your Squirrel application code.
 9. Using [*register()*](#registeroncompleted) method of the AzureIoTHub.DPS instance register your device in the IoT Hub and obtain a **Device Connection String**.
 10. Pass the **Device Connection String** into the [AzureIoTHub.Client](#azureiothubclient) constructor.
 
@@ -366,7 +366,7 @@ dps.register(onCompleted);
 
 ### getConnectionString(*onCompleted*) ###
 
-If the device is already [registered](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/deviceregistrationstatuslookup) and assigned to an IoT Hub, this method returns **Device Connection String** via the [onCompleted handler](#oncompleted-callback). Otherwise returns the **The device is/was not registered)** error (see [error codes](#error-codes)).
+If the device is already [registered](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/deviceregistrationstatuslookup) and assigned to an IoT Hub, this method returns **Device Connection String** via the [onCompleted handler](#oncompleted-callback). Otherwise returns the **The device is/was not registered** error (see [error codes](#error-codes)).
 
 #### Parameters ####
 
