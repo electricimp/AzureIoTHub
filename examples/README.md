@@ -4,7 +4,7 @@ This document describes the example applications provided with the [AzureIoTHub 
 
 ## Messages example ##
 
-The example:
+This example:
 - connects the device to Azure IoT Hub using the provided Device Connection String
 - enables cloud-to-device messages functionality
 - logs all messages received from the cloud
@@ -17,8 +17,8 @@ See [Messages Example Setup and Run](#messages-example-setup-and-run).
 ## Direct Methods Example ##
 
 This example:
-- automatically registers the device (if not registered yet) using the provided Registry Connection String
-- connects the device to Azure IoT Hub using an automatically obtained Device Connection String
+- automatically registers the device (if not registered yet) in Azure IoT Hub using the provided Registry Connection String
+- connects the device to Azure IoT Hub using the Device Connection String obtained after the registration
 - enables Direct Methods functionality
 - logs all Direct Method calls received from the cloud, always responds success
 
@@ -29,8 +29,8 @@ See [Direct Methods Example Setup and Run](#direct-methods-example-setup-and-run
 ## Twins Example ##
 
 This example:
-- automatically registers the device (if not registered yet) via the Device Provisioning Service using the provided Scope ID, Registration ID and Device symmetric key
-- connects the device to Azure IoT Hub using an automatically obtained Device Connection String
+- automatically registers the device (if not registered yet) in Azure IoT Hub via the Device Provisioning Service using the provided Scope ID, Registration ID and Device Symmetric Key
+- connects the device to Azure IoT Hub using the Device Connection String obtained after the registration
 - enables Twin functionality
 - retrieves the Twin's properties (both - Desired and Reported) from the cloud and logs them
 - logs all Desired properties received from the cloud, reads the value of the Desired property "test" and sends it back to the cloud as a Reported property
@@ -43,8 +43,8 @@ See [Twins Example Setup and Run](#twins-example-setup-and-run).
 
 This example:
 - computes the Device Symmetric Key using the provided Group Key
-- automatically registers the device (if not registered yet) in IoT Central via the Device Provisioning Service using the provided Scope ID, Registration ID and computed Device Symmetric Key
-- connects the device to Azure IoT Hub using an automatically obtained Device Connection String
+- automatically registers the device (if not registered yet) in Azure IoT Hub via IoT Central / Device Provisioning Service using the provided Scope ID, Registration ID and computed Device Symmetric Key
+- connects the device to Azure IoT Hub using the Device Connection String obtained after the registration
 - enables Twin functionality
 - receives Settings updates from IoT Central (it is just an update of Desired properties)
 - confirms Settings updates by updating Reported properties
