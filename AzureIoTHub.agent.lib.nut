@@ -835,13 +835,13 @@ class AzureIoTHub {
         }
 
         function _parseBody(body) {
+            local result = null;
             try {
-                body = http.jsondecode(body);
+                result = http.jsondecode(body);
             } catch (e) {
                 server.error("Response body is not a valid JSON: " + e);
-                return null;
             }
-            return body;
+            return result;
         }
     }
 
