@@ -56,7 +56,7 @@ class DirectMethodsTestCase extends ImpTestCase {
             .then(function (value) {
                 return Promise.reject("Should have returned NOT_ENABLED error");
             }.bindenv(this), function (reason) {
-                if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
+                if (reason != AZURE_CLIENT_ERROR_NOT_ENABLED) {
                     return Promise.reject("Should have returned NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
@@ -71,7 +71,7 @@ class DirectMethodsTestCase extends ImpTestCase {
             .then(function (value) {
                 return Promise.reject("Should have returned ALREADY_ENABLED error");
             }.bindenv(this), function (reason) {
-                if (reason != AZURE_IOT_CLIENT_ERROR_ALREADY_ENABLED) {
+                if (reason != AZURE_CLIENT_ERROR_ALREADY_ENABLED) {
                     return Promise.reject("Should have returned ALREADY_ENABLED error");
                 }
                 return _disableMethods();
@@ -87,7 +87,7 @@ class DirectMethodsTestCase extends ImpTestCase {
                 return Promise.reject("Should have returned NOT_ENABLED error");
             }.bindenv(this),
                 function (reason) {
-                if (reason != AZURE_IOT_CLIENT_ERROR_NOT_ENABLED) {
+                if (reason != AZURE_CLIENT_ERROR_NOT_ENABLED) {
                     return Promise.reject("Should have returned NOT_ENABLED error");
                 }
                 return Promise.resolve(0);
