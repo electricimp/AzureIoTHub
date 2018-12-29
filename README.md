@@ -1,6 +1,6 @@
-# Azure IoT Hub 4.0.0 #
+# Azure IoT Hub 5.0.0 #
 
-Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub API version "2016-11-14". Starting with version 3, the library integrates with Azure IoT Hub using the MQTT protocol (previous versions used AMQP) as there is certain functionality, such as Device Twins and Direct Methods, that IoT Hub only supports via MQTT.
+Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub API version "2016-11-14". Starting with version 3, the library integrates with Azure IoT Hub using the MQTT protocol (previous versions used AMQP) as there is certain functionality, such as Device Twins and Direct Methods, that IoT Hub only supports via MQTT. Starting with version 5, the library supports Azure IoT Hub [Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps).
 
 **Note** The Azure IoT Hub MQTT integration is currently in public Beta. Before proceeding, please sign up for access to the Azure IoT Hub MQTT integration using [this link](https://connect.electricimp.com/azure-mqtt-integration-signup).
 
@@ -17,6 +17,9 @@ The library consists of the following classes and methods:
 - [AzureIoTHub.Device](#azureiothubdevice) &mdash; A device object used to manage registry device identities.
   - [*connectionString()*](#connectionstringhostname) &mdash; Returns the Device Connection String.
   - [*getBody()*](#getbody) &mdash; Returns the device identity properties.
+- [AzureIoTHub.DPS](#azureiothubdps) &mdash; Used to provision devices in Azure IoT Hub Device Provisioning Service.
+  - [*register()*](#registeroncompleted) &mdash; Registers the device on IoT Hub Device Provisioning Service.
+  - [*getConnectionString()*](#getconnectionstringoncompleted) &mdash; Returns the Device Connection String.
 - [AzureIoTHub.Message](#azureiothubmessage) &mdash; Used as a wrapper for messages to/from Azure IoT Hub.
   - [*getProperties()*](#getproperties) &mdash; Returns a message’s properties.
   - [*getBody()*](#getbody) &mdash; Returns the message's content.
@@ -33,7 +36,7 @@ The library consists of the following classes and methods:
   - [*enableDirectMethods()*](#enabledirectmethodsonmethod-ondone) &mdash; Enables or disables Azure IoT Hub Direct Methods.
   - [*setDebug()*](#setdebugvalue) &mdash; Enables or disables the client debug output.
 
-**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:4.0.0"` **to the top of your agent code.**
+**To add this library to your project, add** `#require "AzureIoTHub.agent.lib.nut:5.0.0"` **to the top of your agent code.**
 
 [![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=master)](https://travis-ci.org/electricimp/AzureIoTHub)
 
@@ -45,31 +48,54 @@ Full working examples are provided in the [examples](./examples) directory and d
 
 You will need a Microsoft Azure account. If you do not have one, please sign up [here](https://azure.microsoft.com/en-us/resources/videos/sign-up-for-microsoft-azure/) before continuing.
 
-To create either an [AzureIoTHub.Registry](#azureiothubregistry) or an AzureIoTHub.Client object, you require a relevant Connection String. This is provided by the Azure Portal.
+Communication with a concrete Azure IoT Hub happens using [AzureIoTHub.Client](#azureiothubclient) class. To instantiate an object of this class and authenticate the device in the Azure IoT Hub you need to have **Device Connection String**. It may be obtained by one of the following ways:
 
-### Registry Connection String ###
+### Using Device Provisioning Service ###
 
-To get a Registry Connection String you will require owner-level permissions. Please use this option if you have not configured a device in the Azure Portal.
+Use this way when your solution has several Azure IoT Hubs and an instance of Azure [Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps), which distributes your devices between the hubs. This is the main production-oriented way.
 
-1. Open the [Azure Portal](https://portal.azure.com/).
+1. Open the [Azure Portal](https://portal.azure.com/). You need to have owner-level permissions.
+2. Select or create your Azure IoT Hub resource(s).
+3. Select or create your Azure IoT Hub Device Provisioning Service (DPS) resource.
+4. Open the **Overview** page of your DPS, copy the **ID Scope** to the clipboard and paste it (as **scopeId** param) into the [AzureIoTHub.DPS](#azureiothubdps) constructor in your Squirrel application code.
+5. Link your IoT Hub(s) to the DPS (if not linked yet) on the **Linked IoT hubs** page of your DPS.
+6. Create an Individual Enrollment on the **Manage enrollments** page of your DPS (if not created yet). The enrollment must use the **Symmetric key** attestation mechanism.
+7. Open your Individual Enrollment, copy the **Primary key** to the clipboard and paste it (as **deviceKey** param) into the [AzureIoTHub.DPS](#azureiothubdps) constructor in your Squirrel application code.
+8. Put the **Registration ID** you used when creating the Individual Enrollment to [AzureIoTHub.DPS](#azureiothubdps) constructor (as **registrationId** param) in your Squirrel application code.
+9. Using [*register()*](#registeroncompleted) method of the AzureIoTHub.DPS instance register your device in the IoT Hub and obtain a **Device Connection String**.
+10. Pass the **Device Connection String** into the [AzureIoTHub.Client](#azureiothubclient) constructor.
+
+Examples: [here](#azureiothubdps-example), [here](./examples#twins-example) and [here](./examples#iot-central-example).
+
+### Using IoT Hub Registry ###
+
+You may use this way when your solution has only one Azure IoT Hub or when you know in advance which device should be registered in which IoT Hub.
+
+1. Open the [Azure Portal](https://portal.azure.com/). You need to have owner-level permissions.
 2. Select or create your Azure IoT Hub resource.
 3. Under **Settings** click **Shared Access Policies**.
 4. Select a policy which has read/write permissions (such as the *registryReadWrite*) or create a new policy.
 5. Copy the **Connection string--primary key** to the clipboard and paste it into the [AzureIoTHub.Registry](#azureiothubregistry) constructor in your Squirrel application code.
+6. Using [*create()*](#createdeviceinfo-callback) method of the AzureIoTHub.Registry instance register your device in the IoT Hub and obtain the device description as an instance of the [AzureIoTHub.Device](#azureiothubdevice) class.
+7. Using [*connectionString()*](#connectionstringhostname) method of the AzureIoTHub.Device instance get **Device Connection String** and pass it into the [AzureIoTHub.Client](#azureiothubclient) constructor.
 
-### Device Connection String ###
+Examples: [here](#azureiothubregistry-example) and [here](./examples#direct-methods-example).
 
-If your device is already registered in the Azure Portal, you can use a Device Connection String to authorize your device. To get a Device Connection String, you need device-level permissions. Follow the steps below to find the Device Connection String in the Azure Portal, otherwise follow the above instructions to get the Registry Connection String and then use the [AzureIoTHub.Registry](#azureiothubregistry) class to authorize your device [*(see registry example below)*](#azureiothubregistry-example).
+### Using Azure Portal ###
 
-1. Open the [Azure Portal](https://portal.azure.com/).
+You may use this way if your device is already registered in an Azure IoT Hub. In this case you can obtain **Device Connection String** from Azure portal.
+
+1. Open the [Azure Portal](https://portal.azure.com/). You need to have device-level permissions.
 2. Select or create your Azure IoT Hub resource.
 3. Click **Device Explorer**.
 4. Select your device &mdash; you will need to know the device ID used to register the device with IoT Hub.
-5. Copy the **Connection string--primary key** to the clipboard and paste it into the *AzureIoTHub.Client* constructor in your Squirrel application code.
+5. Copy the **Connection string--primary key** (this is the needed **Device Connection String**) to the clipboard and paste it into the [AzureIoTHub.Client](#azureiothubclient) constructor in your Squirrel application code.
+
+Examples: [here](./examples#messages-example).
 
 ## AzureIoTHub.Registry ##
 
-The AzureIoTHub.Registry class is used to manage IoT Hub devices. This class allows your to create, remove, update, delete and list the IoT Hub devices in your Azure account.
+The AzureIoTHub.Registry class is used to manage IoT Hub devices. This class allows your to create, remove, update, delete and list the IoT Hub devices in your Azure account. See [‘Authentication’](#authentication) section for more information.
 
 ## AzureIoTHub.Registry Class Usage ##
 
@@ -86,7 +112,7 @@ This method instantiates an AzureIoTHub.Registry object which exposes the Device
 #### Example ####
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:4.0.0"
+#require "AzureIoTHub.agent.lib.nut:5.0.0"
 
 // Instantiate a client using your connection string
 const AZURE_REGISTRY_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=<KEY_NAME>;SharedAccessKey=<KEY_HASH>";
@@ -161,7 +187,7 @@ This method requests a list of device identities. When IoT Hub responds, an arra
 This example code will create an IoT Hub device using an imp’s agent ID if one isn’t found in the IoT Hub device registry. It will then instantiate the [AzureIoTHub.Client](#azureiothubclient) class for later use.
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:4.0.0"
+#require "AzureIoTHub.agent.lib.nut:5.0.0"
 
 const AZURE_REGISTRY_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 
@@ -173,8 +199,7 @@ local hostname = AzureIoTHub.ConnectionString.Parse(AZURE_REGISTRY_CONN_STRING).
 
 function onConnected(err) {
     if (err != 0) {
-        server.error("Connect failed: " + err);
-        return;
+        server.error("Connection failed: " + err);
     }
 }
 
@@ -254,7 +279,7 @@ This method retrieves the Device Connection String from the stored *authenticati
 
 | Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
-| *hostname* | String | No | The name of the host, found within the Device Connection String |
+| *hostname* | String | Yes | The name of the host, found within the Device Connection String |
 
 #### Returns ####
 
@@ -267,6 +292,149 @@ This method returns the stored device properties.
 #### Returns ####
 
 Table &mdash; The stored device properties. See the [Device Info Table](#device-info-table), above, for details of the possible keys the table may contain.
+
+## AzureIoTHub.DPS ##
+
+This class is used to provision devices in Azure IoT Hub [Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps). It allows you to register a device and obtain its **Device Connection String**. See [‘Authentication’](#authentication) section for more information.
+
+## AzureIoTHub.DPS Class Usage ##
+
+### Constructor: AzureIoTHub.DPS(*scopeId, registrationId, deviceKey*) ###
+
+This method returns a new AzureIoTHub.DPS instance.
+
+#### Parameters ####
+
+| Parameter | Data&nbsp;Type | Required? | Description |
+| --- | --- | --- | --- |
+| *scopeId* | String | Yes | [Scope ID](https://docs.microsoft.com/en-us/azure/iot-dps/concepts-device#id-scope) of Azure IoT Hub DPS |
+| *registrationId* | String | Yes | [Registration ID](https://docs.microsoft.com/en-us/azure/iot-dps/concepts-device#registration-id) of the device |
+| *deviceKey* | String | Yes | [Device symmetric key](https://docs.microsoft.com/en-us/azure/iot-dps/concepts-symmetric-key-attestation) |
+
+#### Example ####
+
+```squirrel
+const AZURE_DPS_SCOPE_ID  = "<Scope ID>";
+const AZURE_DPS_REG_ID    = "<Registration ID>";
+const AZURE_DPS_DEV_KEY   = "<Device key>";
+
+// Create an instance
+dps <- AzureIoTHub.DPS(AZURE_DPS_SCOPE_ID, AZURE_DPS_REG_ID, AZURE_DPS_DEV_KEY);
+```
+
+## AzureIoTHub.DPS Class Methods ##
+
+### onCompleted Callback ###
+
+This callback is executed when a AzureIoTHub.DPS method completes. All of the methods below make use of this callback, but it is important to understand that each of these methods registers their own callback. In other words, you may choose to implement as many different onCompleted handlers as there are AzureIoTHub.DPS methods capable of using one, or simply register a single callback with all of the methods. If you register a callback with one method, the handler will not be called by other methods: each method has to explicitly register its callback.
+
+The callback has the following parameters:
+
+| Parameter | Data&nbsp;Type | Description |
+| --- | --- | --- |
+| *error* | Integer | `0` if the operation is successful, otherwise an [error code](#error-codes) |
+| *response* | Table | Key-value table with the response provided by Azure server. May be `null`. For information on the response format, please see [the Azure documentation](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration). May also contain error details |
+| *connectionString* | String | Device connection string. `null` in case of an error |
+
+### register(*onCompleted*) ###
+
+[Registers](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/registerdevice) the device using Azure IoT Hub Device Provisioning Service. If registration completes successfully and the device is assigned to an IoT Hub, this method returns **Device Connection String** via the [onCompleted handler](#oncompleted-callback).
+
+#### Parameters ####
+
+| Parameter | Data&nbsp;Type | Required? | Description |
+| --- | --- | --- | --- |
+| *[onCompleted](#oncompleted-callback)* | Function | Yes | A function to be called when the operation is completed or an error occurs |
+
+#### Returns ####
+
+Nothing &mdash; The result of the operation may be obtained via the [onCompleted handler](#onCompleted-callback).
+
+#### Example ####
+
+```squirrel
+function onCompleted(err, resp, connStr) {
+    if (err != 0) {
+        server.error("Registration failed: code = " + err + " response = " + http.jsonencode(resp));
+    } else {
+        server.log("Registration finished successfully. Connection string = " + connStr);
+    }
+}
+
+dps.register(onCompleted);
+```
+
+### getConnectionString(*onCompleted*) ###
+
+If the device is already [registered](https://docs.microsoft.com/en-us/rest/api/iot-dps/runtimeregistration/deviceregistrationstatuslookup) and assigned to an IoT Hub, this method returns **Device Connection String** via the [onCompleted handler](#oncompleted-callback). Otherwise returns the **AZURE_DPS_ERROR_NOT_REGISTERED** error (see [error codes](#error-codes)).
+
+#### Parameters ####
+
+| Parameter | Data&nbsp;Type | Required? | Description |
+| --- | --- | --- | --- |
+| *[onCompleted](#oncompleted-callback)* | Function | Yes | A function to be called when the operation is completed or an error occurs |
+
+#### Returns ####
+
+Nothing &mdash; The result of the operation may be obtained via the [onCompleted handler](#onCompleted-callback).
+
+#### Example ####
+
+```squirrel
+function onCompleted(err, resp, connStr) {
+    if (err != 0) {
+        server.error("Getting of the connection string failed: code = " + err + " response = " + http.jsonencode(resp));
+    } else {
+        server.log("Connection string = " + connStr);
+    }
+}
+
+dps.getConnectionString(onCompleted);
+```
+
+## AzureIoTHub.DPS Example ##
+
+```squirrel
+#require "AzureIoTHub.agent.lib.nut:5.0.0"
+
+const AZURE_DPS_SCOPE_ID = "<YOUR_AZURE_DPS_SCOPE_ID>";
+const AZURE_DPS_REGISTRATION_ID = "<YOUR_AZURE_DPS_REGISTRATION_ID>";
+const AZURE_DPS_DEVICE_KEY = "<YOUR_AZURE_DPS_DEVICE_KEY>";
+
+client <- null;
+
+local dps = AzureIoTHub.DPS(AZURE_DPS_SCOPE_ID, AZURE_DPS_REGISTRATION_ID, AZURE_DPS_DEVICE_KEY);
+
+function onConnected(err) {
+    if (err != 0) {
+        server.error("Connection failed: " + err);
+    }
+}
+
+local registrationCalled = false;
+local onCompleted = null;
+onCompleted = function(err, resp, connStr) {
+    if (err == 0) {
+        if (registrationCalled) {
+            server.log("Device has been registered!");
+        } else {
+            server.log("Device is registered already!");
+        }
+        ::client <- AzureIoTHub.Client(connStr, onConnected);
+    } else if (err == AZURE_DPS_ERROR_NOT_REGISTERED && !registrationCalled) {
+        // The device is not registered
+        server.log("Device is not registered. Starting registration...");
+        registrationCalled = true;
+        // Register the device
+        dps.register(onCompleted);
+    } else {
+        server.error("Error occured: code = " + err + " response = " + http.jsonencode(resp));
+    }
+}.bindenv(this);
+
+// Try to get a Device Connection String
+dps.getConnectionString(onCompleted);
+```
 
 ## AzureIoTHub.Message ##
 
@@ -356,7 +524,7 @@ This method returns a new AzureIoTHub.Client instance.
 
 | Parameter | Data&nbsp;Type | Required? | Description |
 | --- | --- | --- | --- |
-| *deviceConnectionString* | String | Yes | A Device Connection String: includes the host name to connect, the device ID and the shared access string. It can be obtained from the Azure Portal [*(see above)*](#authentication). However, if the device was registered using the [AzureIoTHub.Registry](#azureiothubregistry) class, the Device Connection String can be retrieved from the [AzureIoTHub.Device](#azureiothubdevice) instance passed to the *AzureIoTHub.Registry.get()* or *AzureIoTHub.Registry.create()* method callbacks. For more guidance, please see the [AzureIoTHub.registry example](#azureiothubregistry-example) |
+| *deviceConnectionString* | String | Yes | A Device Connection String: includes the host name to connect, the device ID and the shared access string. See [‘Authentication’](#authentication) section for more information. |
 | *[onConnected](#onconnected-callback)* | Function | Optional | A function to be called every time the device connects *(see below)* |
 | *[onDisconnected](#ondisconnected-callback)* | Function | Optional | A function to be called every time the device is disconnected *(see below)* |
 | *[options](#optional-settings)* | Table | Optional | Optional client configuration settings *(see below)* |
@@ -373,7 +541,7 @@ This callback is a good place to enable optional functionality, if needed.
 
 This callback is a good place to call the [*connect()*](#connect) method again, if an unexpected disconnection occurred.
 
-**Note** IoT Hub expires authentication tokens. When the token expires, the client connection disconnects and the onDisconnected handler is called. To reconnect with a new token, you can simply execute the connect flow again by calling [*connect()*](#connect). The library is configured to request tokens with a one-hour life.
+**Note** Authentication token always has an expiration time. The library is configured to request tokens with a one-day life. If the [SAS token auto-refresh](#refreshing-sas-tokens-automatically) feature is disabled and the current token has expired, the Azure IoT Hub disconnects the device and the *onDisconnected()* handler is called. To reconnect with a new token, you can simply execute the connection flow again by calling [*connect()*](#connect).
 
 | Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
@@ -387,9 +555,12 @@ These settings affect the behavior of the client and the operations it performs.
 | --- | --- | --- |
 | *qos* | Integer | An MQTT Quality of Service (QoS) setting. Azure IoT Hub supports QoS 0 and 1 only. Default: 0 |
 | *keepAlive* | Integer | Keep-alive MQTT parameter, in seconds. See [here](https://developer.electricimp.com/api/mqtt/mqttclient/connect) for more information. Default: 60s |
-| *timeout* | Integer | Timeout in seconds for [Retrieve Twin](#retrievetwinpropertiesonretrieved) and [Update Twin](#updatetwinpropertiesproperties-onupdated) operations. Default: 10s |
+| *twinsTimeout* | Integer | Timeout in seconds for [Retrieve Twin](#retrievetwinpropertiesonretrieved) and [Update Twin](#updatetwinpropertiesproperties-onupdated) operations.  Default: 10s |
+| *dMethodsTimeout* | Integer | Timeframe (in seconds) to [reply to direct method](#callback-replydata-onreplysent) call. Default: 30s |
 | *maxPendingTwinRequests* | Integer | Maximum number of pending [Update Twin](#updatetwinpropertiesproperties-onupdated) operations. Default: 3 |
 | *maxPendingSendRequests* | Integer | Maximum number of pending [Send Message](#sendmessagemessage-onsent) operations. Default: 3 |
+| *tokenTTL* | Integer | SAS token's time-to-live (in seconds). For more information, see [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#security-token-structure). Default: 86400s |
+| *tokenAutoRefresh* | Boolean | If `true`, the [SAS token auto-refresh](#refreshing-sas-tokens-automatically) feature is enabled, otherwise disabled. Default: true |
 
 #### Example ####
 
@@ -437,23 +608,6 @@ The callback has the following parameter:
 | Parameter | Data&nbsp;Type | Description |
 | --- | --- | --- |
 | *[error](#error-codes)* | Integer | `0` if the operation is completed successfully, otherwise an [error code](#error-codes) |
-
-### Error Codes ###
-
-An integer error code which specifies a concrete error (if any) which occurred during an operation.
-
-| Error Code | Description |
-| --- | --- |
-| 0 | No error |
-| -99..-1 and 128 | [Codes returned by the MQTT API](https://developer.electricimp.com/api/mqtt) |
-| 100-999 except 128 | [Azure IoT Hub errors](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support) |
-| 1000 | The client is not connected |
-| 1001 | The client is already connected |
-| 1002 | The feature is not enabled |
-| 1003 | The feature is already enabled |
-| 1004 | The operation is not allowed at the moment, eg. the same operation is already in process |
-| 1005 | The operation timed out |
-| 1010 | General error |
 
 ### connect() ###
 
@@ -776,6 +930,47 @@ This method enables (*value* is `true`) or disables (*value* is `false`) the cli
 #### Returns ####
 
 Nothing.
+
+## Refreshing SAS Tokens Automatically ##
+
+[SAS Token](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#security-tokens) always has an expiration time. If the token is expired, Azure IoT Hub disconnects the device. To prevent the disconnection, the token must be updated before its expiration.
+
+The library implements token updating, which is enabled by default.
+
+The token updating algorithm is the following:
+1. A timer fires when the current token is near to expiration.
+1. The library waits for all current operations to be completed (see the note below).
+1. The library generates a new token using the Device Connection String.
+1. The library disconnects from Azure IoT Hub.
+1. The library re-connects to Azure IoT Hub using the new token as the MQTT client's password.
+1. The library subscribes to the topics to which it was subscribed before the reconnection.
+1. The library sets a new timer to fire just before the new token is due to expire.
+
+The library performs all these operations automatically and invisibly to an application. The [*onDisconnected*](#callbacks) and [*onConnected*](#callbacks) callbacks are not called. Any API calls made by the application during the update process are retained in a queue and processed once the token has been successfully updated. If the token can’t be updated, the [*onDisconnected*](#callbacks) callback is executed (if set).
+
+To stop the token being updated automatically, you can set the *tokenAutoRefresh* option in the [AzureIoTHub.Client constructor](#constructor-azureiothubclientdeviceconnectionstring-onconnected-ondisconnected-options) to `false`.
+
+**Note:** Some of the operations (like retrieving twin properties) are two-phase. This means that the library sends a message and waits for a response message from the server. During these operations the library doesn't start token refreshing but waits for them to finish first. This rule also works with direct methods: when the library receives a direct method call, it doesn't start token refreshing until that call is replied or timed out. So please keep this in mind setting the timeouts for these operations.
+
+## Error Codes ##
+
+The table below describes the error codes for all the library classes.
+Error code &mdash; an integer number which specifies a concrete error (if any) which occurred during an operation.
+
+| Error Code | Error Name | Applicable classes | Description |
+| --- | --- | --- | --- |
+| 0 | - | [DPS](#azureiothubdps), [Client](#azureiothubclient) | No error |
+| -99..-1 and 128 | - | [Client](#azureiothubclient) | [Codes returned by the MQTT API](https://developer.electricimp.com/api/mqtt) |
+| 1..99 | - | [DPS](#azureiothubdps) | [Internal errors of the HTTP API](https://developer.electricimp.com/api/httprequest/sendasync) |
+| 100-999 except 128 | - | [DPS](#azureiothubdps), [Client](#azureiothubclient) | For the [Client](#azureiothubclient) class - [Azure IoT Hub errors](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support). For the [DPS](#azureiothubdps) class - HTTP error codes from [Azure DPS REST API](https://docs.microsoft.com/en-us/rest/api/iot-dps/). |
+| 1000 | AZURE_CLIENT_ERROR_NOT_CONNECTED | [Client](#azureiothubclient) | The client is not connected |
+| 1001 | AZURE_CLIENT_ERROR_ALREADY_CONNECTED | [Client](#azureiothubclient) | The client is already connected |
+| 1002 | AZURE_CLIENT_ERROR_NOT_ENABLED | [Client](#azureiothubclient) | The feature is not enabled |
+| 1003 | AZURE_CLIENT_ERROR_ALREADY_ENABLED | [Client](#azureiothubclient) | The feature is already enabled |
+| 1004 | AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW | [Client](#azureiothubclient) | The operation is not allowed at the moment, eg. the same operation is already in process |
+| 1005 | AZURE_CLIENT_ERROR_OP_TIMED_OUT | [Client](#azureiothubclient) | The operation timed out |
+| 1010 | AZURE_DPS_ERROR_NOT_REGISTERED | [DPS](#azureiothubdps) | The device is/was not registered |
+| 1100 | AZURE_ERROR_GENERAL | [DPS](#azureiothubdps), [Client](#azureiothubclient) | General error |
 
 ## Testing ##
 
