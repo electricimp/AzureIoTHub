@@ -35,9 +35,10 @@ const SEND_MESSAGE_PERIOD = 10.0;
 class MessagesExample {
     _counter = 0;
     _azureClient = null;
+    _wakeupTimer = null;
 
     constructor(deviceConnStr) {
-        _azureClient = AzureIoTHub.Client(deviceConnStr, 
+        _azureClient = AzureIoTHub.Client(deviceConnStr,
             _onConnected.bindenv(this), _onDisconnected.bindenv(this));
     }
 
@@ -58,9 +59,9 @@ class MessagesExample {
         } else {
             server.log("Message successfully sent: " + msg.getBody());
         }
-        imp.wakeup(SEND_MESSAGE_PERIOD, function () {
+        _wakeupTimer = imp.wakeup(SEND_MESSAGE_PERIOD, function () {
             sendMessage();
-        }.bindenv(this));
+        }.bindenv(this), "sendMessage");
     }
 
     function _onConnected(err) {
@@ -79,6 +80,7 @@ class MessagesExample {
 
     function _onDisconnected(err) {
         server.log("Disconnected!");
+        if (_wakeupTimer) imp.cancelwakeup(_wakeupTimer);
         server.log("Reconnecting...");
         _azureClient.connect();
     }
