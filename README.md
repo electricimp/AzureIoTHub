@@ -412,7 +412,8 @@ function onConnected(err) {
 }
 
 local registrationCalled = false;
-local onCompleted = function(err, resp, connStr) {
+local onCompleted = null;
+onCompleted = function(err, resp, connStr) {
     if (err == 0) {
         server.log(registrationCalled ? "Device has been registered" : "Device is registered already");
         ::client <- AzureIoTHub.Client(connStr, onConnected);
@@ -954,11 +955,11 @@ To stop the token being updated automatically, you can set the *tokenAutoRefresh
 The table below describes the error codes for all of the library classes. Each error code is an integer which specifies a concrete error which occurred during an operation.
 
 | Error&nbsp;Code | Error&nbsp;Name | Applicable&nbsp;Classes | Description |
-| --- | :-: | --- | --- |
+| --- | --- | --- | --- |
 | 0 | &mdash; | [DPS](#azureiothubdps), [Client](#azureiothubclient) | No error |
 | -99..-1 and 128 | &mdash; | [Client](#azureiothubclient) | [Codes returned by the MQTT API](https://developer.electricimp.com/api/mqtt) |
 | 1..99 | &mdash; | [DPS](#azureiothubdps) | [Internal errors of the HTTP API](https://developer.electricimp.com/api/httprequest/sendasync) |
-| 100-999 except 128 | - | [DPS](#azureiothubdps), [Client](#azureiothubclient) | For the [Client](#azureiothubclient) class: [Azure IoT Hub errors](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support).<br />For the [DPS](#azureiothubdps) class: HTTP error codes from [Azure DPS REST API](https://docs.microsoft.com/en-us/rest/api/iot-dps/). |
+| 100-999 except 128 | &mdash; | [DPS](#azureiothubdps), [Client](#azureiothubclient) | For the [Client](#azureiothubclient) class: [Azure IoT Hub errors](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support).<br />For the [DPS](#azureiothubdps) class: HTTP error codes from [Azure DPS REST API](https://docs.microsoft.com/en-us/rest/api/iot-dps/). |
 | 1000 | `"AZURE_CLIENT_ERROR_NOT_CONNECTED"` | [Client](#azureiothubclient) | The client is not connected |
 | 1001 | `"AZURE_CLIENT_ERROR_ALREADY_CONNECTED"` | [Client](#azureiothubclient) | The client is already connected |
 | 1002 | `"AZURE_CLIENT_ERROR_NOT_ENABLED"` | [Client](#azureiothubclient) | The feature is not enabled |
