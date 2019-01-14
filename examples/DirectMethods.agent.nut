@@ -22,13 +22,12 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-#require "AzureIoTHub.agent.lib.nut:4.0.0"
+#require "AzureIoTHub.agent.lib.nut:5.0.0"
 
-// AzureIoTHub library example.
 // - automatically registers the device (if not registered yet) using the provided Registry Connection String
-// - connects using an automatically obtained Device Connection String
+// - connects the device to Azure IoT Hub using an automatically obtained Device Connection String
 // - enables Direct Methods functionality
-// - logs all comming Direct Method calls, always responds success
+// - logs all Direct Method calls received from the cloud, always responds success
 
 class DirectMethodsExample {
     _azureClient = null;
@@ -105,14 +104,6 @@ class DirectMethodsExample {
         _azureClient.connect();
     }
 
-    function _onReplySent(err, data) {
-        if (err != 0) {
-            server.error("Sending reply failed: " + err);
-        } else {
-            server.log("Reply was sent successfully");
-        }
-    }
-
     function _onMethod(name, params, reply) {
         server.log("Direct method called:");
         server.log("name: " + name);
@@ -121,7 +112,17 @@ class DirectMethodsExample {
             _printTable(params);
         }
         local resp = AzureIoTHub.DirectMethodResponse(200, {"status": "done"});
-        reply(resp, _onReplySent);
+        // reply function can also be called asyncronously.
+        // For example, if you need to get some data from the device before replying to the direct method call
+        reply(resp, _onReplySent.bindenv(this));
+    }
+
+    function _onReplySent(err, resp) {
+        if (err != 0) {
+            server.log("Reply sending failed: " + err);
+            return;
+        }
+        server.log("Reply sent successfully");
     }
 
     function _printTable(tbl) {

@@ -1,3 +1,2 @@
-.imptest.local
-*.bundle.nut
-node_modules
+
+.DS_Store
