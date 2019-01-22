@@ -973,9 +973,9 @@ The table below describes the error codes for all of the library classes. Each e
 - The connection is being established (when you are trying to call some methods of the library, like *sendMessage()*)
 - The *disconnect()* method was called and the disconnection is in progress (when you are trying to call some methods of the library, like *sendMessage()*) 
 - Too many messages are being sent (when you are trying to send another one)
-- One retrieve twin properties operation is already in progress (when you are to retrieve twin properties)
+- One retrieve twin properties operation is already in progress (when you are trying to retrieve twin properties once more)
 - Too many update twin properties operations are in progress (when you are trying to update them once more)
-- The feature is being enabled now (when you are trying to enable it once more)
+- The feature enabling is already in progress (when you are trying to enable it once more)
 
 **Note 2**: `"AZURE_CLIENT_ERROR_OP_TIMED_OUT"` may appear in the following cases:
 - Direct method call has been already expired (when you are trying to reply on it)
