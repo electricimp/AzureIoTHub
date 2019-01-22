@@ -554,8 +554,8 @@ These settings affect the behavior of the client and the operations it performs.
 | *keepAlive* | Integer | Keep-alive MQTT parameter, in seconds. See [here](https://developer.electricimp.com/api/mqtt/mqttclient/connect) for more information. Default: 60s |
 | *twinsTimeout* | Integer | Timeout in seconds for the [retrieve twin](#retrievetwinpropertiesonretrieved) and [update twin](#updatetwinpropertiesproperties-onupdated) operations. Default: 10s |
 | *dMethodsTimeout* | Integer | Time (in seconds) allowed to [reply to direct method](#the-onmethod-callback-reply-function) call. Default: 30s |
-| *maxPendingTwinRequests* | Integer | Maximum number of pending [update twin](#updatetwinpropertiesproperties-onupdated) operations. Default: 3 |
-| *maxPendingSendRequests* | Integer | Maximum number of pending [send message](#sendmessagemessage-onsent) operations. Default: 3 |
+| *maxPendingTwinRequests* | Integer | Maximum number of pending [update twin](#updatetwinpropertiesproperties-onupdated) operations. In case of excess of this limit, the `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` error will be thrown. Default: 3 |
+| *maxPendingSendRequests* | Integer | Maximum number of pending [send message](#sendmessagemessage-onsent) operations. In case of excess of this limit, the `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` error will be thrown. Default: 3 |
 | *tokenTTL* | Integer | SAS token’s time-to-live (in seconds). For more information, please see [the Azure documentation](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#security-token-structure). Default: 86400s |
 | *tokenAutoRefresh* | Boolean | If `true`, the [SAS token auto-refresh](#refreshing-sas-tokens-automatically) feature is enabled, otherwise disabled. Default: true |
 
@@ -964,10 +964,28 @@ The table below describes the error codes for all of the library classes. Each e
 | 1001 | `"AZURE_CLIENT_ERROR_ALREADY_CONNECTED"` | [Client](#azureiothubclient) | The client is already connected |
 | 1002 | `"AZURE_CLIENT_ERROR_NOT_ENABLED"` | [Client](#azureiothubclient) | The feature is not enabled |
 | 1003 | `"AZURE_CLIENT_ERROR_ALREADY_ENABLED"` | [Client](#azureiothubclient) | The feature is already enabled |
-| 1004 | `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` | [Client](#azureiothubclient) | The operation is not allowed at the moment, eg. the same operation is already in process |
-| 1005 | `"AZURE_CLIENT_ERROR_OP_TIMED_OUT"` | [Client](#azureiothubclient) | The operation timed out |
+| 1004 | `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` | [Client](#azureiothubclient) | The operation is not allowed at the moment, eg. the same operation is already in process. For more information, please see the [*Note 1*](#error-descr-notes) below |
+| 1005 | `"AZURE_CLIENT_ERROR_OP_TIMED_OUT"` | [Client](#azureiothubclient) | The operation timed out. For more information, please see the [*Note 2*](#error-descr-notes) below |
 | 1010 | `"AZURE_DPS_ERROR_NOT_REGISTERED"` | [DPS](#azureiothubdps) | The device is/was not registered |
-| 1100 | `"AZURE_ERROR_GENERAL"` | [DPS](#azureiothubdps), [Client](#azureiothubclient) | General error |
+| 1100 | `"AZURE_ERROR_GENERAL"` | [DPS](#azureiothubdps), [Client](#azureiothubclient) | General error. For more information, please see the [*Note 3*](#error-descr-notes) below |
+
+<a id='error-descr-notes'></a>
+**Note 1**: `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` may appear in the following cases:
+- The connection is being established (when you are trying to call some methods of the library, like *sendMessage()*)
+- The *disconnect()* method was called and the disconnection is in progress (when you are trying to call some methods of the library, like *sendMessage()*) 
+- Too many messages are being sent (when you are trying to send another one). See the *maxPendingSendRequests* parameter in the [Optional Settings](#optional-settings) section
+- One retrieve twin properties operation is already in progress (when you are trying to retrieve twin properties once more)
+- Too many update twin properties operations are in progress (when you are trying to update them once more). See the *maxPendingTwinRequests* parameter in the [Optional Settings](#optional-settings) section
+- The feature enabling is already in progress (when you are trying to enable it once more)
+
+**Note 2**: `"AZURE_CLIENT_ERROR_OP_TIMED_OUT"` may appear in the following cases:
+- Direct method call has been already expired (when you are trying to reply on it). See the *dMethodsTimeout* parameter in the [Optional Settings](#optional-settings) section
+- One of the two-phase operations (retrieving or updating of twin properties) has not been replied by the server. See the *twinsTimeout* parameter in the [Optional Settings](#optional-settings) section
+
+**Note 3**: `"AZURE_ERROR_GENERAL"` may appear in the following cases:
+- Unexpected response from the server
+- Parsing error
+- Unexpected disconnection
 
 ## Testing ##
 
