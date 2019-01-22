@@ -964,11 +964,12 @@ The table below describes the error codes for all of the library classes. Each e
 | 1001 | `"AZURE_CLIENT_ERROR_ALREADY_CONNECTED"` | [Client](#azureiothubclient) | The client is already connected |
 | 1002 | `"AZURE_CLIENT_ERROR_NOT_ENABLED"` | [Client](#azureiothubclient) | The feature is not enabled |
 | 1003 | `"AZURE_CLIENT_ERROR_ALREADY_ENABLED"` | [Client](#azureiothubclient) | The feature is already enabled |
-| 1004 | `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` | [Client](#azureiothubclient) | The operation is not allowed at the moment, eg. the same operation is already in process. For more information, please see the *Note 1* below |
+| 1004 | `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` | [Client](#azureiothubclient) | The operation is not allowed at the moment, eg. the same operation is already in process. For more information, please see the [*Note 1*](#error-descr-notes) below |
 | 1005 | `"AZURE_CLIENT_ERROR_OP_TIMED_OUT"` | [Client](#azureiothubclient) | The operation timed out. For more information, please see the *Note 2* below |
 | 1010 | `"AZURE_DPS_ERROR_NOT_REGISTERED"` | [DPS](#azureiothubdps) | The device is/was not registered |
 | 1100 | `"AZURE_ERROR_GENERAL"` | [DPS](#azureiothubdps), [Client](#azureiothubclient) | General error. For more information, please see the *Note 3* below |
 
+<a id='error-descr-notes'></a>
 **Note 1**: `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` may appear in the following cases:
 - The connection is being established (when you are trying to call some methods of the library, like *sendMessage()*)
 - The *disconnect()* method was called and the disconnection is in progress (when you are trying to call some methods of the library, like *sendMessage()*) 
