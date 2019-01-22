@@ -972,14 +972,14 @@ The table below describes the error codes for all of the library classes. Each e
 **Note 1**: `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` may appear in the following cases:
 - The connection is being established (when you are trying to call some methods of the library, like *sendMessage()*)
 - The *disconnect()* method was called and the disconnection is in progress (when you are trying to call some methods of the library, like *sendMessage()*) 
-- Too many messages are being sent (when you are trying to send another one)
+- Too many messages are being sent (when you are trying to send another one). See the *maxPendingSendRequests* parameter in the [Optional Settings](#optional-settings) section
 - One retrieve twin properties operation is already in progress (when you are trying to retrieve twin properties once more)
-- Too many update twin properties operations are in progress (when you are trying to update them once more)
+- Too many update twin properties operations are in progress (when you are trying to update them once more). See the *maxPendingTwinRequests* parameter in the [Optional Settings](#optional-settings) section
 - The feature enabling is already in progress (when you are trying to enable it once more)
 
 **Note 2**: `"AZURE_CLIENT_ERROR_OP_TIMED_OUT"` may appear in the following cases:
-- Direct method call has been already expired (when you are trying to reply on it)
-- One of the two-phase operations (retrieving or updating of twin properties) has not been replied by the server
+- Direct method call has been already expired (when you are trying to reply on it). See the *dMethodsTimeout* parameter in the [Optional Settings](#optional-settings) section
+- One of the two-phase operations (retrieving or updating of twin properties) has not been replied by the server. See the *twinsTimeout* parameter in the [Optional Settings](#optional-settings) section
 
 **Note 3**: `"AZURE_ERROR_GENERAL"` may appear in the following cases:
 - Unexpected response from the server
