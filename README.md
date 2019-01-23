@@ -955,7 +955,7 @@ To stop the token being updated automatically, you can set the *tokenAutoRefresh
 The table below describes the error codes for all of the library classes. Each error code is an integer which specifies a concrete error which occurred during an operation.
 
 | Error&nbsp;Code | Error&nbsp;Name | Applicable&nbsp;Classes | Description |
-| --- | --- | --- | --- |
+| :-: | :-: | --- | --- |
 | 0 | &mdash; | [DPS](#azureiothubdps), [Client](#azureiothubclient) | No error |
 | -99..-1 and 128 | &mdash; | [Client](#azureiothubclient) | [Codes returned by the MQTT API](https://developer.electricimp.com/api/mqtt) |
 | 1..99 | &mdash; | [DPS](#azureiothubdps) | [Internal errors of the HTTP API](https://developer.electricimp.com/api/httprequest/sendasync) |
@@ -964,28 +964,33 @@ The table below describes the error codes for all of the library classes. Each e
 | 1001 | `"AZURE_CLIENT_ERROR_ALREADY_CONNECTED"` | [Client](#azureiothubclient) | The client is already connected |
 | 1002 | `"AZURE_CLIENT_ERROR_NOT_ENABLED"` | [Client](#azureiothubclient) | The feature is not enabled |
 | 1003 | `"AZURE_CLIENT_ERROR_ALREADY_ENABLED"` | [Client](#azureiothubclient) | The feature is already enabled |
-| 1004 | `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` | [Client](#azureiothubclient) | The operation is not allowed at the moment, eg. the same operation is already in process. For more information, please see the [*Note 1*](#error-descr-notes) below |
-| 1005 | `"AZURE_CLIENT_ERROR_OP_TIMED_OUT"` | [Client](#azureiothubclient) | The operation timed out. For more information, please see the [*Note 2*](#error-descr-notes) below |
+| 1004 | `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` | [Client](#azureiothubclient) | The operation is not allowed at the moment, typically because the same operation is already in process. For more information, please see [Note 1](#error-note-1) below |
+| 1005 | `"AZURE_CLIENT_ERROR_OP_TIMED_OUT"` | [Client](#azureiothubclient) | The operation timed out. For more information, please see [Note 2](#error-note-2) below |
 | 1010 | `"AZURE_DPS_ERROR_NOT_REGISTERED"` | [DPS](#azureiothubdps) | The device is/was not registered |
-| 1100 | `"AZURE_ERROR_GENERAL"` | [DPS](#azureiothubdps), [Client](#azureiothubclient) | General error. For more information, please see the [*Note 3*](#error-descr-notes) below |
+| 1100 | `"AZURE_ERROR_GENERAL"` | [DPS](#azureiothubdps), [Client](#azureiothubclient) | General error. For more information, please see [Note 3](#error-note-3) below |
 
-<a id='error-descr-notes'></a>
-**Note 1**: `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` may appear in the following cases:
-- The connection is being established (when you are trying to call some methods of the library, like *sendMessage()*)
-- The *disconnect()* method was called and the disconnection is in progress (when you are trying to call some methods of the library, like *sendMessage()*) 
-- Too many messages are being sent (when you are trying to send another one). See the *maxPendingSendRequests* parameter in the [Optional Settings](#optional-settings) section
-- One retrieve twin properties operation is already in progress (when you are trying to retrieve twin properties once more)
-- Too many update twin properties operations are in progress (when you are trying to update them once more). See the *maxPendingTwinRequests* parameter in the [Optional Settings](#optional-settings) section
-- The feature enabling is already in progress (when you are trying to enable it once more)
+<a id='error-note-1'></a>
+**Note 1** The error `"AZURE_CLIENT_ERROR_OP_NOT_ALLOWED_NOW"` may appear in the following situations:
 
-**Note 2**: `"AZURE_CLIENT_ERROR_OP_TIMED_OUT"` may appear in the following cases:
-- Direct method call has been already expired (when you are trying to reply on it). See the *dMethodsTimeout* parameter in the [Optional Settings](#optional-settings) section
-- One of the two-phase operations (retrieving or updating of twin properties) has not been replied by the server. See the *twinsTimeout* parameter in the [Optional Settings](#optional-settings) section
+- The connection is still being established when you try to call one or more library methods, such as [*sendMessage()*](#sendmessagemessage-onsent).
+- You try to call one or more library methods, such as [*sendMessage()*](#sendmessagemessage-onsent), when a disconnection is in progress (because you called [*disconnect()*](#disconnect) earlier).
+- Too many messages are being sent and you try to send another one. Please see the *maxPendingSendRequests* parameter in the [Optional Settings](#optional-settings) section for information on dealing with this.
+- A retrieve twin properties operation is already in progress when you try to retrieve the properties again.
+- Too many update twin properties operations are in progress when you try to update another. Please see the *maxPendingTwinRequests* parameter in the [Optional Settings](#optional-settings) section for information on dealing with this.
+- You try to enable a feature after already attempting to enable it.
 
-**Note 3**: `"AZURE_ERROR_GENERAL"` may appear in the following cases:
-- Unexpected response from the server
-- Parsing error
-- Unexpected disconnection
+<a id='error-note-2'></a>
+**Note 2** The error `"AZURE_CLIENT_ERROR_OP_TIMED_OUT"` may appear in the following situations:
+
+- A direct method call has already expired when you try to reply to it. Please see the *dMethodsTimeout* parameter in the [Optional Settings](#optional-settings) section for information on dealing with this.
+- One of the two-phase operations (retrieving or updating of twin properties) has not received a response from the server. Please see the *twinsTimeout* parameter in the [Optional Settings](#optional-settings) section for information on dealing with this.
+
+<a id='error-note-3'></a>
+**Note 3** The error `"AZURE_ERROR_GENERAL"` may appear in the following situations:
+
+- An unexpected response was received from the server.
+- A parsing error occurred.
+- An unexpected disconnection took place.
 
 ## Testing ##
 
