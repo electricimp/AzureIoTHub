@@ -38,7 +38,7 @@ The library consists of the following classes and methods:
 
 **To include this library in your project, add** `#require "AzureIoTHub.agent.lib.nut:5.0.0"` **to the top of your agent code.**
 
-[![Build Status](https://travis-ci.org/electricimp/AzureIoTHub.svg?branch=master)](https://travis-ci.org/electricimp/AzureIoTHub)
+![Build Status](https://cse-ci.electricimp.com/app/rest/builds/buildType:(id:AzureIoTHub_BuildAndTest)/statusIcon)
 
 ## Examples ##
 
