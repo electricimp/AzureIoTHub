@@ -868,6 +868,7 @@ class AzureIoTHub {
         _isEnablingMsg          = false;
         _isEnablingTwin         = false;
         _isEnablingDMethod      = false;
+        _shouldDisconnect       = false;
 
         _connStrParsed          = null;
         _resourceUri            = null;
@@ -1020,6 +1021,10 @@ class AzureIoTHub {
                     _pendingCalls.append(@() _mqttclient.disconnect(_onDisconnected.bindenv(this)));
                     return;
                 }
+                if (_isConnecting) {
+                    _shouldDisconnect = true;
+                    return;
+                } 
                 _mqttclient.disconnect(_onDisconnected.bindenv(this));
             }
         }
@@ -1501,6 +1506,21 @@ class AzureIoTHub {
                 return;
             }
 
+            if (_shouldDisconnect) {
+                _log("Disconnect called while connecting.");
+                if (err == 0) {
+                    _log("Triggering disconnect.");
+                    _isConnected = true;
+                    _isDisconnected = false;
+                    _mqttclient.disconnect(_onDisconnected.bindenv(this));
+                } else {
+                    _log("Connection attempt failed. Return code: " + err);
+                }
+                _shouldDisconnect = false;
+                _isConnecting = false;
+                return;
+            } 
+
             if (err == 0) {
                 _log("Connected!");
                 _isConnected = true;
@@ -1509,6 +1529,7 @@ class AzureIoTHub {
                     _refreshTokenTimer = imp.wakeup(_timeBeforeRefreshing(), _refreshToken.bindenv(this));
                 }
             }
+
             _isConnecting = false;
             _onConnectedCb && _onConnectedCb(err);
         }
