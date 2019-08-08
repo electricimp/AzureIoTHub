@@ -1,4 +1,4 @@
-# Azure IoT Hub 5.0.0 #
+# Azure IoT Hub 5.1.0 #
 
 Azure IoT Hub is an Electric Imp agent-side library for interfacing with Azure IoT Hub API version "2016-11-14". Starting with version 3, the library integrates with Azure IoT Hub using the MQTT protocol (previous versions used AMQP) as there is certain functionality, such as Device Twins and Direct Methods, that IoT Hub only supports via MQTT. Starting with version 5, the library supports the Azure IoT Hub [Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/about-iot-dps).
 
@@ -36,7 +36,7 @@ The library consists of the following classes and methods:
   - [*enableDirectMethods()*](#enabledirectmethodsonmethod-ondone) &mdash; Enables or disables Azure IoT Hub Direct Methods.
   - [*setDebug()*](#setdebugvalue) &mdash; Enables or disables the client debug output.
 
-**To include this library in your project, add** `#require "AzureIoTHub.agent.lib.nut:5.0.0"` **to the top of your agent code.**
+**To include this library in your project, add** `#require "AzureIoTHub.agent.lib.nut:5.1.0"` **at the top of your agent code.**
 
 ![Build Status](https://cse-ci.electricimp.com/app/rest/builds/buildType:(id:AzureIoTHub_BuildAndTest)/statusIcon)
 
@@ -112,7 +112,7 @@ This method instantiates an AzureIoTHub.Registry object which exposes the Device
 #### Example ####
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:5.0.0"
+#require "AzureIoTHub.agent.lib.nut:5.1.0"
 
 // Instantiate a client using your connection string
 const AZURE_REGISTRY_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=<KEY_NAME>;SharedAccessKey=<KEY_HASH>";
@@ -141,7 +141,7 @@ This method creates a new device identity in IoT Hub.
 
 ### update(*deviceInfo[, callback]*) ###
 
-This method updates an existing device identity in IoT Hub. The update function cannot change the values of any read-only properties, including the *deviceId*, and the *statusReason* value cannot be updated via this method. 
+This method updates an existing device identity in IoT Hub. The update function cannot change the values of any read-only properties, including the *deviceId*, and the *statusReason* value cannot be updated via this method.
 
 #### Parameters ####
 
@@ -187,7 +187,7 @@ This method requests a list of device identities. When IoT Hub responds, an arra
 This example code will create an IoT Hub device using an imp’s agent ID if one isn’t found in the IoT Hub device registry. It will then instantiate the [AzureIoTHub.Client](#azureiothubclient) class for later use.
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:5.0.0"
+#require "AzureIoTHub.agent.lib.nut:5.1.0"
 
 const AZURE_REGISTRY_CONN_STRING = "HostName=<HUB_ID>.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=<KEY_HASH>";
 
@@ -209,7 +209,7 @@ function createDevice() {
             server.error(error.message);
         } else {
             server.log("Created " + iotHubDevice.getBody().deviceId);
-            
+
             // Create a client with the device authentication provided from the registry response
             ::client <- AzureIoTHub.Client(iotHubDevice.connectionString(hostname), onConnected);
         }
@@ -226,9 +226,9 @@ registry.get(agentId, function(err, iothubDevice) {
             server.error(err.message);
         }
     } else {
-        // Found the device 
+        // Found the device
         server.log("Device registered as " + iothubDevice.getBody().deviceId);
-        
+
         // Create a client with the device authentication provided from the registry response
         ::client <- AzureIoTHub.Client(iothubDevice.connectionString(hostname), onConnected);
     }
@@ -237,13 +237,13 @@ registry.get(agentId, function(err, iothubDevice) {
 
 ## AzureIoTHub.Device ##
 
-The AzureIoTHub.Device class is used to create Devices identity objects used by the [AzureIoTHub.Registry](#azureiothubregistry) class. Registry methods will create device objects for you if you choose to pass in tables. 
+The AzureIoTHub.Device class is used to create Devices identity objects used by the [AzureIoTHub.Registry](#azureiothubregistry) class. Registry methods will create device objects for you if you choose to pass in tables.
 
 ### AzureIoTHub.Device Class Usage ###
 
 #### Constructor: AzureIoTHub.Device(*[deviceInfo]*) ####
 
-The constructor creates a device object from the *deviceInfo* parameter. See the *Device Info Table* below for details on what to include in the table. If no *deviceInfo* is provided, default settings will be used. 
+The constructor creates a device object from the *deviceInfo* parameter. See the *Device Info Table* below for details on what to include in the table. If no *deviceInfo* is provided, default settings will be used.
 
 #### Parameters ####
 
@@ -264,16 +264,16 @@ The constructor creates a device object from the *deviceInfo* parameter. See the
 | *connectionStateUpdatedTime* | Read only | A temporal indicator, showing the date and time the connection state was last updated. Default: `null` |
 | *statusUpdatedTime* | Read only | A temporal indicator, showing the date and time of the last status update. Default: `null` |
 | *lastActivityTime* | Read only | A temporal indicator, showing the date and time the device last connected, received or sent a message. Default: `null` |
-| *cloudToDeviceMessageCount* | Read only | The number of cloud to device messages awaiting delivery. Default: 0 |                               
+| *cloudToDeviceMessageCount* | Read only | The number of cloud to device messages awaiting delivery. Default: 0 |
 | *authentication* | Optional | An authentication table containing information and security materials. The primary and a secondary key are stored in base64 format. Default: `{"symmetricKey" : {"primaryKey" : null, "secondaryKey" : null}}` |
 
-**Note** The default authentication parameters do not contain the authentication needed to create an [AzureIoTHub.Client](#azureiothubclient) object.    
+**Note** The default authentication parameters do not contain the authentication needed to create an [AzureIoTHub.Client](#azureiothubclient) object.
 
 ## AzureIoTHub.Device Class Methods ##
 
 ### connectionString(*hostname*) ###
 
-This method retrieves the Device Connection String from the stored *authentication* and *deviceId* properties of the specified host. A Device Connection String is needed to create an [AzureIoTHub.Client](#azureiothubclient) object. 
+This method retrieves the Device Connection String from the stored *authentication* and *deviceId* properties of the specified host. A Device Connection String is needed to create an [AzureIoTHub.Client](#azureiothubclient) object.
 
 #### Parameters ####
 
@@ -395,7 +395,7 @@ dps.getConnectionString(onCompleted);
 ## AzureIoTHub.DPS Example ##
 
 ```squirrel
-#require "AzureIoTHub.agent.lib.nut:5.0.0"
+#require "AzureIoTHub.agent.lib.nut:5.1.0"
 
 const AZURE_DPS_SCOPE_ID = "<YOUR_AZURE_DPS_SCOPE_ID>";
 const AZURE_DPS_REGISTRATION_ID = "<YOUR_AZURE_DPS_REGISTRATION_ID>";
@@ -421,7 +421,7 @@ onCompleted = function(err, resp, connStr) {
         // The device is not registered
         server.log("Device is not registered. Starting registration...");
         registrationCalled = true;
-        
+
         // Register the device
         dps.register(onCompleted);
     } else {
@@ -509,7 +509,7 @@ Please keep in mind the [Azure IoT Hub limitations](https://github.com/Microsoft
 
 All optional functionalities are disabled after a client instantiation. If an optional function is needed, it should be enabled after the client has successfully connected, and it should be explicitly re-enabled after every re-connection of the client. The class provides methods to enable every optional feature.
 
-Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. Specific callbacks are described within every method. Many callbacks provide an [error code](#error-codes) which specifies a concrete error (if any) happened during the operation. 
+Most of the methods return nothing. A result of an operation may be obtained via a callback function specified in the method. Specific callbacks are described within every method. Many callbacks provide an [error code](#error-codes) which specifies a concrete error (if any) happened during the operation.
 
 ## AzureIoTHub.Client Class Usage ##
 
@@ -570,14 +570,14 @@ function onConnected(err) {
         return;
     }
     server.log("Connected");
-    
+
     // Here is a good place to enable required features, like Device Twins or Direct Methods
 }
 
 function onDisconnected(err) {
     if (err != 0) {
         server.error("Disconnected unexpectedly with code: " + err);
-        
+
         // Reconnect if disconnection is not initiated by application
         client.connect();
     } else {
@@ -672,7 +672,7 @@ function onSent(err, msg) {
     if (err != 0) {
         server.error("Message sending failed: " + err);
         server.log("Trying to send again...");
-        
+
         // For example simplicity trying to resend the message in case of any error
         client.sendMessage(message2, onSent);
     } else {
@@ -773,7 +773,7 @@ client.enableTwin(onRequest, onDone);
 
 This method [retrieves Device Twin properties](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#retrieving-a-device-twins-properties).
 
-It may be called only if Device Twins functionality is enabled. Do not call this method until any previous retrieve operation has completed. 
+It may be called only if Device Twins functionality is enabled. Do not call this method until any previous retrieve operation has completed.
 
 #### Parameters ####
 
@@ -801,7 +801,7 @@ function onRetrieved(err, repProps, desProps) {
         server.error("Retrieving Twin properties failed: " + err);
         return;
     }
-    
+
     server.log("Twin properties retrieved successfully");
 }
 
@@ -922,7 +922,7 @@ client.enableDirectMethods(onMethod, onDone);
 
 ### setDebug(*value*) ###
 
-This method enables (*value* is `true`) or disables (*value* is `false`) the client debug output (including error logging). It is disabled by default. 
+This method enables (*value* is `true`) or disables (*value* is `false`) the client debug output (including error logging). It is disabled by default.
 
 #### Returns ####
 
