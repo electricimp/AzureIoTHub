@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright 2018 Electric Imp
+// Copyright 2018-19 Electric Imp
 //
 // SPDX-License-Identifier: MIT
 //
@@ -22,7 +22,7 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-#require "AzureIoTHub.agent.lib.nut:5.0.0"
+#require "AzureIoTHub.agent.lib.nut:5.1.0"
 
 // AzureIoTHub library example.
 // - automatically registers the device (if not registered yet) via the Device Provisioning Service

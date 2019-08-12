@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright 2015-2018 Electric Imp
+// Copyright 2015-2019 Electric Imp
 //
 // SPDX-License-Identifier: MIT
 //
@@ -54,7 +54,7 @@ const AZURE_CLIENT_DEFAULT_DMETHODS_TIMEOUT     = 30;
 
 class AzureIoTHub {
 
-    static VERSION = "5.0.0";
+    static VERSION = "5.1.0";
 
     // Helper Classes modeled after JS/Node SDK
     //------------------------------------------------------------------------------
@@ -110,8 +110,14 @@ class AzureIoTHub {
             return time() + 3600;
         }
 
-        static function anDayFromNow() {
+        static function aDayFromNow() {
+            // Add 'aDayFromNow()' - see https://electricimp.atlassian.net/browse/CSE-785
             return time() + 86400;
+        }
+
+        static function anDayFromNow() {
+            // Retain old version for compatibility?
+            return aDayFromNow();
         }
 
         // encode URI component strict
@@ -868,6 +874,7 @@ class AzureIoTHub {
         _isEnablingMsg          = false;
         _isEnablingTwin         = false;
         _isEnablingDMethod      = false;
+        _shouldDisconnect       = false;
 
         _connStrParsed          = null;
         _resourceUri            = null;
@@ -1020,6 +1027,10 @@ class AzureIoTHub {
                     _pendingCalls.append(@() _mqttclient.disconnect(_onDisconnected.bindenv(this)));
                     return;
                 }
+                if (_isConnecting) {
+                    _shouldDisconnect = true;
+                    return;
+                } 
                 _mqttclient.disconnect(_onDisconnected.bindenv(this));
             }
         }
@@ -1501,6 +1512,21 @@ class AzureIoTHub {
                 return;
             }
 
+            if (_shouldDisconnect) {
+                _log("Disconnect called while connecting.");
+                if (err == 0) {
+                    _log("Triggering disconnect.");
+                    _isConnected = true;
+                    _isDisconnected = false;
+                    _mqttclient.disconnect(_onDisconnected.bindenv(this));
+                } else {
+                    _log("Connection attempt failed. Return code: " + err);
+                }
+                _shouldDisconnect = false;
+                _isConnecting = false;
+                return;
+            } 
+
             if (err == 0) {
                 _log("Connected!");
                 _isConnected = true;
@@ -1509,6 +1535,7 @@ class AzureIoTHub {
                     _refreshTokenTimer = imp.wakeup(_timeBeforeRefreshing(), _refreshToken.bindenv(this));
                 }
             }
+
             _isConnecting = false;
             _onConnectedCb && _onConnectedCb(err);
         }
